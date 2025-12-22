@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  x:Class="Player.Resources.Themes.DarkTheme"
+>
+  <!-- Page Colors -->
+  <Color x:Key="PageBackgroundColor">#121212</Color>
+  <Color x:Key="NavigationBarColor">#1E1E1E</Color>
+
+  <!-- Primary Colors -->
+  <Color x:Key="PrimaryColor">#BB86FC</Color>
+  <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
+
+  <!-- Secondary Colors -->
+  <Color x:Key="SecondaryColor">#03DAC6</Color>
+  <Color x:Key="SecondaryTextColor">#FFFFFF</Color>
+
+  <!-- Text Colors -->
+  <Color x:Key="TertiaryTextColor">#E0E0E0</Color>
+  <Color x:Key="TextColor">#FFFFFF</Color>
+  <Color x:Key="MutedTextColor">#B0B0B0</Color>
+
+  <!-- Error Colors -->
+  <Color x:Key="ErrorColor">#CF6679</Color>
+
+  <!-- Video Player Colors -->
+  <Color x:Key="VideoBackgroundColor">#000000</Color>
+  <Color x:Key="VideoOverlay80">#CC000000</Color>
+  <Color x:Key="VideoOverlay87">#DD000000</Color>
+  <Color x:Key="VideoTextColor">White</Color>
+
+  <!-- Transparent & Surface Colors -->
+  <Color x:Key="TransparentColor">Transparent</Color>
+  <Color x:Key="CardBackgroundColor">#1E1E1E</Color>
+  <Color x:Key="CardBorderColor">#2A2A2A</Color>
+</ResourceDictionary>

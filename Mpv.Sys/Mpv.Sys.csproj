@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <Target Name="PrintPlatformInfo" BeforeTargets="BeforeBuild">
+    <Message Text="OS Property: $(OS)" Importance="high" />
+    <Message Text="IsOSPlatform OSX: $([MSBuild]::IsOSPlatform('OSX'))" Importance="high" />
+    <Message Text="IsOSPlatform Windows: $([MSBuild]::IsOSPlatform('Windows'))" Importance="high" />
+    <Message Text="IsOSPlatform Linux: $([MSBuild]::IsOSPlatform('Linux'))" Importance="high" />
+  </Target>
+
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <None Include="../.cache/*.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

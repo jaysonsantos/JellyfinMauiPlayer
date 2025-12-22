@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:viewmodels="clr-namespace:Player.ViewModels"
+  xmlns:models="using:JellyfinPlayer.Lib.Models"
+  xmlns:controls="clr-namespace:Player.Controls"
+  x:Class="Player.Pages.LibraryPage"
+  x:DataType="viewmodels:LibraryViewModel"
+  Title="{Binding LibraryName}"
+>
+  <RefreshView IsRefreshing="{Binding IsLoading}" Command="{Binding LoadItemsCommand}">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <!-- Items Grid -->
+      <CollectionView
+        Grid.Row="0"
+        ItemsSource="{Binding Items}"
+        SelectionMode="None"
+        RemainingItemsThreshold="5"
+        RemainingItemsThresholdReachedCommand="{Binding LoadMoreItemsCommand}"
+      >
+        <CollectionView.ItemsLayout>
+          <GridItemsLayout
+            Orientation="Vertical"
+            Span="{Binding GridSpan}"
+            HorizontalItemSpacing="16"
+            VerticalItemSpacing="16"
+          />
+        </CollectionView.ItemsLayout>
+
+        <CollectionView.ItemTemplate>
+          <DataTemplate x:DataType="{x:Type models:MediaItem}">
+            <controls:MediaCard
+              MediaItem="{Binding}"
+              TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LibraryViewModel}}, Path=NavigateToItemCommand}"
+              ImageHeight="300"
+              ShowTitle="True"
+              ShowType="True"
+              ShowYear="True"
+            />
+          </DataTemplate>
+        </CollectionView.ItemTemplate>
+
+        <CollectionView.EmptyView>
+          <VerticalStackLayout
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="20"
+            Padding="40"
+          >
+            <Label Text="No items found" FontSize="18" HorizontalOptions="Center" />
+            <Label
+              Text="Pull down to refresh"
+              FontSize="14"
+              TextColor="{DynamicResource MutedTextColor}"
+              HorizontalOptions="Center"
+            />
+          </VerticalStackLayout>
+        </CollectionView.EmptyView>
+      </CollectionView>
+
+      <!-- Loading More Indicator -->
+      <ActivityIndicator
+        Grid.Row="1"
+        IsRunning="{Binding IsLoadingMore}"
+        IsVisible="{Binding IsLoadingMore}"
+        HeightRequest="50"
+        Margin="0,10"
+      />
+
+      <!-- Error Message -->
+      <Label
+        Grid.Row="0"
+        Text="{Binding ErrorMessage}"
+        TextColor="{DynamicResource ErrorColor}"
+        IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+        FontSize="14"
+        HorizontalOptions="Center"
+        VerticalOptions="Center"
+        Margin="20"
+      />
+    </Grid>
+  </RefreshView>
+</ContentPage>

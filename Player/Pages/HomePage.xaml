@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<ContentPage
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:viewModels="clr-namespace:Player.ViewModels"
+  xmlns:models="using:JellyfinPlayer.Lib.Models"
+  xmlns:controls="clr-namespace:Player.Controls"
+  x:Class="Player.Pages.HomePage"
+  x:DataType="viewModels:HomeViewModel"
+  Title="Home"
+>
+  <ContentPage.ToolbarItems>
+    <ToolbarItem Text="Logout" Command="{Binding LogoutCommand}" />
+  </ContentPage.ToolbarItems>
+
+  <RefreshView IsRefreshing="{Binding IsLoading}" Command="{Binding LoadDataCommand}">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <ScrollView Grid.Row="0">
+        <VerticalStackLayout Padding="20" Spacing="20">
+          <!-- Libraries Section -->
+          <VerticalStackLayout Spacing="12">
+            <Label
+              Text="Libraries"
+              Style="{StaticResource SubHeadline}"
+              FontSize="22"
+              FontAttributes="Bold"
+            />
+
+            <CollectionView ItemsSource="{Binding Libraries}" HeightRequest="320">
+              <CollectionView.Margin>
+                <Thickness Bottom="10" />
+              </CollectionView.Margin>
+              <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="16" />
+              </CollectionView.ItemsLayout>
+
+              <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type models:MediaItem}">
+                  <controls:MediaCard
+                    MediaItem="{Binding}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToLibraryCommand}"
+                    CardWidth="370"
+                    CardHeight="320"
+                    ImageHeight="210"
+                    ShowTitle="True"
+                    ShowType="True"
+                    ShowYear="False"
+                  />
+                </DataTemplate>
+              </CollectionView.ItemTemplate>
+            </CollectionView>
+          </VerticalStackLayout>
+
+          <!-- Continue Watching Section -->
+          <VerticalStackLayout Spacing="12">
+            <Label
+              Text="Continue Watching"
+              Style="{StaticResource SubHeadline}"
+              FontSize="22"
+              FontAttributes="Bold"
+            />
+
+            <CollectionView ItemsSource="{Binding ResumeItems}" HeightRequest="380">
+              <CollectionView.EmptyView>
+                <Label Text="No items" TextColor="{DynamicResource MutedTextColor}" />
+              </CollectionView.EmptyView>
+              <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="16" />
+              </CollectionView.ItemsLayout>
+              <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type models:MediaItem}">
+                  <controls:MediaCard
+                    MediaItem="{Binding}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand}"
+                    CardWidth="200"
+                    CardHeight="380"
+                    ImageHeight="300"
+                    ShowTitle="True"
+                    ShowType="False"
+                    ShowYear="False"
+                  />
+                </DataTemplate>
+              </CollectionView.ItemTemplate>
+            </CollectionView>
+          </VerticalStackLayout>
+
+          <!-- Latest Section -->
+          <VerticalStackLayout Spacing="12">
+            <Label
+              Text="Latest"
+              Style="{StaticResource SubHeadline}"
+              FontSize="22"
+              FontAttributes="Bold"
+            />
+
+            <CollectionView ItemsSource="{Binding LatestItems}" HeightRequest="380">
+              <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="16" />
+              </CollectionView.ItemsLayout>
+              <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type models:MediaItem}">
+                  <controls:MediaCard
+                    MediaItem="{Binding}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand}"
+                    CardWidth="200"
+                    CardHeight="380"
+                    ImageHeight="300"
+                    ShowTitle="True"
+                    ShowType="False"
+                    ShowYear="False"
+                  />
+                </DataTemplate>
+              </CollectionView.ItemTemplate>
+            </CollectionView>
+          </VerticalStackLayout>
+
+          <!-- Error Message -->
+          <Label
+            Text="{Binding ErrorMessage}"
+            TextColor="{DynamicResource ErrorColor}"
+            IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            FontSize="14"
+            HorizontalOptions="Center"
+          />
+
+          <!-- Empty State -->
+          <VerticalStackLayout
+            Spacing="20"
+            Padding="40"
+            IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"
+          >
+            <Label
+              Text="No content available"
+              FontSize="18"
+              HorizontalOptions="Center"
+              IsVisible="{Binding Libraries.Count, Converter={StaticResource IsZeroConverter}}"
+            />
+            <Label
+              Text="Pull down to refresh or check your connection"
+              FontSize="14"
+              TextColor="{DynamicResource MutedTextColor}"
+              HorizontalOptions="Center"
+              IsVisible="{Binding Libraries.Count, Converter={StaticResource IsZeroConverter}}"
+            />
+          </VerticalStackLayout>
+        </VerticalStackLayout>
+      </ScrollView>
+
+      <!-- Loading Indicator -->
+      <ActivityIndicator
+        Grid.Row="1"
+        IsRunning="{Binding IsLoading}"
+        IsVisible="{Binding IsLoading}"
+        HeightRequest="50"
+        Margin="0,10"
+      />
+    </Grid>
+  </RefreshView>
+</ContentPage>

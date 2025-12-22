@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  x:Class="Player.Controls.MediaCard"
+  x:Name="This"
+>
+  <Border
+    Padding="0"
+    StrokeThickness="0"
+    BackgroundColor="{DynamicResource TransparentColor}"
+    MinimumWidthRequest="{Binding Source={x:Reference This}, Path=CardWidth}"
+    MinimumHeightRequest="{Binding Source={x:Reference This}, Path=CardHeight}"
+  >
+    <Border.Shadow>
+      <Shadow Brush="{DynamicResource PrimaryTextColor}" Opacity="0.1" Radius="8" Offset="0,2" />
+    </Border.Shadow>
+    <Border.GestureRecognizers>
+      <TapGestureRecognizer
+        Command="{Binding Source={x:Reference This}, Path=TappedCommand}"
+        CommandParameter="{Binding Source={x:Reference This}, Path=MediaItem}"
+      />
+    </Border.GestureRecognizers>
+
+    <VerticalStackLayout Spacing="0">
+      <!-- Image with rounded corners -->
+      <Border
+        StrokeThickness="0"
+        HeightRequest="{Binding Source={x:Reference This}, Path=ImageHeight}"
+        WidthRequest="{Binding Source={x:Reference This}, Path=CardWidth}"
+      >
+        <Border.StrokeShape>
+          <RoundRectangle CornerRadius="12" />
+        </Border.StrokeShape>
+        <Image
+          Source="{Binding Source={x:Reference This}, Path=MediaItem.ImageUrl}"
+          Aspect="AspectFit"
+          WidthRequest="{Binding Source={x:Reference This}, Path=CardWidth}"
+          HeightRequest="{Binding Source={x:Reference This}, Path=ImageHeight}"
+        />
+      </Border>
+
+      <!-- Title -->
+      <Label
+        Text="{Binding Source={x:Reference This}, Path=MediaItem.Name}"
+        FontSize="20"
+        FontAttributes="Bold"
+        MaxLines="2"
+        LineBreakMode="TailTruncation"
+        HorizontalTextAlignment="Center"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowTitle}"
+        Margin="4,12,4,6"
+      />
+
+      <!-- Type -->
+      <Label
+        Text="{Binding Source={x:Reference This}, Path=MediaItem.Type}"
+        FontSize="18"
+        TextColor="{DynamicResource MutedTextColor}"
+        HorizontalTextAlignment="Center"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowType}"
+        Margin="4,0,4,4"
+      />
+
+      <!-- Year -->
+      <Label
+        Text="{Binding Source={x:Reference This}, Path=MediaItem.ProductionYear}"
+        FontSize="15"
+        TextColor="{DynamicResource MutedTextColor}"
+        HorizontalTextAlignment="Center"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowYear}"
+        Margin="4,0,4,6"
+      />
+    </VerticalStackLayout>
+  </Border>
+</ContentView>

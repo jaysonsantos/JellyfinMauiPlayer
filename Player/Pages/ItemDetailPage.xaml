@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<ContentPage
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:viewmodels="clr-namespace:Player.ViewModels"
+  x:Class="Player.Pages.ItemDetailPage"
+  x:DataType="viewmodels:ItemDetailViewModel"
+  Title="{Binding ItemName}"
+>
+  <ContentPage.Resources>
+    <ResourceDictionary>
+      <Style TargetType="Label" x:Key="SectionHeader">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+        <Setter Property="Margin" Value="0,20,0,10" />
+      </Style>
+    </ResourceDictionary>
+  </ContentPage.Resources>
+
+  <Grid>
+    <!-- Loading Indicator -->
+    <ActivityIndicator
+      IsRunning="{Binding IsLoading}"
+      IsVisible="{Binding IsLoading}"
+      VerticalOptions="Center"
+      HorizontalOptions="Center"
+    />
+
+    <!-- Content -->
+    <ScrollView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+      <Grid Padding="20">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Hero Image -->
+        <Border Grid.Row="0" StrokeThickness="0" HeightRequest="300">
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="16" />
+          </Border.StrokeShape>
+          <StackLayout>
+            <Image
+              Source="{Binding Item.ImageUrl}"
+              Aspect="AspectFill"
+              BackgroundColor="{DynamicResource PrimaryColor}"
+            />
+          </StackLayout>
+        </Border>
+
+        <!-- Title and metadata -->
+        <VerticalStackLayout Grid.Row="1" Spacing="8" Margin="0,20,0,0">
+          <Label
+            Text="{Binding ItemName}"
+            FontSize="32"
+            FontAttributes="Bold"
+            LineBreakMode="WordWrap"
+            SemanticProperties.HeadingLevel="Level1"
+          />
+          <Label
+            Text="{Binding Item.Type}"
+            FontSize="16"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+          <HorizontalStackLayout Spacing="16">
+            <Label
+              Text="{Binding YearText}"
+              FontSize="14"
+              TextColor="{DynamicResource MutedTextColor}"
+              IsVisible="{Binding YearText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            />
+            <Label
+              Text="{Binding RuntimeText}"
+              FontSize="14"
+              TextColor="{DynamicResource MutedTextColor}"
+              IsVisible="{Binding RuntimeText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            />
+            <Label
+              Text="{Binding RatingText, StringFormat='⭐ {0}'}"
+              FontSize="14"
+              TextColor="{DynamicResource MutedTextColor}"
+              IsVisible="{Binding RatingText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            />
+          </HorizontalStackLayout>
+          <Label
+            Text="{Binding OfficialRatingText}"
+            FontSize="14"
+            TextColor="{DynamicResource MutedTextColor}"
+            IsVisible="{Binding OfficialRatingText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+          />
+          <Label
+            Text="{Binding GenresText}"
+            FontSize="14"
+            TextColor="{DynamicResource MutedTextColor}"
+            IsVisible="{Binding GenresText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Action Buttons -->
+        <VerticalStackLayout Grid.Row="2" Spacing="12" Margin="0,24,0,0">
+          <Button
+            Text="Play"
+            Command="{Binding PlayCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="18"
+            FontAttributes="Bold"
+            HeightRequest="50"
+            CornerRadius="8"
+            IsVisible="{Binding CanPlay}"
+          />
+          <HorizontalStackLayout Spacing="12">
+            <Button
+              Text="Add to Favorites"
+              Command="{Binding ToggleFavoriteCommand}"
+              BackgroundColor="{DynamicResource PrimaryColor}"
+              TextColor="{DynamicResource PrimaryTextColor}"
+              FontSize="16"
+              HeightRequest="44"
+              CornerRadius="8"
+              HorizontalOptions="FillAndExpand"
+            />
+            <Button
+              Text="More Info"
+              Command="{Binding ShowMoreInfoCommand}"
+              BackgroundColor="{DynamicResource PrimaryColor}"
+              TextColor="{DynamicResource PrimaryTextColor}"
+              FontSize="16"
+              HeightRequest="44"
+              CornerRadius="8"
+              HorizontalOptions="FillAndExpand"
+            />
+          </HorizontalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- Overview -->
+        <VerticalStackLayout Grid.Row="3" Spacing="12" Margin="0,24,0,0">
+          <Label Text="Overview" Style="{StaticResource SectionHeader}" />
+          <Label
+            Text="{Binding Item.Overview}"
+            LineBreakMode="WordWrap"
+            TextColor="{DynamicResource TextColor}"
+            FontSize="15"
+            IsVisible="{Binding Item.Overview, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+          />
+          <Label
+            Text="No overview available."
+            TextColor="{DynamicResource MutedTextColor}"
+            FontSize="15"
+            IsVisible="{Binding Item.Overview, Converter={StaticResource IsStringNotNullOrEmptyConverter}, ConverterParameter=Inverted}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Episode/Series Info (if applicable) -->
+        <VerticalStackLayout
+          Grid.Row="4"
+          Spacing="8"
+          Margin="0,24,0,0"
+          IsVisible="{Binding HasSeriesInfo}"
+        >
+          <Label Text="Episode Information" Style="{StaticResource SectionHeader}" />
+          <Label
+            Text="{Binding SeriesInfoText}"
+            FontSize="14"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Additional Details -->
+        <VerticalStackLayout Grid.Row="5" Spacing="12" Margin="0,24,0,20">
+          <Label Text="Details" Style="{StaticResource SectionHeader}" />
+          <VerticalStackLayout Spacing="12">
+            <!-- Date Added -->
+            <HorizontalStackLayout
+              Spacing="8"
+              IsVisible="{Binding DateCreatedText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            >
+              <Label
+                Text="Date Added:"
+                FontSize="14"
+                FontAttributes="Bold"
+                TextColor="{DynamicResource MutedTextColor}"
+                WidthRequest="120"
+              />
+              <Label
+                Text="{Binding DateCreatedText}"
+                FontSize="14"
+                TextColor="{DynamicResource TextColor}"
+                LineBreakMode="WordWrap"
+                HorizontalOptions="FillAndExpand"
+              />
+            </HorizontalStackLayout>
+
+            <!-- Release Date -->
+            <HorizontalStackLayout
+              Spacing="8"
+              IsVisible="{Binding ReleaseDateText, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+            >
+              <Label
+                Text="Release Date:"
+                FontSize="14"
+                FontAttributes="Bold"
+                TextColor="{DynamicResource MutedTextColor}"
+                WidthRequest="120"
+              />
+              <Label
+                Text="{Binding ReleaseDateText}"
+                FontSize="14"
+                TextColor="{DynamicResource TextColor}"
+                LineBreakMode="WordWrap"
+                HorizontalOptions="FillAndExpand"
+              />
+            </HorizontalStackLayout>
+          </VerticalStackLayout>
+        </VerticalStackLayout>
+      </Grid>
+    </ScrollView>
+
+    <!-- Error Message -->
+    <Label
+      Text="{Binding ErrorMessage}"
+      TextColor="{DynamicResource ErrorColor}"
+      IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+      FontSize="16"
+      HorizontalOptions="Center"
+      VerticalOptions="Center"
+      Margin="40"
+      HorizontalTextAlignment="Center"
+    />
+  </Grid>
+</ContentPage>

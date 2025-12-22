@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: dotnet-csharpier
+        name: dotnet csharpier format
+        entry: dotnet csharpier format
+        language: system
+        pass_filenames: true
+        files: '\.(cs|xaml|csproj|slnx)$'
