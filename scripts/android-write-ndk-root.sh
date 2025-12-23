@@ -5,4 +5,4 @@ if grep CMAKE_ANDROID_NDK "$1"; then
    exit 0
 fi
 
-printf "\n[cmake]\nCMAKE_ANDROID_NDK = '%s'\nNDK_PROC_aarch64_ABI='arm64-v8a'\nCMAKE_POSITION_INDEPENDENT_CODE='ON'\n" "$NDK_ROOT" >> "$1"
+printf "\n[cmake]\nCMAKE_ANDROID_NDK = '%s'\nNDK_PROC_aarch64_ABI='arm64-v8a'\nNDK_PROC_x86_64_ABI='x86_64'\nCMAKE_POSITION_INDEPENDENT_CODE='ON'\n" "$NDK_ROOT" >> "$1"

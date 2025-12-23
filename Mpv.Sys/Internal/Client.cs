@@ -257,3 +257,12 @@ public struct MpvOpenGlInitParms
     public int type;
     public MpvOpenGlInitParmsInner? data;
 }
+
+public static partial class FfmpegLibs
+{
+    [LibraryImport("libavcodec.so", EntryPoint = "av_jni_set_java_vm")]
+    public static partial int SetJavaVm(IntPtr vm, IntPtr reserved);
+
+    [LibraryImport("libavutil.so", EntryPoint = "av_strerror")]
+    public static partial int MakeErrorString(int errorNumber, IntPtr errbuf, int size);
+}

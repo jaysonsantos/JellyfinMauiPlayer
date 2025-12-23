@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
@@ -27,8 +27,11 @@
     </NativeReference>
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-    <AndroidNativeLibrary Include="../.cache/mpv/prefix/android/lib/*.so">
+    <AndroidNativeLibrary Include="../.cache/prefix/android/aarch64/lib/*.so">
       <Abi>arm64-v8a</Abi>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="../.cache/prefix/android/x86_64/lib/*.so">
+      <Abi>x86_64</Abi>
     </AndroidNativeLibrary>
   </ItemGroup>
 </Project>

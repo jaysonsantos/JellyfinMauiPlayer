@@ -1,8 +1,12 @@
-﻿using Android.Content;
+﻿using System.Runtime.InteropServices;
+using Android.Content;
 using Android.Media;
+using Android.Opengl;
 using Android.Views;
 using Android.Widget;
 using AndroidX.CoordinatorLayout.Widget;
+using Java.Interop;
+using Java.Util.Concurrent.Atomic;
 using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
 using Mpv.Sys;
@@ -14,13 +18,14 @@ namespace Mpv.Maui.Platforms.Android;
 
 public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListener
 {
-    VideoView _videoView;
     MediaController _mediaController;
     bool _isPrepared;
     Context _context;
     Video _video;
     private readonly MpvClient _mpvClient;
     private readonly ILogger<MauiVideoPlayer> _logger;
+
+    private static readonly AtomicBoolean _s_jvmSet = new(false);
 
     public MauiVideoPlayer(
         Context context,
@@ -30,6 +35,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
     )
         : base(context)
     {
+        EnsureJvmIsSet();
         _context = context;
         _video = video;
         _mpvClient = mpvClient;
@@ -41,16 +47,22 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         _mpvClient.SetOption("input-media-keys", "yes");
 
         _mpvClient.SetOption("vo", "gpu-next");
-        _mpvClient.SetOption("hwdec", "auto");
+        _mpvClient.SetOption("hwdec", "mediacodec");
         _mpvClient.SetOption("gpu-context", "android");
+        var surface = new SurfaceView(Context);
 
-        // _mpvClient.SetOption("wid", 4, ptr);
+        // TODO: Get the right size for pointer on platform
+        var ptr = Marshal.AllocHGlobal(8);
+        Marshal.WriteInt64(ptr, surface.Holder!.Surface!.Handle.ToInt64());
+
         _mpvClient.Initialize();
+        _mpvClient.SetOption("wid", 4, ptr);
+        Marshal.FreeHGlobal(ptr);
 
         SetBackgroundColor(Color.Black);
 
         // Create a RelativeLayout for sizing the video
-        RelativeLayout relativeLayout = new RelativeLayout(_context)
+        RelativeLayout relativeLayout = new(_context)
         {
             LayoutParameters = new LayoutParams(LayoutParams.MatchParent, LayoutParams.MatchParent)
             {
@@ -58,21 +70,9 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
             },
         };
 
-        // Create a VideoView and position it in the RelativeLayout
-        _videoView = new VideoView(context)
-        {
-            LayoutParameters = new RelativeLayout.LayoutParams(
-                LayoutParams.MatchParent,
-                LayoutParams.MatchParent
-            ),
-        };
-
         // Add to the layouts
-        relativeLayout.AddView(_videoView);
+        relativeLayout.AddView(surface);
         AddView(relativeLayout);
-
-        // Handle events
-        _videoView.Prepared += OnVideoViewPrepared;
     }
 
     private void LogLines(object? sender, MpvLogMessage e)
@@ -84,9 +84,6 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
     {
         if (disposing)
         {
-            _videoView.Prepared -= OnVideoViewPrepared;
-            _videoView.Dispose();
-            _videoView = null;
             _video = null;
         }
 
@@ -98,12 +95,12 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         if (_video.AreTransportControlsEnabled)
         {
             _mediaController = new MediaController(_context);
-            _mediaController.SetMediaPlayer(_videoView);
-            _videoView.SetMediaController(_mediaController);
+            // _mediaController.SetMediaPlayer(_videoView);
+            // _videoView.SetMediaController(_mediaController);
         }
         else
         {
-            _videoView.SetMediaController(null);
+            // _videoView.SetMediaController(null);
             if (_mediaController != null)
             {
                 _mediaController.SetMediaPlayer(null);
@@ -132,7 +129,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
             string filename = (_video.Source as FileVideoSource).File;
             if (!string.IsNullOrWhiteSpace(filename))
             {
-                _videoView.SetVideoPath(filename);
+                // _videoView.SetVideoPath(filename);
                 hasSetSource = true;
             }
         }
@@ -143,89 +140,113 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
             if (!string.IsNullOrWhiteSpace(path))
             {
                 string assetFilePath = "content://" + package + "/" + path;
-                _videoView.SetVideoPath(assetFilePath);
+                // _videoView.SetVideoPath(assetFilePath);
                 hasSetSource = true;
             }
         }
 
         if (hasSetSource && _video.AutoPlay)
         {
-            _videoView.Start();
+            // _videoView.Start();
         }
     }
 
-    public void UpdateIsLooping()
-    {
-        if (_video.IsLooping)
-        {
-            _videoView.SetOnPreparedListener(this);
-        }
-        else
-        {
-            _videoView.SetOnPreparedListener(null);
-        }
-    }
-
-    public void UpdatePosition()
-    {
-        if (Math.Abs(_videoView.CurrentPosition - _video.Position.TotalMilliseconds) > 1000)
-        {
-            _videoView.SeekTo((int)_video.Position.TotalMilliseconds);
-        }
-    }
-
-    public void UpdateStatus()
-    {
-        VideoStatus status = VideoStatus.NotReady;
-
-        if (_isPrepared)
-        {
-            status = _videoView.IsPlaying ? VideoStatus.Playing : VideoStatus.Paused;
-        }
-
-        ((IVideoController)_video).Status = status;
-
-        // Set Position property
-        TimeSpan timeSpan = TimeSpan.FromMilliseconds(_videoView.CurrentPosition);
-        _video.Position = timeSpan;
-    }
-
-    public void PlayRequested(TimeSpan position)
-    {
-        _videoView.Start();
-        System.Diagnostics.Debug.WriteLine(
-            $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        );
-    }
-
-    public void PauseRequested(TimeSpan position)
-    {
-        _videoView.Pause();
-        System.Diagnostics.Debug.WriteLine(
-            $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        );
-    }
-
-    public void StopRequested(TimeSpan position)
-    {
-        // Stops and releases the media player
-        _videoView.StopPlayback();
-        System.Diagnostics.Debug.WriteLine(
-            $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        );
-
-        // Ensure the video can be played again
-        _videoView.Resume();
-    }
-
-    void OnVideoViewPrepared(object sender, EventArgs args)
-    {
-        _isPrepared = true;
-        ((IVideoController)_video).Duration = TimeSpan.FromMilliseconds(_videoView.Duration);
-    }
-
+    //
+    // public void UpdateIsLooping()
+    // {
+    //     if (_video.IsLooping)
+    //     {
+    //         _videoView.SetOnPreparedListener(this);
+    //     }
+    //     else
+    //     {
+    //         _videoView.SetOnPreparedListener(null);
+    //     }
+    // }
+    //
+    // public void UpdatePosition()
+    // {
+    //     if (Math.Abs(_videoView.CurrentPosition - _video.Position.TotalMilliseconds) > 1000)
+    //     {
+    //         _videoView.SeekTo((int)_video.Position.TotalMilliseconds);
+    //     }
+    // }
+    //
+    // public void UpdateStatus()
+    // {
+    //     VideoStatus status = VideoStatus.NotReady;
+    //
+    //     if (_isPrepared)
+    //     {
+    //         status = _videoView.IsPlaying ? VideoStatus.Playing : VideoStatus.Paused;
+    //     }
+    //
+    //     ((IVideoController)_video).Status = status;
+    //
+    //     // Set Position property
+    //     TimeSpan timeSpan = TimeSpan.FromMilliseconds(_videoView.CurrentPosition);
+    //     _video.Position = timeSpan;
+    // }
+    //
+    // public void PlayRequested(TimeSpan position)
+    // {
+    //     _videoView.Start();
+    //     System.Diagnostics.Debug.WriteLine(
+    //         $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+    //     );
+    // }
+    //
+    // public void PauseRequested(TimeSpan position)
+    // {
+    //     _videoView.Pause();
+    //     System.Diagnostics.Debug.WriteLine(
+    //         $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+    //     );
+    // }
+    //
+    // public void StopRequested(TimeSpan position)
+    // {
+    //     // Stops and releases the media player
+    //     _videoView.StopPlayback();
+    //     System.Diagnostics.Debug.WriteLine(
+    //         $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+    //     );
+    //
+    //     // Ensure the video can be played again
+    //     _videoView.Resume();
+    // }
+    //
+    // void OnVideoViewPrepared(object sender, EventArgs args)
+    // {
+    //     _isPrepared = true;
+    //     ((IVideoController)_video).Duration = TimeSpan.FromMilliseconds(_videoView.Duration);
+    // }
+    //
     public void OnPrepared(MediaPlayer mp)
     {
         mp.Looping = _video.IsLooping;
+    }
+
+    private static void EnsureJvmIsSet()
+    {
+        if (_s_jvmSet.Get())
+            return;
+
+        var jvm = JniEnvironment.Runtime.InvocationPointer;
+        var returnCode = FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
+        if (returnCode != 0)
+        {
+            var errorMsg = Marshal.AllocHGlobal(1000);
+            var error = FfmpegLibs.MakeErrorString(returnCode, errorMsg, 1000);
+            if (error != 0)
+                throw new Exception(
+                    $"Failed to make error string for FFmpeg Java VM set failure: {error} original error {returnCode}"
+                );
+            var msg = Marshal.PtrToStringAnsi(errorMsg);
+            Marshal.FreeHGlobal(errorMsg);
+            throw new Exception($"Failed to set Java VM for FFmpeg: {returnCode} {msg}");
+        }
+
+        _s_jvmSet.Set(true);
     }
 }

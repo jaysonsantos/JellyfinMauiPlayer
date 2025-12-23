@@ -43,17 +43,17 @@ public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
 
     public static void MapIsLooping(VideoHandler handler, Video video)
     {
-        handler.PlatformView?.UpdateIsLooping();
+        // handler.PlatformView?.UpdateIsLooping();
     }
 
     public static void MapPosition(VideoHandler handler, Video video)
     {
-        handler.PlatformView?.UpdatePosition();
+        // handler.PlatformView?.UpdatePosition();
     }
 
     public static void MapUpdateStatus(VideoHandler handler, Video video, object? args)
     {
-        handler.PlatformView?.UpdateStatus();
+        // handler.PlatformView?.UpdateStatus();
     }
 
     public static void MapPlayRequested(VideoHandler handler, Video video, object? args)
@@ -61,8 +61,8 @@ public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
         if (args is not VideoPositionEventArgs eventArgs)
             return;
 
-        TimeSpan position = eventArgs.Position;
-        handler.PlatformView?.PlayRequested(position);
+        // TimeSpan position = eventArgs.Position;
+        // handler.PlatformView?.PlayRequested(position);
     }
 
     public static void MapPauseRequested(VideoHandler handler, Video video, object? args)
@@ -70,8 +70,8 @@ public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
         if (args is not VideoPositionEventArgs eventArgs)
             return;
 
-        TimeSpan position = eventArgs.Position;
-        handler.PlatformView?.PauseRequested(position);
+        // TimeSpan position = eventArgs.Position;
+        // handler.PlatformView?.PauseRequested(position);
     }
 
     public static void MapStopRequested(VideoHandler handler, Video video, object? args)
@@ -79,7 +79,7 @@ public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
         if (args is not VideoPositionEventArgs eventArgs)
             return;
 
-        TimeSpan position = eventArgs.Position;
-        handler.PlatformView?.StopRequested(position);
+        // TimeSpan position = eventArgs.Position;
+        // handler.PlatformView?.StopRequested(position);
     }
 }
