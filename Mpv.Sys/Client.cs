@@ -11,6 +11,7 @@ public sealed class MpvClient : IDisposable
     private bool _disposed;
     private static bool s_dllImporterResolverSet;
     private static readonly Mutex ResolverInitMutex = new(false, "MpvClientInternal");
+    private bool _initialized;
 
     public event EventHandler<MpvLogMessage>? OnLog;
     public event EventHandler? OnVideoReconfigure;
@@ -57,6 +58,8 @@ public sealed class MpvClient : IDisposable
 
     public void Initialize()
     {
+        if (_initialized)
+            return;
         var error = MpvClientInternal.RequestLogMessages(_handle, "debug");
         if (error != 0)
             throw new Exception(
@@ -65,6 +68,7 @@ public sealed class MpvClient : IDisposable
         error = MpvClientInternal.Initialize(_handle);
         if (error != 0)
             throw new Exception("MpvClient failed to initialize: " + ErrorToString(error));
+        _initialized = true;
     }
 
     public void SetOption(string key, string value)
@@ -187,6 +191,7 @@ public sealed class MpvClient : IDisposable
         }
 
         _disposed = true;
+        _initialized = false;
 
         if (_handle == IntPtr.Zero)
         {

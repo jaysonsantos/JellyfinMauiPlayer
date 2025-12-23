@@ -20,18 +20,6 @@
 
     <views:Video x:Name="MpvElement" Grid.Row="0" Source="{Binding VideoUrl}" />
 
-    <toolkit:MediaElement
-      x:Name="MediaElement"
-      Grid.Row="0"
-      Source="{Binding VideoUrl}"
-      ShouldShowPlaybackControls="True"
-      ShouldAutoPlay="True"
-      ShouldLoopPlayback="False"
-      BackgroundColor="{DynamicResource VideoBackgroundColor}"
-      StateChanged="OnMediaStateChanged"
-      PositionChanged="OnPositionChanged"
-    />
-
     <!-- Loading Indicator -->
     <ActivityIndicator
       Grid.Row="0"

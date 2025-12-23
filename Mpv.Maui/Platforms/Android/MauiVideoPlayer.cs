@@ -25,7 +25,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
     private readonly MpvClient _mpvClient;
     private readonly ILogger<MauiVideoPlayer> _logger;
 
-    private static readonly AtomicBoolean _s_jvmSet = new(false);
+    private static readonly AtomicBoolean JvmSet = new(false);
 
     public MauiVideoPlayer(
         Context context,
@@ -49,7 +49,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         _mpvClient.SetOption("vo", "gpu-next");
         _mpvClient.SetOption("hwdec", "mediacodec");
         _mpvClient.SetOption("gpu-context", "android");
-        var surface = new SurfaceView(Context);
+        var surface = new SurfaceView(_context);
 
         // TODO: Get the right size for pointer on platform
         var ptr = Marshal.AllocHGlobal(8);
@@ -85,6 +85,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         if (disposing)
         {
             _video = null;
+            _mpvClient.OnLog -= LogLines;
         }
 
         base.Dispose(disposing);
@@ -229,7 +230,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
 
     private static void EnsureJvmIsSet()
     {
-        if (_s_jvmSet.Get())
+        if (JvmSet.Get())
             return;
 
         var jvm = JniEnvironment.Runtime.InvocationPointer;
@@ -247,6 +248,6 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
             throw new Exception($"Failed to set Java VM for FFmpeg: {returnCode} {msg}");
         }
 
-        _s_jvmSet.Set(true);
+        JvmSet.Set(true);
     }
 }
