@@ -44,7 +44,7 @@
       Include="**\*.Android.cs"
       Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"
     />
-    <None Update="Platforms\iOS\MauiVideoPlayer.cs.bkp">
+    <None Update="Platforms\iOS\MauiVideoPlayer.cs">
       <ExcludeFromCurrentConfiguration>true</ExcludeFromCurrentConfiguration>
     </None>
   </ItemGroup>

@@ -8,7 +8,7 @@ indent_style = space
 indent_style = tab
 
 # Xml files
-[*.xml]
+[*.{xml,csproj}]
 indent_size = 2
 
 # C# files

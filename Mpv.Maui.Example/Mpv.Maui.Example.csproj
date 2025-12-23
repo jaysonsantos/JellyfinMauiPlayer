@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!--        <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>-->
-    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))"
-      >$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks
+      >$(TargetFrameworks);net10.0-windows10.0.19041.0
+    </TargetFrameworks
     >
 
     <!-- Note for MacCatalyst:
@@ -89,14 +89,21 @@
     <ProjectReference Include="..\Mpv.Maui\Mpv.Maui.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-    <!--    <NativeReference Include="../.cache/*.dylib">-->
-    <!--      <Kind>Dynamic</Kind>-->
-    <!--      <SmartLink>False</SmartLink>-->
-    <!--    </NativeReference>-->
-    <NativeReference Include="/Users/jayson.reis/src/mpv/buildDir/xa.a">
-      <Kind>Static</Kind>
-      <SmartLink>True</SmartLink>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <NativeReference Include="../.cache/*.dylib">
+      <Kind>Dynamic</Kind>
+      <SmartLink>False</SmartLink>
     </NativeReference>
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <NativeReference Include="../.cache/*.dylib">
+      <Kind>Dynamic</Kind>
+      <SmartLink>False</SmartLink>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <AndroidNativeLibrary Include="../.cache/mpv/prefix/android/lib/*.so">
+      <Abi>arm64-v8a</Abi>
+    </AndroidNativeLibrary>
   </ItemGroup>
 </Project>

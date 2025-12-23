@@ -3,7 +3,10 @@ using Android.Media;
 using Android.Views;
 using Android.Widget;
 using AndroidX.CoordinatorLayout.Widget;
+using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
+using Mpv.Sys;
+using Mpv.Sys.Internal;
 using Color = Android.Graphics.Color;
 using Uri = Android.Net.Uri;
 
@@ -16,22 +19,40 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
     bool _isPrepared;
     Context _context;
     Video _video;
+    private readonly MpvClient _mpvClient;
+    private readonly ILogger<MauiVideoPlayer> _logger;
 
-    public MauiVideoPlayer(Context context, Video video)
+    public MauiVideoPlayer(
+        Context context,
+        Video video,
+        MpvClient mpvClient,
+        ILogger<MauiVideoPlayer> logger
+    )
         : base(context)
     {
         _context = context;
         _video = video;
+        _mpvClient = mpvClient;
+        _logger = logger;
+
+        _mpvClient.OnLog += LogLines;
+
+        // Initialize mpv client
+        _mpvClient.SetOption("input-media-keys", "yes");
+
+        _mpvClient.SetOption("vo", "gpu-next");
+        _mpvClient.SetOption("hwdec", "auto");
+        _mpvClient.SetOption("gpu-context", "android");
+
+        // _mpvClient.SetOption("wid", 4, ptr);
+        _mpvClient.Initialize();
 
         SetBackgroundColor(Color.Black);
 
         // Create a RelativeLayout for sizing the video
         RelativeLayout relativeLayout = new RelativeLayout(_context)
         {
-            LayoutParameters = new CoordinatorLayout.LayoutParams(
-                LayoutParams.MatchParent,
-                LayoutParams.MatchParent
-            )
+            LayoutParameters = new LayoutParams(LayoutParams.MatchParent, LayoutParams.MatchParent)
             {
                 Gravity = (int)GravityFlags.Center,
             },
@@ -52,6 +73,11 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
 
         // Handle events
         _videoView.Prepared += OnVideoViewPrepared;
+    }
+
+    private void LogLines(object? sender, MpvLogMessage e)
+    {
+        _logger.LogWarning("{Level} {Prefix} {Text}", e.Level, e.Prefix, e.Text);
     }
 
     protected override void Dispose(bool disposing)
@@ -96,7 +122,8 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
             string uri = (_video.Source as UriVideoSource).Uri;
             if (!string.IsNullOrWhiteSpace(uri))
             {
-                _videoView.SetVideoURI(Uri.Parse(uri));
+                _mpvClient.Command("loadfile", uri);
+
                 hasSetSource = true;
             }
         }

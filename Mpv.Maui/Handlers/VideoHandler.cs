@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
-using Mpv.Sys;
 
 namespace Mpv.Maui.Handlers
 {
     public partial class VideoHandler
     {
-        private MpvClient _mpvClient;
-        private readonly ILogger<VideoHandler> _logger;
+        // NOTE: MauiContext is not initialized during handler construction on Android.
+        // Dependencies must be retrieved from MauiContext.Services in CreatePlatformView() instead of constructor injection.
+        // See platform-specific implementations (VideoHandler.android.cs, VideoHandler.macios.cs, VideoHandler.windows.cs).
 
         private static readonly IPropertyMapper<Video, VideoHandler> PropertyMapper =
             new PropertyMapper<Video, VideoHandler>(ViewMapper)
@@ -28,12 +27,7 @@ namespace Mpv.Maui.Handlers
             [nameof(Video.StopRequested)] = MapStopRequested,
         };
 
-        public VideoHandler(MpvClient mpvClient, ILogger<VideoHandler> logger)
-            : base(PropertyMapper, CommandMapper)
-        {
-            _mpvClient = mpvClient;
-            _logger = logger;
-            _logger.LogInformation($"{nameof(VideoHandler)} Is created");
-        }
+        public VideoHandler()
+            : base(PropertyMapper, CommandMapper) { }
     }
 }

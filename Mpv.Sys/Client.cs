@@ -157,11 +157,8 @@ public sealed class MpvClient : IDisposable
         const string homeBrewPath = "/opt/homebrew/lib/libmpv.dylib";
         if (OperatingSystem.IsMacCatalyst() && File.Exists(homeBrewPath))
         {
-            // return NativeLibrary.Load(homeBrewPath);
-            // return NativeLibrary.Load(homeBrewPath);
             return NativeLibrary.Load("libmpv.2.dylib");
         }
-
         // Otherwise, fallback to default import resolver.
         return IntPtr.Zero;
     }

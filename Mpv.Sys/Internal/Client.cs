@@ -4,8 +4,17 @@ namespace Mpv.Sys.Internal;
 
 public struct Constants
 {
-    public const string MpvLib = "mpv";
-    public const string Internal = "__Internal";
+#if WINDOWS
+    public const string LibraryName = "mpv2";
+#elif IOS
+    public const string LibraryName = "__Internal";
+#elif MACCATALYST || MACOS
+    public const string LibraryName = "mpv";
+#elif LINUX || ANDROID
+    public const string LibraryName = "libmpv.so";
+#else
+#error Unsupported platform
+#endif
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -51,52 +60,52 @@ public class ArrayPtr<T>
 
 internal static partial class MpvClientInternal
 {
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_client_api_version")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_client_api_version")]
     internal static partial ulong Version();
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_create")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_create")]
     internal static partial IntPtr Create();
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_free")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_free")]
     internal static partial void Free(IntPtr ptr);
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_initialize")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_initialize")]
     internal static partial int Initialize(IntPtr ptr);
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_error_string")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_error_string")]
     // [return: MarshalAs(UnmanagedType.LPUTF8Str)]
     internal static partial IntPtr ErrorToString(int code);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_set_option_string",
         StringMarshalling = StringMarshalling.Utf8
     )]
     internal static partial int SetOptionString(IntPtr ptr, string key, string value);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_set_option",
         StringMarshalling = StringMarshalling.Utf8
     )]
     internal static partial int SetOption(IntPtr ptr, string key, int format, IntPtr data);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_set_option",
         StringMarshalling = StringMarshalling.Utf8
     )]
     internal static partial int SetOptionInt64(IntPtr ptr, string key, int format, Int64 data);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_command",
         StringMarshalling = StringMarshalling.Utf8
     )]
     internal static partial int Command(IntPtr ptr, [In] string?[] args);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_get_property",
         StringMarshalling = StringMarshalling.Utf8
     )]
@@ -107,18 +116,18 @@ internal static partial class MpvClientInternal
         out IntPtr value
     );
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_wait_event")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_wait_event")]
     internal static partial IntPtr WaitEvent(IntPtr ptr, double timeout);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_event_name",
         StringMarshalling = StringMarshalling.Utf8
     )]
     internal static partial string EventName(int eventId);
 
     [LibraryImport(
-        Constants.Internal,
+        Constants.LibraryName,
         EntryPoint = "mpv_request_log_messages",
         StringMarshalling = StringMarshalling.Utf8
     )]
@@ -127,16 +136,16 @@ internal static partial class MpvClientInternal
 
 internal static partial class MpvRenderInternal
 {
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_render_context_create")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_render_context_create")]
     internal static partial int Create(out IntPtr contextOutput, IntPtr client, IntPtr parameters);
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_render_context_free")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_render_context_free")]
     internal static partial void Free(IntPtr context);
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_render_context_render")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_render_context_render")]
     internal static partial int Render(IntPtr context, IntPtr parameters);
 
-    [LibraryImport(Constants.Internal, EntryPoint = "mpv_render_context_set_update_callback")]
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_render_context_set_update_callback")]
     internal static partial void SetUpdateCallback(
         IntPtr context,
         IntPtr callback,
