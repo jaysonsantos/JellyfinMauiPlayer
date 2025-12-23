@@ -4,7 +4,7 @@ MPV_TAR=.cache/mpv-$(MPV_VERSION).tar.gz
 
 WRAPS=expat harfbuzz libpng zlib mbedtls
 WRAP_FILES=$(patsubst %,.cache/mpv/subprojects/%.wrap,$(WRAPS))
-GSTREAMER_WRAPS=dav1d freetype2 fribidi fontconfig libjpeg-turbo
+GSTREAMER_WRAPS=freetype2 fribidi fontconfig libjpeg-turbo
 GSTREAMER_WRAP_FILES=$(patsubst %,.cache/mpv/subprojects/%.wrap,$(GSTREAMER_WRAPS))
 GSTREAMER_WRAP_URL=https://gitlab.freedesktop.org/gstreamer/gstreamer/-/raw/main/subprojects
 LOCAL_WRAPS=$(wildcard wraps/*.wrap)
@@ -54,11 +54,10 @@ android-compile: $(CROSS_FILE) wraps
 		-Dlibass:require-system-font-provider=false \
 		-DFFmpeg:gpl=enabled \
 		-DFFmpeg:version3=enabled \
-		-DFFmpeg:openssl=enabled \
+		-DFFmpeg:mbedtls=enabled \
 		-DFFmpeg:tls_protocol=enabled \
-		-DFFmpeg:libdav1d=enabled \
 		--cross-file ../../$(CROSS_FILE) \
-		--prefix=$(PWD)/prefix/android || true && \
+		--prefix=$(abspath .cache/mpv)/prefix/android || true && \
 	cd buildAndroid && \
 	ninja install && \
 	../../../scripts/android-copy-libs.sh

@@ -88,22 +88,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Mpv.Maui\Mpv.Maui.csproj" />
   </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-    <NativeReference Include="../.cache/*.dylib">
-      <Kind>Dynamic</Kind>
-      <SmartLink>False</SmartLink>
-    </NativeReference>
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-    <NativeReference Include="../.cache/*.dylib">
-      <Kind>Dynamic</Kind>
-      <SmartLink>False</SmartLink>
-    </NativeReference>
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-    <AndroidNativeLibrary Include="../.cache/mpv/prefix/android/lib/*.so">
-      <Abi>arm64-v8a</Abi>
-    </AndroidNativeLibrary>
-  </ItemGroup>
 </Project>
