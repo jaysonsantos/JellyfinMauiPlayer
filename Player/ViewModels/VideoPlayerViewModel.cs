@@ -1,10 +1,10 @@
 using System.Globalization;
-using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
+using Mpv.Maui.Controls;
 
 namespace Player.ViewModels;
 
@@ -49,31 +49,27 @@ public sealed partial class VideoPlayerViewModel(
     private DateTime _lastProgressReport = DateTime.MinValue;
     private const int ProgressReportIntervalSeconds = 10;
 
-    public void HandleMediaStateChanged(MediaElementState newState)
+    public void HandleMediaStateChanged(VideoStatus newState)
     {
         logger.LogInformation("Media state changed to: {State}", newState);
 
-        IsPlaying = newState == MediaElementState.Playing;
-        IsLoading =
-            newState == MediaElementState.Opening || newState == MediaElementState.Buffering;
+        IsPlaying = newState == VideoStatus.Playing;
+        // IsLoading =
+        //     newState == VideoStatus.Opening || newState == VideoStatus.Buffering;
 
-        if (newState == MediaElementState.Failed)
-        {
-            ErrorMessage =
-                "Failed to load video. Please check your network connection and try again.";
-            logger.LogError("Media playback failed");
-        }
-        else
-        {
-            ErrorMessage = null;
-        }
+        // if (newState == VideoStatus.Failed)
+        // {
+        //     ErrorMessage =
+        //         "Failed to load video. Please check your network connection and try again.";
+        //     logger.LogError("Media playback failed");
+        // }
+        // else
+        // {
+        ErrorMessage = null;
+        // }
 
         // Report playback start when playing begins
-        if (
-            newState == MediaElementState.Playing
-            && !_hasReportedStart
-            && _playbackInfo is not null
-        )
+        if (newState == VideoStatus.Playing && !_hasReportedStart && _playbackInfo is not null)
         {
             _hasReportedStart = true;
             _ = ReportPlaybackStartAsync();

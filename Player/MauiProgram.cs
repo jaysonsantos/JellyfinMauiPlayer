@@ -16,7 +16,6 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
-            .UseMauiCommunityToolkitMediaElement()
             .UseMpv()
             .ConfigureFonts(fonts =>
             {

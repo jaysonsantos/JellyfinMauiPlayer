@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Android.Content;
 using Android.Media;
 using Android.Opengl;
@@ -152,77 +152,76 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         }
     }
 
-    //
-    // public void UpdateIsLooping()
-    // {
-    //     if (_video.IsLooping)
-    //     {
-    //         _videoView.SetOnPreparedListener(this);
-    //     }
-    //     else
-    //     {
-    //         _videoView.SetOnPreparedListener(null);
-    //     }
-    // }
-    //
-    // public void UpdatePosition()
-    // {
-    //     if (Math.Abs(_videoView.CurrentPosition - _video.Position.TotalMilliseconds) > 1000)
-    //     {
-    //         _videoView.SeekTo((int)_video.Position.TotalMilliseconds);
-    //     }
-    // }
-    //
-    // public void UpdateStatus()
-    // {
-    //     VideoStatus status = VideoStatus.NotReady;
-    //
-    //     if (_isPrepared)
-    //     {
-    //         status = _videoView.IsPlaying ? VideoStatus.Playing : VideoStatus.Paused;
-    //     }
-    //
-    //     ((IVideoController)_video).Status = status;
-    //
-    //     // Set Position property
-    //     TimeSpan timeSpan = TimeSpan.FromMilliseconds(_videoView.CurrentPosition);
-    //     _video.Position = timeSpan;
-    // }
-    //
-    // public void PlayRequested(TimeSpan position)
-    // {
-    //     _videoView.Start();
-    //     System.Diagnostics.Debug.WriteLine(
-    //         $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-    //     );
-    // }
-    //
-    // public void PauseRequested(TimeSpan position)
-    // {
-    //     _videoView.Pause();
-    //     System.Diagnostics.Debug.WriteLine(
-    //         $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-    //     );
-    // }
-    //
-    // public void StopRequested(TimeSpan position)
-    // {
-    //     // Stops and releases the media player
-    //     _videoView.StopPlayback();
-    //     System.Diagnostics.Debug.WriteLine(
-    //         $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-    //     );
-    //
-    //     // Ensure the video can be played again
-    //     _videoView.Resume();
-    // }
-    //
-    // void OnVideoViewPrepared(object sender, EventArgs args)
-    // {
-    //     _isPrepared = true;
-    //     ((IVideoController)_video).Duration = TimeSpan.FromMilliseconds(_videoView.Duration);
-    // }
-    //
+    public void UpdateIsLooping()
+    {
+        // if (_video.IsLooping)
+        // {
+        //     _videoView.SetOnPreparedListener(this);
+        // }
+        // else
+        // {
+        //     _videoView.SetOnPreparedListener(null);
+        // }
+    }
+
+    public void UpdatePosition()
+    {
+        // if (Math.Abs(_videoView.CurrentPosition - _video.Position.TotalMilliseconds) > 1000)
+        // {
+        //     _videoView.SeekTo((int)_video.Position.TotalMilliseconds);
+        // }
+    }
+
+    public void UpdateStatus()
+    {
+        // VideoStatus status = VideoStatus.NotReady;
+        //
+        // if (_isPrepared)
+        // {
+        //     status = _videoView.IsPlaying ? VideoStatus.Playing : VideoStatus.Paused;
+        // }
+        //
+        // ((IVideoController)_video).Status = status;
+        //
+        // // Set Position property
+        // TimeSpan timeSpan = TimeSpan.FromMilliseconds(_videoView.CurrentPosition);
+        // _video.Position = timeSpan;
+    }
+
+    public void PlayRequested(TimeSpan position)
+    {
+        // _videoView.Start();
+        // System.Diagnostics.Debug.WriteLine(
+        //     $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+        // );
+    }
+
+    public void PauseRequested(TimeSpan position)
+    {
+        // _videoView.Pause();
+        // System.Diagnostics.Debug.WriteLine(
+        //     $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+        // );
+    }
+
+    public void StopRequested(TimeSpan position)
+    {
+        // // Stops and releases the media player
+        // _videoView.StopPlayback();
+        // System.Diagnostics.Debug.WriteLine(
+        //     $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
+        // );
+        //
+        // // Ensure the video can be played again
+        // _videoView.Resume();
+    }
+
+    void OnVideoViewPrepared(object sender, EventArgs args)
+    {
+        // _isPrepared = true;
+        // ((IVideoController)_video).Duration = TimeSpan.FromMilliseconds(_videoView.Duration);
+    }
+
     public void OnPrepared(MediaPlayer mp)
     {
         mp.Looping = _video.IsLooping;

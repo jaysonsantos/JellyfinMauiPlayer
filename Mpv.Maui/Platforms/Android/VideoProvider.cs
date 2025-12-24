@@ -6,7 +6,7 @@ using Uri = Android.Net.Uri;
 
 namespace Mpv.Maui.Platforms.Android
 {
-    [ContentProvider(new string[] { "com.companyname.videodemos" })]
+    [ContentProvider(["io.github.jaysonsantos.JellyfinPlayer"])]
     public class VideoProvider : ContentProvider
     {
         public override AssetFileDescriptor OpenAssetFile(Uri uri, string mode)
