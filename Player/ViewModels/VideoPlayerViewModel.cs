@@ -54,19 +54,18 @@ public sealed partial class VideoPlayerViewModel(
         logger.LogInformation("Media state changed to: {State}", newState);
 
         IsPlaying = newState == VideoStatus.Playing;
-        // IsLoading =
-        //     newState == VideoStatus.Opening || newState == VideoStatus.Buffering;
+        IsLoading = newState == VideoStatus.Opening || newState == VideoStatus.Buffering;
 
-        // if (newState == VideoStatus.Failed)
-        // {
-        //     ErrorMessage =
-        //         "Failed to load video. Please check your network connection and try again.";
-        //     logger.LogError("Media playback failed");
-        // }
-        // else
-        // {
-        ErrorMessage = null;
-        // }
+        if (newState == VideoStatus.Failed)
+        {
+            ErrorMessage =
+                "Failed to load video. Please check your network connection and try again.";
+            logger.LogError("Media playback failed");
+        }
+        else
+        {
+            ErrorMessage = null;
+        }
 
         // Report playback start when playing begins
         if (newState == VideoStatus.Playing && !_hasReportedStart && _playbackInfo is not null)

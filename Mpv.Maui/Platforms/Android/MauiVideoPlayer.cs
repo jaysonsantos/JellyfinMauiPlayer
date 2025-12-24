@@ -42,6 +42,7 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         _logger = logger;
 
         _mpvClient.OnLog += LogLines;
+        _mpvClient.OnPropertyChange += OnMpvPropertyChange;
 
         // Initialize mpv client
         _mpvClient.SetOption("input-media-keys", "yes");
@@ -58,6 +59,12 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         _mpvClient.Initialize();
         _mpvClient.SetOption("wid", 4, ptr);
         Marshal.FreeHGlobal(ptr);
+
+        _mpvClient.ObserveProperty(0, "idle-active", MpvFormat.Flag);
+        _mpvClient.ObserveProperty(0, "pause", MpvFormat.Flag);
+        _mpvClient.ObserveProperty(0, "paused-for-cache", MpvFormat.Flag);
+        _mpvClient.ObserveProperty(0, "core-idle", MpvFormat.Flag);
+        _mpvClient.ObserveProperty(0, "eof-reached", MpvFormat.Flag);
 
         SetBackgroundColor(Color.Black);
 
@@ -80,12 +87,18 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
         _logger.LogWarning("{Level} {Prefix} {Text}", e.Level, e.Prefix, e.Text);
     }
 
+    private void OnMpvPropertyChange(object? sender, MpvEventProperty e)
+    {
+        UpdateStatus();
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _video = null;
             _mpvClient.OnLog -= LogLines;
+            _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
         }
 
         base.Dispose(disposing);
@@ -174,46 +187,74 @@ public class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListene
 
     public void UpdateStatus()
     {
-        // VideoStatus status = VideoStatus.NotReady;
-        //
-        // if (_isPrepared)
-        // {
-        //     status = _videoView.IsPlaying ? VideoStatus.Playing : VideoStatus.Paused;
-        // }
-        //
-        // ((IVideoController)_video).Status = status;
-        //
-        // // Set Position property
+        VideoStatus status = VideoStatus.NotReady;
+
+        bool idleActive = GetPropertyBool("idle-active");
+        bool pause = GetPropertyBool("pause");
+        bool pausedForCache = GetPropertyBool("paused-for-cache");
+        bool coreIdle = GetPropertyBool("core-idle");
+        bool eofReached = GetPropertyBool("eof-reached");
+
+        if (idleActive && !eofReached)
+        {
+            status = VideoStatus.Opening;
+        }
+        else if (pausedForCache)
+        {
+            status = VideoStatus.Buffering;
+        }
+        else if (pause || coreIdle)
+        {
+            status = VideoStatus.Paused;
+        }
+        else if (!idleActive)
+        {
+            status = VideoStatus.Playing;
+        }
+        else if (eofReached)
+        {
+            status = VideoStatus.Paused; // Treat EOF as paused/finished
+        }
+
+        // TODO: Detect failure state
+
+        ((IVideoController)_video).Status = status;
+
+        // Set Position property
         // TimeSpan timeSpan = TimeSpan.FromMilliseconds(_videoView.CurrentPosition);
         // _video.Position = timeSpan;
     }
 
+    private bool GetPropertyBool(string property)
+    {
+        try
+        {
+            var ptr = _mpvClient.GetPropertyPtr(property);
+            if (ptr == IntPtr.Zero)
+                return false;
+            var result = Marshal.ReadInt64(ptr) != 0;
+            Marshal.FreeHGlobal(ptr);
+            return result;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public void PlayRequested(TimeSpan position)
     {
-        // _videoView.Start();
-        // System.Diagnostics.Debug.WriteLine(
-        //     $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        // );
+        _mpvClient.SetOption("pause", "no");
     }
 
     public void PauseRequested(TimeSpan position)
     {
-        // _videoView.Pause();
-        // System.Diagnostics.Debug.WriteLine(
-        //     $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        // );
+        _mpvClient.SetOption("pause", "yes");
     }
 
     public void StopRequested(TimeSpan position)
     {
-        // // Stops and releases the media player
-        // _videoView.StopPlayback();
-        // System.Diagnostics.Debug.WriteLine(
-        //     $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}."
-        // );
-        //
-        // // Ensure the video can be played again
-        // _videoView.Resume();
+        _mpvClient.Command("stop");
     }
 
     void OnVideoViewPrepared(object sender, EventArgs args)

@@ -14,6 +14,7 @@ public sealed class MpvClient : IDisposable
     private bool _initialized;
 
     public event EventHandler<MpvLogMessage>? OnLog;
+    public event EventHandler<MpvEventProperty>? OnPropertyChange;
     public event EventHandler? OnVideoReconfigure;
 
     public MpvClient()
@@ -48,6 +49,12 @@ public sealed class MpvClient : IDisposable
             {
                 var mpvEvent = Marshal.PtrToStructure<MpvEventLogMessage>(evt.data);
                 OnLog?.Invoke(this, MpvEventLogMessageHelper.ToManaged(mpvEvent));
+                break;
+            }
+            case MpvEventId.PropertyChange:
+            {
+                var mpvEvent = Marshal.PtrToStructure<MpvEventProperty>(evt.data);
+                OnPropertyChange?.Invoke(this, mpvEvent);
                 break;
             }
             case MpvEventId.VideoReconfig:
@@ -221,6 +228,13 @@ public sealed class MpvClient : IDisposable
     {
         EnsureDllImporterResolver();
         return MpvClientInternal.Version();
+    }
+
+    public void ObserveProperty(ulong userData, string name, MpvFormat format)
+    {
+        var error = MpvClientInternal.ObserveProperty(_handle, userData, name, (int)format);
+        if (error != 0)
+            throw new Exception($"Failed to observe property {name}: " + ErrorToString(error));
     }
 
     public IntPtr GetHandle()
