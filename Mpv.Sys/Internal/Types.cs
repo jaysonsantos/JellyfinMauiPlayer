@@ -261,4 +261,114 @@ namespace Mpv.Sys.Internal
         public string Text { get; set; }
         public MpvLogLevel LogLevel { get; set; }
     }
+
+    /// <summary>
+    /// Data format for options and properties.
+    /// </summary>
+    public enum MpvFormat
+    {
+        None = 0,
+        String = 1,
+        OsdString = 2,
+        Flag = 3,
+        Int64 = 4,
+        Double = 5,
+        Node = 6,
+        NodeArray = 7,
+        NodeMap = 8,
+        ByteArray = 9,
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct MpvNode
+    {
+        [FieldOffset(0)]
+        public IntPtr Str;
+
+        [FieldOffset(0)]
+        public int Flag;
+
+        [FieldOffset(0)]
+        public long Int64;
+
+        [FieldOffset(0)]
+        public double Double;
+
+        [FieldOffset(0)]
+        public IntPtr List;
+
+        [FieldOffset(0)]
+        public IntPtr ByteArray;
+
+        [FieldOffset(8)]
+        public MpvFormat Format;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvNodeList
+    {
+        public int Num;
+        public IntPtr Values;
+        public IntPtr Keys;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvByteArray
+    {
+        public IntPtr Data;
+        public UIntPtr Size;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventProperty
+    {
+        public IntPtr Name;
+        public MpvFormat Format;
+        public IntPtr Data;
+    }
+
+    public enum MpvEndFileReason
+    {
+        Eof = 0,
+        Stop = 2,
+        Quit = 3,
+        Error = 4,
+        Redirect = 5,
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventStartFile
+    {
+        public long PlaylistEntryId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventEndFile
+    {
+        public MpvEndFileReason Reason;
+        public int Error;
+        public long PlaylistEntryId;
+        public long PlaylistInsertId;
+        public int PlaylistInsertNumEntries;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventClientMessage
+    {
+        public int NumArgs;
+        public IntPtr Args;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventHook
+    {
+        public IntPtr Name;
+        public ulong Id;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MpvEventCommand
+    {
+        public MpvNode Result;
+    }
 }
