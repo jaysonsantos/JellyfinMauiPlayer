@@ -58,16 +58,13 @@ public sealed class ImageCacheService(string cacheDirectory, ILogger<ImageCacheS
             var cacheKey = GenerateCacheKey(imageUrl);
             var cachePath = GetCacheFilePath(cacheKey);
 
-            // Check if already cached
             if (File.Exists(cachePath))
             {
                 return cachePath;
             }
 
-            // Ensure cache directory exists
             Directory.CreateDirectory(cacheDirectory);
 
-            // Download image using HttpClient
             var httpClient = await CreateHttpClientAsync(cancellationToken).ConfigureAwait(false);
             if (httpClient is null)
             {
@@ -80,75 +77,90 @@ public sealed class ImageCacheService(string cacheDirectory, ILogger<ImageCacheS
                 .ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            // Check content type
             var contentType = response.Content.Headers.ContentType?.MediaType;
-            if (
-                contentType is null
-                || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
-            )
+            if (!IsValidImageContentType(contentType, imageUrl))
             {
-                logger.LogWarning(
-                    "Invalid content type for image URL: {ImageUrl}, ContentType: {ContentType}",
-                    imageUrl,
-                    contentType
-                );
                 return null;
             }
 
-            // Determine file extension from content type
-            var extension = GetExtensionFromContentType(contentType);
+            var extension = GetExtensionFromContentType(contentType!);
             cachePath = Path.ChangeExtension(cachePath, extension);
 
-            // Download with efficient buffer management using ArrayPool
-            var fileStream = new FileStream(
-                cachePath,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None,
-                BufferSize,
-                useAsync: true
-            );
-
-            await using var stream = fileStream.ConfigureAwait(false);
-            var contentStream = await response
-                .Content.ReadAsStreamAsync(cancellationToken)
+            await WriteImageToFileAsync(response, cachePath, cancellationToken)
                 .ConfigureAwait(false);
-            await using (contentStream.ConfigureAwait(false))
-            {
-                // Use Span<T> and Memory<T> for efficient buffer operations (C# 14 first-class span support)
-                var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
-                try
-                {
-                    var memory = buffer.AsMemory(0, BufferSize);
-                    int bytesRead;
-                    while (
-                        (
-                            bytesRead = await contentStream
-                                .ReadAsync(memory, cancellationToken)
-                                .ConfigureAwait(false)
-                        ) > 0
-                    )
-                    {
-                        // Use Memory<T> slice to write only the bytes we read
-                        var writeMemory = buffer.AsMemory(0, bytesRead);
-                        await fileStream
-                            .WriteAsync(writeMemory, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(buffer);
-                }
 
-                logger.LogDebug("Cached image: {ImageUrl} -> {CachePath}", imageUrl, cachePath);
-                return cachePath;
-            }
+            logger.LogDebug("Cached image: {ImageUrl} -> {CachePath}", imageUrl, cachePath);
+            return cachePath;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to download and cache image: {ImageUrl}", imageUrl);
             return null;
+        }
+    }
+
+    private bool IsValidImageContentType(string? contentType, string imageUrl)
+    {
+        if (
+            contentType is null
+            || !contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            logger.LogWarning(
+                "Invalid content type for image URL: {ImageUrl}, ContentType: {ContentType}",
+                imageUrl,
+                contentType
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    private static async Task WriteImageToFileAsync(
+        HttpResponseMessage response,
+        string cachePath,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileStream = new FileStream(
+            cachePath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            BufferSize,
+            useAsync: true
+        );
+
+        await using var stream = fileStream.ConfigureAwait(false);
+        var contentStream = await response
+            .Content.ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using (contentStream.ConfigureAwait(false))
+        {
+            var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+            try
+            {
+                var memory = buffer.AsMemory(0, BufferSize);
+                int bytesRead;
+                while (
+                    (
+                        bytesRead = await contentStream
+                            .ReadAsync(memory, cancellationToken)
+                            .ConfigureAwait(false)
+                    ) > 0
+                )
+                {
+                    var writeMemory = buffer.AsMemory(0, bytesRead);
+                    await fileStream
+                        .WriteAsync(writeMemory, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
     }
 

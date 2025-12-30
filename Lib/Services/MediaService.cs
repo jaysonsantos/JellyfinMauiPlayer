@@ -89,42 +89,22 @@ public sealed class MediaService(
         }
 
         var cacheKey = $"library:{libraryId}:{startIndex}:{limit}";
-
-        // Try cache first
-        if (cacheService is not null)
+        var cached = await TryGetFromCacheAsync<QueryResult<MediaItem>>(cacheKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (cached is not null)
         {
-            var cached = await cacheService
-                .GetAsync<QueryResult<MediaItem>>(cacheKey, cancellationToken)
-                .ConfigureAwait(false);
-            if (cached is not null)
-            {
-                logger.LogDebug("Cache hit for library {LibraryId}", libraryId);
-                return cached;
-            }
+            logger.LogDebug("Cache hit for library {LibraryId}", libraryId);
+            return cached;
         }
 
         try
         {
-            // Use Items endpoint with parentId to get children of the library folder
-            var result = await retryPolicy
-                .ExecuteAsync(
-                    async ct =>
-                    {
-                        var queryResult = await apiClient
-                            .Items.GetAsync(
-                                config =>
-                                {
-                                    config.QueryParameters.UserId = userId;
-                                    config.QueryParameters.ParentId = libraryId;
-                                    config.QueryParameters.StartIndex = startIndex;
-                                    config.QueryParameters.Limit = limit;
-                                    config.QueryParameters.Recursive = true;
-                                },
-                                ct
-                            )
-                            .ConfigureAwait(false);
-                        return queryResult ?? new BaseItemDtoQueryResult();
-                    },
+            var result = await FetchLibraryItemsFromApiAsync(
+                    apiClient,
+                    userId,
+                    libraryId,
+                    startIndex,
+                    limit,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -134,22 +114,11 @@ public sealed class MediaService(
                 return QueryResult<MediaItem>.Empty;
             }
 
-            var baseImageUrl = await GetBaseImageUrlAsync(cancellationToken).ConfigureAwait(false);
-            var items = result.Items.Select(item => item!.ToMediaItem(baseImageUrl)).ToArray();
+            var queryResult = await BuildQueryResultAsync(result, startIndex, cancellationToken)
+                .ConfigureAwait(false);
 
-            var queryResult = new QueryResult<MediaItem>(
-                Items: items,
-                TotalRecordCount: result.TotalRecordCount ?? 0,
-                StartIndex: startIndex
-            );
-
-            // Cache the result
-            if (cacheService is not null)
-            {
-                await cacheService
-                    .SetAsync(cacheKey, queryResult, TimeSpan.FromHours(1), cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            await CacheResultAsync(cacheKey, queryResult, TimeSpan.FromHours(1), cancellationToken)
+                .ConfigureAwait(false);
 
             return queryResult;
         }
@@ -158,6 +127,87 @@ public sealed class MediaService(
             logger.LogError(ex, "Failed to get library items for {LibraryId}", libraryId);
             return QueryResult<MediaItem>.Empty;
         }
+    }
+
+    private async Task<BaseItemDtoQueryResult?> FetchLibraryItemsFromApiAsync(
+        JellyfinApiClient apiClient,
+        string userId,
+        string libraryId,
+        int startIndex,
+        int limit,
+        CancellationToken cancellationToken
+    )
+    {
+        return await retryPolicy
+            .ExecuteAsync(
+                async ct =>
+                {
+                    var queryResult = await apiClient
+                        .Items.GetAsync(
+                            config =>
+                            {
+                                config.QueryParameters.UserId = userId;
+                                config.QueryParameters.ParentId = libraryId;
+                                config.QueryParameters.StartIndex = startIndex;
+                                config.QueryParameters.Limit = limit;
+                                config.QueryParameters.Recursive = true;
+                            },
+                            ct
+                        )
+                        .ConfigureAwait(false);
+                    return queryResult ?? new BaseItemDtoQueryResult();
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task<QueryResult<MediaItem>> BuildQueryResultAsync(
+        BaseItemDtoQueryResult result,
+        int startIndex,
+        CancellationToken cancellationToken
+    )
+    {
+        var baseImageUrl = await GetBaseImageUrlAsync(cancellationToken).ConfigureAwait(false);
+        var items = result.Items!.Select(item => item!.ToMediaItem(baseImageUrl)).ToArray();
+
+        return new QueryResult<MediaItem>(
+            Items: items,
+            TotalRecordCount: result.TotalRecordCount ?? 0,
+            StartIndex: startIndex
+        );
+    }
+
+    private async Task<T?> TryGetFromCacheAsync<T>(
+        string cacheKey,
+        CancellationToken cancellationToken
+    )
+        where T : class
+    {
+        if (cacheService is null)
+        {
+            return null;
+        }
+
+        return await cacheService.GetAsync<T>(cacheKey, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task CacheResultAsync<T>(
+        string cacheKey,
+        T value,
+        TimeSpan expiration,
+        CancellationToken cancellationToken
+    )
+        where T : class
+    {
+        if (cacheService is null)
+        {
+            return;
+        }
+
+        await cacheService
+            .SetAsync(cacheKey, value, expiration, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async IAsyncEnumerable<MediaItem> GetLibraryItemsStreamAsync(

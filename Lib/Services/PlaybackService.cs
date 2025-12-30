@@ -75,7 +75,6 @@ public sealed class PlaybackService(
         }
 
         var userId = await GetUserIdAsync(cancellationToken).ConfigureAwait(false);
-
         if (userId is null)
         {
             logger.LogWarning("Cannot get playback info: User ID not available");
@@ -84,68 +83,87 @@ public sealed class PlaybackService(
 
         try
         {
-            // Use POST with PlaybackInfoDto for more control
-            var playbackInfoDto = new PlaybackInfoDto
-            {
-                UserId = userId,
-                EnableDirectPlay = true,
-                EnableDirectStream = true,
-                EnableTranscoding = true,
-                MaxStreamingBitrate = 120_000_000, // 120 Mbps
-                DeviceProfile = DeviceProfileBuilder.CreateDefaultProfile(),
-            };
-
-            var result = await apiClient
-                .Items[itemId]
-                .PlaybackInfo.PostAsync(playbackInfoDto, cancellationToken: cancellationToken)
+            var result = await FetchPlaybackInfoFromApiAsync(
+                    apiClient,
+                    itemId,
+                    userId,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
 
             if (result is null)
                 return null;
 
-            var sessionId = await GetOrCreateSessionIdAsync(cancellationToken)
+            return await BuildPlaybackInfoAsync(result, itemId, serverUrl, cancellationToken)
                 .ConfigureAwait(false);
-            var mediaSource = result.MediaSources?.FirstOrDefault();
-
-            if (mediaSource is null)
-            {
-                logger.LogWarning("No media source available for item {ItemId}", itemId);
-                return null;
-            }
-
-            // Get access token for URL construction
-            var accessToken = await secureStorage
-                .GetAsync(AccessTokenKey, cancellationToken)
-                .ConfigureAwait(false);
-
-            var streamUrl = GetStreamUrl(mediaSource, itemId, serverUrl, accessToken);
-            if (string.IsNullOrWhiteSpace(streamUrl))
-            {
-                logger.LogWarning("Could not determine stream URL for item {ItemId}", itemId);
-                return null;
-            }
-
-            var subtitleTracks = GetSubtitleTracks(mediaSource);
-
-            var audioTracks = GetAudioTracks(mediaSource);
-
-            return new PlaybackInfo(StreamUrl: streamUrl, ItemId: itemId)
-            {
-                MediaSourceId = mediaSource.Id ?? string.Empty,
-                SessionId = sessionId,
-                SubtitleTracks = subtitleTracks,
-                AudioTracks = audioTracks,
-                CanSeek =
-                    mediaSource.SupportsDirectPlay == true
-                    || mediaSource.SupportsDirectStream == true,
-                TotalTicks = mediaSource.RunTimeTicks,
-            };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to get playback info for item {ItemId}", itemId);
             return null;
         }
+    }
+
+    private async Task<PlaybackInfoResponse?> FetchPlaybackInfoFromApiAsync(
+        JellyfinApiClient apiClient,
+        string itemId,
+        string userId,
+        CancellationToken cancellationToken
+    )
+    {
+        var playbackInfoDto = new PlaybackInfoDto
+        {
+            UserId = userId,
+            EnableDirectPlay = true,
+            EnableDirectStream = true,
+            EnableTranscoding = true,
+            MaxStreamingBitrate = 120_000_000,
+            DeviceProfile = DeviceProfileBuilder.CreateDefaultProfile(),
+        };
+
+        return await apiClient
+            .Items[itemId]
+            .PlaybackInfo.PostAsync(playbackInfoDto, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<PlaybackInfo?> BuildPlaybackInfoAsync(
+        PlaybackInfoResponse result,
+        string itemId,
+        string serverUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        var sessionId = await GetOrCreateSessionIdAsync(cancellationToken).ConfigureAwait(false);
+        var mediaSource = result.MediaSources?.FirstOrDefault();
+
+        if (mediaSource is null)
+        {
+            logger.LogWarning("No media source available for item {ItemId}", itemId);
+            return null;
+        }
+
+        var accessToken = await secureStorage
+            .GetAsync(AccessTokenKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        var streamUrl = GetStreamUrl(mediaSource, itemId, serverUrl, accessToken);
+        if (string.IsNullOrWhiteSpace(streamUrl))
+        {
+            logger.LogWarning("Could not determine stream URL for item {ItemId}", itemId);
+            return null;
+        }
+
+        return new PlaybackInfo(StreamUrl: streamUrl, ItemId: itemId)
+        {
+            MediaSourceId = mediaSource.Id ?? string.Empty,
+            SessionId = sessionId,
+            SubtitleTracks = GetSubtitleTracks(mediaSource),
+            AudioTracks = GetAudioTracks(mediaSource),
+            CanSeek =
+                mediaSource.SupportsDirectPlay == true || mediaSource.SupportsDirectStream == true,
+            TotalTicks = mediaSource.RunTimeTicks,
+        };
     }
 
     private static AudioTrack[] GetAudioTracks(MediaSourceInfo mediaSource)
