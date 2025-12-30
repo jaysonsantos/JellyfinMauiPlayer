@@ -128,6 +128,13 @@ internal static partial class MpvClientInternal
         int format
     );
 
+    [LibraryImport(
+        Constants.LibraryName,
+        EntryPoint = "mpv_unobserve_property",
+        StringMarshalling = StringMarshalling.Utf8
+    )]
+    internal static partial int UnobserveProperty(IntPtr mpv, ulong registeredReplyUserData);
+
     [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_wait_event")]
     internal static partial IntPtr WaitEvent(IntPtr ptr, double timeout);
 

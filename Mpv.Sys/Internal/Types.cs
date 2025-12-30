@@ -256,9 +256,9 @@ namespace Mpv.Sys.Internal
     /// </summary>
     public class MpvLogMessage
     {
-        public string Prefix { get; set; }
-        public string Level { get; set; }
-        public string Text { get; set; }
+        public required string Prefix { get; set; }
+        public required string Level { get; set; }
+        public required string Text { get; set; }
         public MpvLogLevel LogLevel { get; set; }
     }
 

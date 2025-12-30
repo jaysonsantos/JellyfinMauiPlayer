@@ -11,11 +11,8 @@ using UIKit;
 
 namespace Mpv.Maui.Platforms.MaciOS
 {
-    public sealed class MauiVideoPlayer : MTKView
+    public sealed partial class MauiVideoPlayer : MTKView
     {
-        private readonly Video _video;
-        private readonly MpvClient _mpvClient;
-        private readonly ILogger<MauiVideoPlayer> _logger;
         private bool _disposed;
 
         public MauiVideoPlayer(
@@ -31,8 +28,9 @@ namespace Mpv.Maui.Platforms.MaciOS
             _mpvClient = mpvClient;
             _logger = logger;
 
+            InitializeMpvCommon();
+
             // Subscribe to events
-            _mpvClient.OnLog += LogLines;
             _mpvClient.OnVideoReconfigure += OnVideoReconfigure;
 
             CAMetalLayer layer = new MetalLayer();
@@ -45,8 +43,6 @@ namespace Mpv.Maui.Platforms.MaciOS
             Marshal.WriteIntPtr(ptr, Layer.Handle.Handle);
 
             // Initialize mpv client
-            _mpvClient.SetOption("input-media-keys", "yes");
-
             _mpvClient.SetOption("vo", "gpu-next");
             // _mpvClient.SetOption("hwdec", "videotoolbox");
             _mpvClient.SetOption("gpu-context", "moltenvk");
@@ -55,76 +51,37 @@ namespace Mpv.Maui.Platforms.MaciOS
             _mpvClient.Initialize();
         }
 
-        private void LogLines(object? sender, MpvLogMessage log)
-        {
-            Console.WriteLine($"[{log.Level}] {log.Prefix}: {log.Text}");
-            _logger.LogWarning("{Level} {Prefix} {Text}", log.Level, log.Prefix, log.Text);
-        }
-
         private void OnVideoReconfigure(object? sender, EventArgs e)
         {
             _logger.LogInformation("Video reconfigured.");
         }
 
-        public void UpdateTransportControlsEnabled()
+        private partial void UpdateSourcePlatform()
         {
-            // Transport controls are handled externally in MAUI
-        }
-
-        public void UpdateSource()
-        {
-            if (_video.Source is not UriVideoSource uriSource)
-            {
+            if (_video == null)
                 return;
-            }
 
-            string uri = uriSource.Uri;
-            if (!string.IsNullOrWhiteSpace(uri))
+            if (_video.Source is FileVideoSource fileSource)
             {
-                MainThread.BeginInvokeOnMainThread(() =>
+                if (!string.IsNullOrWhiteSpace(fileSource.File))
                 {
-                    _mpvClient.Command("loadfile", uri);
-                });
+                    _mpvClient.Command("loadfile", fileSource.File);
+                }
             }
-        }
-
-        public void UpdateIsLooping()
-        {
-            // Looping can be set via mpv property "loop-file"
-            _mpvClient.Command("set", "loop-file", _video.IsLooping ? "inf" : "no");
-        }
-
-        public void UpdatePosition()
-        {
-            // Position updates are handled via mpv properties
-        }
-
-        public void UpdateStatus()
-        {
-            // Status updates are handled via mpv events
-        }
-
-        public void PlayRequested(TimeSpan position)
-        {
-            _mpvClient.Command(
-                "seek",
-                position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-                "absolute"
-            );
-            _mpvClient.Command("set", "pause", "no");
-            _logger.LogDebug("Video playback from {Position}.", position);
-        }
-
-        public void PauseRequested(TimeSpan position)
-        {
-            _mpvClient.Command("set", "pause", "yes");
-            _logger.LogDebug("Video paused at {Position}.", position);
-        }
-
-        public void StopRequested(TimeSpan position)
-        {
-            _mpvClient.Command("stop");
-            _logger.LogDebug("Video stopped at {Position}.", position);
+            else if (_video.Source is ResourceVideoSource resourceSource)
+            {
+                if (!string.IsNullOrWhiteSpace(resourceSource.Path))
+                {
+                    string? path = Foundation.NSBundle.MainBundle.PathForResource(
+                        resourceSource.Path,
+                        null
+                    );
+                    if (path != null)
+                    {
+                        _mpvClient.Command("loadfile", path);
+                    }
+                }
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -138,7 +95,7 @@ namespace Mpv.Maui.Platforms.MaciOS
 
             if (disposing)
             {
-                _mpvClient.OnLog -= LogLines;
+                DisposeMpvCommon();
                 _mpvClient.OnVideoReconfigure -= OnVideoReconfigure;
             }
 

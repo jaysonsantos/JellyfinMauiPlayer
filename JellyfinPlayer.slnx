@@ -7,10 +7,8 @@
     <Project Path="Mpv.Maui.Example/Mpv.Maui.Example.csproj">
       <Platform Solution="Debug|ARM64" Project="ARM64" />
       <Deploy Solution="*|ARM64" />
-      <Deploy Solution="Debug|Any CPU" />
     </Project>
     <Project Path="Mpv.Maui\Mpv.Maui.csproj" />
-    <Project Path="Mpv.Sys.DebugIssues/Mpv.Sys.DebugIssues.csproj" />
     <Project Path="Mpv.Sys.Tests/Mpv.Sys.Tests.csproj" />
     <Project Path="Mpv.Sys/Mpv.Sys.csproj" />
   </Folder>
@@ -20,6 +18,6 @@
   </Project>
   <Project Path="Player/Player.csproj">
     <Platform Solution="Debug|ARM64" Project="ARM64" />
-    <Deploy Solution="Debug|ARM64" />
+    <Deploy Solution="Debug|*" />
   </Project>
 </Solution>

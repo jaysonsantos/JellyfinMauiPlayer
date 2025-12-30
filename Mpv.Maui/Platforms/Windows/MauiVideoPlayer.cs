@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
 using Mpv.Maui.Controls;
@@ -24,11 +24,8 @@ namespace Mpv.Maui.Platforms.Windows
         void SetSwapChain(IntPtr swapChain);
     }
 
-    public class MauiVideoPlayer : Grid, IDisposable
+    public partial class MauiVideoPlayer : Grid, IDisposable
     {
-        readonly Video _video;
-        private readonly MpvClient _mpvClient;
-        private readonly ILogger<MauiVideoPlayer> _logger;
         bool _isMediaPlayerAttached;
 
         public MauiVideoPlayer(Video video, MpvClient mpvClient, ILogger<MauiVideoPlayer> logger)
@@ -38,13 +35,15 @@ namespace Mpv.Maui.Platforms.Windows
             _video = video;
             _mpvClient = mpvClient;
             _logger = logger;
+
+            InitializeMpvCommon();
+
             // _mpvClient.SetOption("keep-open", "always");
             _mpvClient.SetOption("vo", "gpu-next");
             _mpvClient.SetOption("gpu-context", "d3d11");
             _mpvClient.SetOption("d3d11-output-mode", "composition");
 
             _mpvClient.SetOption("d3d11-composition-size", "320x160");
-            _mpvClient.OnLog += LogLines;
             _mpvClient.OnVideoReconfigure += (s, e) =>
             {
                 var swapChain = _mpvClient.GetPropertyPtr("display-swapchain");
@@ -74,147 +73,48 @@ namespace Mpv.Maui.Platforms.Windows
             this.Children.Add(swapChainPanel);
         }
 
-        private void LogLines(object? sender, MpvLogMessage log)
+        private partial void UpdateSourcePlatform()
         {
-            _logger.LogWarning($"{log.Level} {log.Prefix} {log.Text}");
+            if (_video == null)
+                return;
+            if (_video.Source is FileVideoSource fileSource)
+            {
+                string filename = fileSource.File;
+                if (!string.IsNullOrWhiteSpace(filename))
+                {
+                    StorageFile
+                        .GetFileFromPathAsync(filename)
+                        .AsTask()
+                        .ContinueWith(t =>
+                        {
+                            if (t.IsCompletedSuccessfully)
+                            {
+                                _mpvClient.Command("loadfile", filename);
+                            }
+                            else
+                            {
+                                _logger.LogError(
+                                    t.Exception,
+                                    "Failed to load file {Filename}",
+                                    filename
+                                );
+                            }
+                        });
+                }
+            }
+            else if (_video.Source is ResourceVideoSource resourceSource)
+            {
+                string path = "ms-appx:///" + resourceSource.Path;
+                if (!string.IsNullOrWhiteSpace(path))
+                {
+                    _mpvClient.Command("loadfile", path);
+                }
+            }
         }
 
         public void Dispose()
         {
             _mpvClient.Dispose();
-        }
-
-        public void UpdateTransportControlsEnabled()
-        {
-            return;
-        }
-
-        public async void UpdateSource()
-        {
-            bool hasSetSource = false;
-
-            if (_video.Source is UriVideoSource)
-            {
-                string uri = (_video.Source as UriVideoSource).Uri;
-                if (!string.IsNullOrWhiteSpace(uri))
-                {
-                    _mpvClient.Command("loadfile", uri);
-
-                    // var swapChain = _mpvClient.GetPropertyPtr("display-swapchain");
-                    //_mediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(uri));
-                    hasSetSource = true;
-                }
-            }
-            // else if (_video.Source is FileVideoSource)
-            // {
-            //     string filename = (_video.Source as FileVideoSource).File;
-            //     if (!string.IsNullOrWhiteSpace(filename))
-            //     {
-            //         StorageFile storageFile = await StorageFile.GetFileFromPathAsync(filename);
-            //         _mediaPlayerElement.Source = MediaSource.CreateFromStorageFile(storageFile);
-            //         hasSetSource = true;
-            //     }
-            // }
-            // else if (_video.Source is ResourceVideoSource)
-            // {
-            //     string path = "ms-appx:///" + (_video.Source as ResourceVideoSource).Path;
-            //     if (!string.IsNullOrWhiteSpace(path))
-            //     {
-            //         _mediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(path));
-            //         hasSetSource = true;
-            //     }
-            // }
-            //
-            // if (hasSetSource && !_isMediaPlayerAttached)
-            // {
-            //     //_isMediaPlayerAttached = true;
-            //     //_mediaPlayerElement.MediaPlayer.MediaOpened += OnMediaPlayerMediaOpened;
-            // }
-            //
-            // if (hasSetSource && _video.AutoPlay)
-            // {
-            //     // _mediaPlayerElement.AutoPlay = true;
-            // }
-        }
-
-        public void UpdateIsLooping()
-        {
-            // if (_isMediaPlayerAttached)
-            //     _mediaPlayerElement.MediaPlayer.IsLoopingEnabled = _video.IsLooping;
-        }
-
-        public void UpdatePosition()
-        {
-            // if (_isMediaPlayerAttached)
-            // {
-            //     if (Math.Abs((_mediaPlayerElement.MediaPlayer.Position - _video.Position).TotalSeconds) > 1)
-            //     {
-            //         _mediaPlayerElement.MediaPlayer.Position = _video.Position;
-            //     }
-            // }
-        }
-
-        public void UpdateStatus()
-        {
-            // if (_isMediaPlayerAttached)
-            // {
-            //     VideoStatus status = VideoStatus.NotReady;
-            //
-            //     switch (_mediaPlayerElement.MediaPlayer.CurrentState)
-            //     {
-            //         case MediaPlayerState.Playing:
-            //             status = VideoStatus.Playing;
-            //             break;
-            //         case MediaPlayerState.Paused:
-            //         case MediaPlayerState.Stopped:
-            //             status = VideoStatus.Paused;
-            //             break;
-            //     }
-            //
-            //     ((IVideoController)_video).Status = status;
-            //     _video.Position = _mediaPlayerElement.MediaPlayer.Position;
-            // }
-        }
-
-        public void PlayRequested(TimeSpan position)
-        {
-            // if (_isMediaPlayerAttached)
-            // {
-            //     _mediaPlayerElement.MediaPlayer.Play();
-            //     System.Diagnostics.Debug.WriteLine(
-            //         $"Video playback from {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}.");
-            // }
-        }
-
-        public void PauseRequested(TimeSpan position)
-        {
-            // if (_isMediaPlayerAttached)
-            // {
-            //     _mediaPlayerElement.MediaPlayer.Pause();
-            //     System.Diagnostics.Debug.WriteLine(
-            //         $"Video paused at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}.");
-            // }
-        }
-
-        public void StopRequested(TimeSpan position)
-        {
-            // if (_isMediaPlayerAttached)
-            // {
-            //     // There's no Stop method so pause the video and reset its position
-            //     _mediaPlayerElement.MediaPlayer.Pause();
-            //     _mediaPlayerElement.MediaPlayer.Position = TimeSpan.Zero;
-            //     System.Diagnostics.Debug.WriteLine(
-            //         $"Video stopped at {position.Hours:X2}:{position.Minutes:X2}:{position.Seconds:X2}.");
-            // }
-        }
-
-        void OnMediaPlayerMediaOpened(MediaPlayer sender, object args)
-        {
-            return;
-            // MainThread.BeginInvokeOnMainThread(() =>
-            // {
-            //     ((IVideoController)_video).Duration = _mediaPlayerElement.MediaPlayer.NaturalDuration;
-            // });
         }
     }
 }

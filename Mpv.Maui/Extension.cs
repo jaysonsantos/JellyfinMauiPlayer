@@ -9,6 +9,8 @@ public static class Extension
     public static MauiAppBuilder UseMpv(this MauiAppBuilder builder)
     {
         builder.Services.AddSingleton<MpvClient>();
+        var version = MpvClient.Version();
+        Console.WriteLine($"Mpv version: {version}");
         builder.ConfigureMauiHandlers(handlers =>
         {
             handlers.AddHandler<Video, VideoHandler>();

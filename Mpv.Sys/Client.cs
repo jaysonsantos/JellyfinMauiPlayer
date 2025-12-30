@@ -237,6 +237,13 @@ public sealed class MpvClient : IDisposable
             throw new Exception($"Failed to observe property {name}: " + ErrorToString(error));
     }
 
+    public void UnobserveProperty(ulong userData)
+    {
+        var error = MpvClientInternal.UnobserveProperty(_handle, userData);
+        if (error != 0)
+            throw new Exception("Failed to unobserve property: " + ErrorToString(error));
+    }
+
     public IntPtr GetHandle()
     {
         return _handle;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace Mpv.Maui.Controls
 {
@@ -139,10 +139,10 @@ namespace Mpv.Maui.Controls
 
         #region Events
 
-        public event EventHandler UpdateStatus;
-        public event EventHandler<VideoPositionEventArgs> PlayRequested;
-        public event EventHandler<VideoPositionEventArgs> PauseRequested;
-        public event EventHandler<VideoPositionEventArgs> StopRequested;
+        public event EventHandler? UpdateStatus;
+        public event EventHandler<VideoPositionEventArgs>? PlayRequested;
+        public event EventHandler<VideoPositionEventArgs>? PauseRequested;
+        public event EventHandler<VideoPositionEventArgs>? StopRequested;
 
         #endregion
 
@@ -179,7 +179,7 @@ namespace Mpv.Maui.Controls
             Handler?.Invoke(nameof(Video.StopRequested), args);
         }
 
-        void OnTimerTick(object sender, EventArgs e)
+        void OnTimerTick(object? sender, EventArgs e)
         {
             UpdateStatus?.Invoke(this, EventArgs.Empty);
             Handler?.Invoke(nameof(Video.UpdateStatus));

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace Mpv.Maui.Controls
 {
@@ -11,7 +11,7 @@ namespace Mpv.Maui.Controls
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                Uri uri;
+                Uri? uri;
                 return Uri.TryCreate(value, UriKind.Absolute, out uri) && uri.Scheme != "file"
                     ? VideoSource.FromUri(value)
                     : VideoSource.FromResource(value);
