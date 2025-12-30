@@ -1,0 +1,126 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: android-aarch64
+            framework: net10.0-android
+            runtime: android-arm64
+          - target: android-x86_64
+            framework: net10.0-android
+            runtime: android-x64
+          - target: maccatalyst-arm64
+            framework: net10.0-maccatalyst
+            runtime: maccatalyst-arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          dotnet-quality: "preview"
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui-android maui-maccatalyst maui-ios
+
+      - name: Cache MPV dependencies
+        uses: actions/cache@v4
+        with:
+          path: .cache/mpv
+          key: mpv-deps-${{ matrix.target }}-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            mpv-deps-${{ matrix.target }}-
+
+      - name: Download MPV dependencies
+        run: make deps
+
+      - name: Restore dependencies
+        run: dotnet restore JellyfinPlayer.slnx
+
+      - name: Build solution
+        run: dotnet build JellyfinPlayer.slnx -c Release --no-restore -warnaserror
+
+      - name: Publish ${{ matrix.target }}
+        run: |
+          dotnet publish Player/Player.csproj \
+            -c Release \
+            -f ${{ matrix.framework }} \
+            -r ${{ matrix.runtime }} \
+            -o publish/${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyfin-player-${{ matrix.target }}
+          path: publish/${{ matrix.target }}
+          retention-days: 14
+
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: windows-x86_64
+            framework: net10.0-windows10.0.19041.0
+            runtime: win-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          dotnet-quality: "preview"
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui-windows
+
+      - name: Cache MPV dependencies
+        uses: actions/cache@v4
+        with:
+          path: .cache/mpv
+          key: mpv-deps-${{ matrix.target }}-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            mpv-deps-${{ matrix.target }}-
+
+      - name: Download MPV dependencies
+        run: make deps
+        shell: bash
+
+      - name: Restore dependencies
+        run: dotnet restore JellyfinPlayer.slnx
+
+      - name: Build solution
+        run: dotnet build JellyfinPlayer.slnx -c Release --no-restore -warnaserror
+
+      - name: Publish ${{ matrix.target }}
+        run: |
+          dotnet publish Player/Player.csproj `
+            -c Release `
+            -f ${{ matrix.framework }} `
+            -r ${{ matrix.runtime }} `
+            -o publish/${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyfin-player-${{ matrix.target }}
+          path: publish/${{ matrix.target }}
+          retention-days: 14
