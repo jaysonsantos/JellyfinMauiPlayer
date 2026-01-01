@@ -171,8 +171,10 @@ public partial class MauiVideoPlayer
 
     private void SyncPositionFromMpv()
     {
+        return;
         if (_video == null)
             return;
+
         var duration = GetPropertyDouble("duration");
         var position = GetPropertyDouble("time-pos");
 

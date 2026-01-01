@@ -116,4 +116,17 @@
   <ItemGroup>
     <Folder Include="Helpers\" />
   </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <NativeReference Include="../.cache/mpv/ios-aarch64/*.a">
+      <Kind>Static</Kind>
+      <SmartLink>True</SmartLink>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <NativeReference Include="../.cache/mpv/macos-aarch64/*.dylib">
+      <Kind>Dynamic</Kind>
+      <SmartLink>True</SmartLink>
+    </NativeReference>
+  </ItemGroup>
 </Project>

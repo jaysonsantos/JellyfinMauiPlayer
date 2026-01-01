@@ -15,16 +15,15 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-    <NativeReference Include="../.cache/*.dylib">
-      <Kind>Dynamic</Kind>
-      <SmartLink>False</SmartLink>
+    <NativeReference Include="../.cache/mpv/ios-aarch64/*.a">
+      <Kind>Static</Kind>
+      <SmartLink>True</SmartLink>
     </NativeReference>
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-    <NativeReference Include="../.cache/mpv/macos-aarch64/*.dylib">
-      <Kind>Dynamic</Kind>
-      <SmartLink>False</SmartLink>
-      <ForceLoad>False</ForceLoad>
+    <NativeReference Include="../.cache/mpv/macos-aarch64/*.a">
+      <Kind>Static</Kind>
+      <SmartLink>True</SmartLink>
     </NativeReference>
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
