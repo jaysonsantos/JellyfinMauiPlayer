@@ -25,9 +25,10 @@ $(MPV_TARGETS_TAR):
 
 
 $(MPV_TARGETS_DESTINATION): $(MPV_TARGETS_TAR)
-	@target=$(@:.cache/mpv/%=%); \
+	@set -x; target=$(@:.cache/mpv/%=%); \
 	echo "Extracting mpv for $$target"; \
-	tar -xf .cache/mpv/$$target.tar.xz -C .cache/
+	mkdir -p .cache/mpv/$$target; \
+	tar -xf .cache/mpv/$$target.tar.xz -C .cache/mpv
 
 $(MOLTENVK_TAR):
 	@mkdir -p .cache

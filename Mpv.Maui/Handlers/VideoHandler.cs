@@ -62,26 +62,24 @@ namespace Mpv.Maui.Handlers
 
         public static void MapPlayRequested(VideoHandler handler, Video video, object? args)
         {
-            if (args is not VideoPositionEventArgs eventArgs)
-                return;
-
-            handler.PlatformView?.PlayRequested(eventArgs.Position);
+            TimeSpan? position = (args as VideoPositionEventArgs)?.Position;
+            handler.PlatformView?.PlayRequested(position);
         }
 
         public static void MapPauseRequested(VideoHandler handler, Video video, object? args)
         {
-            if (args is not VideoPositionEventArgs eventArgs)
+            if (args is not VideoPositionEventArgs { Position: { } position })
                 return;
 
-            handler.PlatformView?.PauseRequested(eventArgs.Position);
+            handler.PlatformView?.PauseRequested(position);
         }
 
         public static void MapStopRequested(VideoHandler handler, Video video, object? args)
         {
-            if (args is not VideoPositionEventArgs eventArgs)
+            if (args is not VideoPositionEventArgs { Position: { } position })
                 return;
 
-            handler.PlatformView?.StopRequested(eventArgs.Position);
+            handler.PlatformView?.StopRequested(position);
         }
     }
 }

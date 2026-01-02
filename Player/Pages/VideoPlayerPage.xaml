@@ -9,30 +9,38 @@
   x:DataType="viewModels:VideoPlayerViewModel"
   Title="{Binding ItemName}"
   NavigationPage.HasNavigationBar="False"
+  Shell.NavBarIsVisible="False"
+  BackgroundColor="{DynamicResource VideoBackgroundColor}"
 >
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
-    <!-- Video Player -->
+  <Grid x:Name="RootGrid">
+    <!-- Video Player (full screen) -->
+    <views:Video
+      x:Name="MpvElement"
+      Source="{Binding VideoSource}"
+      HorizontalOptions="Fill"
+      VerticalOptions="Fill"
+    />
 
-    <views:Video x:Name="MpvElement" Grid.Row="0" Source="{Binding VideoSource}" />
+    <!-- Tap area for showing/hiding controls -->
+    <Grid x:Name="TapArea" BackgroundColor="Transparent">
+      <Grid.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnVideoTapped" />
+      </Grid.GestureRecognizers>
+    </Grid>
 
     <!-- Loading Indicator -->
     <ActivityIndicator
-      Grid.Row="0"
       IsRunning="{Binding IsLoading}"
       IsVisible="{Binding IsLoading}"
       Color="{DynamicResource VideoTextColor}"
       VerticalOptions="Center"
       HorizontalOptions="Center"
+      WidthRequest="50"
+      HeightRequest="50"
     />
 
     <!-- Error Message -->
     <Border
-      Grid.Row="0"
       IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
       BackgroundColor="{DynamicResource VideoOverlay80}"
       Padding="20"
@@ -67,85 +75,152 @@
       </VerticalStackLayout>
     </Border>
 
-    <!-- Debug info strip -->
-    <Grid Grid.Row="1" Padding="8" BackgroundColor="{DynamicResource VideoOverlay87}">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
-      <Label
-        Text="Debug URL:"
-        TextColor="{DynamicResource VideoTextColor}"
-        FontAttributes="Bold"
+    <!-- Controls Overlay Container -->
+    <Grid x:Name="ControlsOverlay" VerticalOptions="Fill" InputTransparent="False">
+      <!-- Top Bar (Title + Close) -->
+      <Border
+        x:Name="TopBar"
+        VerticalOptions="Start"
+        BackgroundColor="{DynamicResource VideoOverlay80}"
+        Padding="16,12"
+        StrokeThickness="0"
+      >
+        <Grid ColumnDefinitions="*,Auto">
+          <Label
+            Text="{Binding ItemName}"
+            FontSize="18"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource VideoTextColor}"
+            VerticalOptions="Center"
+            LineBreakMode="TailTruncation"
+          />
+          <Button
+            Grid.Column="1"
+            Text="X"
+            Command="{Binding CloseCommand}"
+            BackgroundColor="Transparent"
+            TextColor="{DynamicResource VideoTextColor}"
+            FontSize="20"
+            FontAttributes="Bold"
+            WidthRequest="44"
+            HeightRequest="44"
+            Padding="0"
+          />
+        </Grid>
+      </Border>
+
+      <!-- Center Play/Pause Button -->
+      <Border
+        x:Name="CenterPlayButton"
         VerticalOptions="Center"
-      />
-      <ScrollView Grid.Column="1" Orientation="Horizontal">
+        HorizontalOptions="Center"
+        BackgroundColor="{DynamicResource VideoOverlay80}"
+        WidthRequest="80"
+        HeightRequest="80"
+        StrokeThickness="0"
+      >
+        <Border.StrokeShape>
+          <RoundRectangle CornerRadius="40" />
+        </Border.StrokeShape>
+        <Border.GestureRecognizers>
+          <TapGestureRecognizer Tapped="OnPlayPauseTapped" />
+        </Border.GestureRecognizers>
         <Label
-          Text="{Binding VideoUrl}"
+          x:Name="PlayPauseIcon"
+          Text="{Binding IsPlaying, Converter={StaticResource PlayPauseConverter}}"
+          FontSize="36"
           TextColor="{DynamicResource VideoTextColor}"
-          LineBreakMode="NoWrap"
+          HorizontalOptions="Center"
           VerticalOptions="Center"
         />
-      </ScrollView>
-    </Grid>
+      </Border>
 
-    <!-- Custom Controls Overlay (Optional - MediaElement has built-in controls) -->
-    <Grid
-      Grid.Row="2"
-      Padding="10"
-      BackgroundColor="{DynamicResource VideoOverlay80}"
-      IsVisible="{Binding ShowCustomControls}"
-    >
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
+      <!-- Bottom Bar (Slider + Time) -->
+      <Border
+        x:Name="BottomBar"
+        VerticalOptions="End"
+        BackgroundColor="{DynamicResource VideoOverlay80}"
+        Padding="16,8"
+        StrokeThickness="0"
+      >
+        <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+          <!-- Seek Slider -->
+          <views:PositionSlider
+            x:Name="PositionSlider"
+            Grid.Row="0"
+            Duration="{Binding Source={x:Reference MpvElement}, Path=Duration}"
+            Position="{Binding Source={x:Reference MpvElement}, Path=Position, Mode=TwoWay}"
+            MinimumTrackColor="{DynamicResource PrimaryColor}"
+            MaximumTrackColor="{DynamicResource MutedTextColor}"
+            ThumbColor="{DynamicResource PrimaryColor}"
+            Margin="0"
+          />
 
-      <!-- Play/Pause Button -->
-      <Button
-        Grid.Column="0"
-        Text="{Binding IsPlaying, Converter={StaticResource PlayPauseConverter}}"
-        Command="{Binding TogglePlayPauseCommand}"
-        BackgroundColor="{DynamicResource TransparentColor}"
-        TextColor="{DynamicResource VideoTextColor}"
-        FontSize="24"
-        WidthRequest="60"
-      />
+          <!-- Time Display + Controls -->
+          <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+            <!-- Current Time -->
+            <Label
+              Grid.Column="0"
+              Text="{Binding CurrentPositionText}"
+              TextColor="{DynamicResource VideoTextColor}"
+              FontSize="12"
+              VerticalOptions="Center"
+            />
 
-      <!-- Position Display -->
-      <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
-        <Label
-          Text="{Binding CurrentPositionText}"
-          TextColor="{DynamicResource VideoTextColor}"
-          FontSize="12"
-          VerticalOptions="Center"
-        />
-        <Label
-          Text="/"
-          TextColor="{DynamicResource VideoTextColor}"
-          FontSize="12"
-          VerticalOptions="Center"
-        />
-        <Label
-          Text="{Binding DurationText}"
-          TextColor="{DynamicResource VideoTextColor}"
-          FontSize="12"
-          VerticalOptions="Center"
-        />
-      </HorizontalStackLayout>
+            <!-- Spacer / Future: additional controls like subtitles, audio tracks -->
+            <HorizontalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="20">
+              <!-- Skip Back 10s -->
+              <Border
+                BackgroundColor="Transparent"
+                WidthRequest="44"
+                HeightRequest="44"
+                StrokeThickness="0"
+              >
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Tapped="OnSkipBackTapped" />
+                </Border.GestureRecognizers>
+                <Label
+                  Text="-10"
+                  FontSize="14"
+                  FontAttributes="Bold"
+                  TextColor="{DynamicResource VideoTextColor}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                />
+              </Border>
 
-      <!-- Close Button -->
+              <!-- Skip Forward 10s -->
+              <Border
+                BackgroundColor="Transparent"
+                WidthRequest="44"
+                HeightRequest="44"
+                StrokeThickness="0"
+              >
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Tapped="OnSkipForwardTapped" />
+                </Border.GestureRecognizers>
+                <Label
+                  Text="+10"
+                  FontSize="14"
+                  FontAttributes="Bold"
+                  TextColor="{DynamicResource VideoTextColor}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                />
+              </Border>
+            </HorizontalStackLayout>
 
-      <Button
-        Grid.Column="2"
-        Text="✕"
-        Command="{Binding CloseCommand}"
-        BackgroundColor="{DynamicResource TransparentColor}"
-        TextColor="{DynamicResource VideoTextColor}"
-        FontSize="24"
-        WidthRequest="60"
-      />
+            <!-- Duration -->
+            <Label
+              Grid.Column="2"
+              Text="{Binding DurationText}"
+              TextColor="{DynamicResource VideoTextColor}"
+              FontSize="12"
+              VerticalOptions="Center"
+            />
+          </Grid>
+        </Grid>
+      </Border>
     </Grid>
   </Grid>
 </ContentPage>

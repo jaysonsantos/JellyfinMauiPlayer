@@ -306,13 +306,14 @@ public partial class MauiVideoPlayer
         _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
     }
 
-    public void PlayRequested(TimeSpan position)
+    public void PlayRequested(TimeSpan? position)
     {
-        _mpvClient.Command(
-            "seek",
-            position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-            "absolute"
-        );
+        if (position != null)
+            _mpvClient.Command(
+                "seek",
+                position.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+                "absolute"
+            );
         _mpvClient.SetOption(MpvPropertyNames.Pause, "no");
         _logger.LogDebug("Video playback from {Position}.", position);
     }

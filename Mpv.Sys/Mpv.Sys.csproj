@@ -14,18 +14,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-    <NativeReference Include="../.cache/mpv/ios-aarch64/*.a">
-      <Kind>Static</Kind>
-      <SmartLink>True</SmartLink>
-    </NativeReference>
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-    <NativeReference Include="../.cache/mpv/macos-aarch64/*.a">
-      <Kind>Static</Kind>
-      <SmartLink>True</SmartLink>
-    </NativeReference>
-  </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
     <!-- Copy native Windows DLLs to output for win-x64 -->
     <Content Include="../.cache/mpv/windows-x86_64/*.dll">

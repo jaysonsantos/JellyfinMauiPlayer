@@ -40,9 +40,6 @@ public sealed class MpvClient : IDisposable
     {
         var evt = WaitEvent();
 
-        if (evt.eventId != MpvEventId.LogMessage)
-            Console.WriteLine($"EVENT: {evt}");
-
         switch (evt.eventId)
         {
             case MpvEventId.LogMessage:

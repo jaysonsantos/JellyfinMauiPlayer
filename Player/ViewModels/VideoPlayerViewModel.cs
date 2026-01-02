@@ -50,11 +50,14 @@ public sealed partial class VideoPlayerViewModel(
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
-    [ObservableProperty]
+[ObservableProperty]
     public partial bool IsPlaying { get; set; }
 
     [ObservableProperty]
-    public partial bool ShowCustomControls { get; set; }
+    public partial double CurrentPositionSeconds { get; set; }
+
+    [ObservableProperty]
+    public partial double DurationSeconds { get; set; } = 1.0;
 
     [ObservableProperty]
     public partial string CurrentPositionText { get; set; } = "00:00";
@@ -99,6 +102,7 @@ public sealed partial class VideoPlayerViewModel(
     {
         _currentPosition = position;
         CurrentPositionText = FormatTimeSpan(position);
+        CurrentPositionSeconds = position.TotalSeconds;
 
         // Report progress periodically
         var now = DateTime.UtcNow;
@@ -116,6 +120,7 @@ public sealed partial class VideoPlayerViewModel(
     {
         _duration = duration;
         DurationText = FormatTimeSpan(duration);
+        DurationSeconds = duration.TotalSeconds > 0 ? duration.TotalSeconds : 1.0;
     }
 
     private static string FormatTimeSpan(TimeSpan timeSpan)
