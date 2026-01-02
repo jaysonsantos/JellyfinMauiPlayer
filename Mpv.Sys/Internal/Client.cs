@@ -6,10 +6,10 @@ public struct Constants
 {
 #if WINDOWS
     public const string LibraryName = "mpv2";
-#elif IOS || MACCATALYST || MACOS
+#elif IOS
     public const string LibraryName = "__Internal";
-    // #elif MACCATALYST || MACOS
-    //     public const string LibraryName = "mpv";
+#elif MACCATALYST || MACOS
+    public const string LibraryName = "mpv";
 #elif LINUX || ANDROID
     public const string LibraryName = "libmpv.so";
 #else
