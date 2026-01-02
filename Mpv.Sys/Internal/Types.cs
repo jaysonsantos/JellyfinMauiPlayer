@@ -417,7 +417,7 @@ namespace Mpv.Sys.Internal
         /// <summary>
         /// The raw event data from mpv.
         /// </summary>
-        public required MpvEventProperty EventData { get; init; }
+        public required object EventData { get; init; }
     }
 
     public enum MpvEndFileReason
