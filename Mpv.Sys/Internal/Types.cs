@@ -417,7 +417,17 @@ namespace Mpv.Sys.Internal
         /// <summary>
         /// The raw event data from mpv.
         /// </summary>
-        public required object EventData { get; init; }
+        public required object? EventData { get; init; }
+
+        public bool UnwrapBool()
+        {
+            return EventData != null && (bool)EventData;
+        }
+
+        public double UnwrapDouble()
+        {
+            return EventData == null ? 0.0 : (double)EventData;
+        }
     }
 
     public enum MpvEndFileReason

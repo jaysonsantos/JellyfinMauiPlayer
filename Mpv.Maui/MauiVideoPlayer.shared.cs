@@ -70,32 +70,32 @@ public partial class MauiVideoPlayer
         switch (e.Property)
         {
             case ObservedProperty.IdleActive:
-                _idleActive = (bool)e.EventData;
+                _idleActive = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.Pause:
-                _pause = (bool)e.EventData;
+                _pause = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.PausedForCache:
-                _pausedForCache = true;
+                _pausedForCache = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.CoreIdle:
-                _coreIdle = (bool)e.EventData;
+                _coreIdle = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.EofReached:
-                _eofReached = (bool)e.EventData;
+                _eofReached = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.Duration:
-                _duration = (double)e.EventData;
+                _duration = e.UnwrapDouble();
                 // Only sync position when actually playing
                 if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
                 {
@@ -104,7 +104,7 @@ public partial class MauiVideoPlayer
                 break;
 
             case ObservedProperty.TimePos:
-                _timePos = (double)e.EventData;
+                _timePos = e.UnwrapDouble();
                 // Only sync position when actually playing
                 if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
                 {

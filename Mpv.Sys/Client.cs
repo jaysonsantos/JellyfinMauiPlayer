@@ -51,7 +51,7 @@ public sealed class MpvClient : IDisposable
             case MpvEventId.PropertyChange:
             {
                 var mpvEvent = Marshal.PtrToStructure<MpvEventProperty>(evt.data);
-                object output;
+                object? output;
                 try
                 {
                     output = ReadEventOutput(mpvEvent);
@@ -81,7 +81,7 @@ public sealed class MpvClient : IDisposable
         }
     }
 
-    private static object ReadEventOutput(MpvEventProperty mpvEvent)
+    private static object? ReadEventOutput(MpvEventProperty mpvEvent)
     {
         switch (mpvEvent.Format)
         {

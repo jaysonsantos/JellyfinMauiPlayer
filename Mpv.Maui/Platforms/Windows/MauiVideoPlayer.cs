@@ -169,14 +169,3 @@ public partial class MauiVideoPlayer : Grid, IDisposable
         // _mpvClient.Dispose();
     }
 }
-
-        if (_sizeChangedHandler != null)
-        {
-            SizeChanged -= _sizeChangedHandler;
-            _sizeChangedHandler = null;
-        }
-
-        // Do not dispose the mpv client because it is a singleton
-        // _mpvClient.Dispose();
-    }
-}
