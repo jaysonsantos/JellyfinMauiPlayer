@@ -10,8 +10,6 @@ namespace Mpv.Maui.Controls
             IServiceProvider serviceProvider
         )
         {
-            Debug.WriteLine($"[VideoSourceConverter] Converting string to VideoSource: '{value}'");
-
             if (!string.IsNullOrWhiteSpace(value))
             {
                 Uri? uri;
@@ -20,24 +18,16 @@ namespace Mpv.Maui.Controls
                 if (Uri.TryCreate(value, UriKind.Absolute, out uri) && uri.Scheme != "file")
                 {
                     result = VideoSource.FromUri(value);
-                    Debug.WriteLine(
-                        $"[VideoSourceConverter] Created UriVideoSource from: '{value}'"
-                    );
+                    Debug.WriteLine($"[VideoSourceConverter] Created UriVideoSource from: '{value}'");
                 }
                 else
                 {
                     result = VideoSource.FromResource(value);
-                    Debug.WriteLine(
-                        $"[VideoSourceConverter] Created ResourceVideoSource from: '{value}'"
-                    );
+                    Debug.WriteLine($"[VideoSourceConverter] Created ResourceVideoSource from: '{value}'");
                 }
 
                 return result;
             }
-
-            Debug.WriteLine(
-                $"[VideoSourceConverter] ERROR: Cannot convert null or whitespace to VideoSource"
-            );
             throw new InvalidOperationException(
                 "Cannot convert null or whitespace to VideoSource."
             );

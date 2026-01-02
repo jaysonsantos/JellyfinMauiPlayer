@@ -292,10 +292,7 @@ public partial class MauiVideoPlayer
         // Use the passed video parameter if provided, otherwise fall back to _video
         var sourceVideo = video ?? _video;
 
-        _mpvClient.Command(
-            "set",
-            MpvPropertyNames.LoopFile,
-            (sourceVideo?.IsLooping ?? false) ? "inf" : "no"
+        _mpvClient.Command("set", MpvPropertyNames.LoopFile, (sourceVideo?.IsLooping ?? false) ? "inf" : "no"
         );
     }
 
