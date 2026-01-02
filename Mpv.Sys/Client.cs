@@ -92,13 +92,12 @@ public sealed class MpvClient : IDisposable
             throw new Exception("Failed to set option: " + ErrorToString(error));
     }
 
-    public IntPtr GetPropertyPtr(string property)
+    public IntPtr GetPropertyPtr(string property, MpvFormat format = MpvFormat.Int64)
     {
-        var mpvFormatInt64 = 4;
         var error = MpvClientInternal.GetProperty(
             _handle,
             property,
-            mpvFormatInt64,
+            format,
             out IntPtr output
         );
         if (error != 0)

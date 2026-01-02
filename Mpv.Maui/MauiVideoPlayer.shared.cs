@@ -1,7 +1,8 @@
-using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+
 using Microsoft.Extensions.Logging;
+
 using Mpv.Maui.Controls;
 using Mpv.Sys;
 using Mpv.Sys.Internal;
@@ -100,34 +101,33 @@ public partial class MauiVideoPlayer
     {
         try
         {
-            var ptr = _mpvClient.GetPropertyPtr(property);
-            if (ptr == IntPtr.Zero)
-                return false;
-            var result = Marshal.ReadInt64(ptr) != 0;
-            Marshal.FreeHGlobal(ptr);
-            return result;
+            var ptr = _mpvClient.GetPropertyPtr(property, MpvFormat.Flag);
+            return ptr.ToInt32() == 1;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to get boolean property '{Property}'.", property);
             return false;
         }
     }
 
     private double GetPropertyDouble(string property)
+
     {
+        IntPtr ptr;
+
         try
         {
-            var ptr = _mpvClient.GetPropertyPtr(property);
-            if (ptr == IntPtr.Zero)
-                return 0;
-            var result = Marshal.PtrToStructure<double>(ptr);
-            Marshal.FreeHGlobal(ptr);
-            return result;
+            ptr = _mpvClient.GetPropertyPtr(property, MpvFormat.Double);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to get double property '{Property}'.", property);
             return 0;
         }
+
+        var bytes = BitConverter.GetBytes(ptr);
+        return BitConverter.ToDouble(bytes, 0);
     }
 
     public void UpdateSource()
@@ -171,7 +171,6 @@ public partial class MauiVideoPlayer
 
     private void SyncPositionFromMpv()
     {
-        return;
         if (_video == null)
             return;
 

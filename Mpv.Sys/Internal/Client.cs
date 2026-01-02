@@ -5,7 +5,7 @@ namespace Mpv.Sys.Internal;
 public struct Constants
 {
 #if WINDOWS
-    public const string LibraryName = "mpv2";
+    public const string LibraryName = "mpv";
 #elif IOS
     public const string LibraryName = "__Internal";
 #elif MACCATALYST || MACOS
@@ -112,7 +112,7 @@ internal static partial class MpvClientInternal
     internal static partial int GetProperty(
         IntPtr ptr,
         string property,
-        int format,
+        MpvFormat format,
         out IntPtr value
     );
 
