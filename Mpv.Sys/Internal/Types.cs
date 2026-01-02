@@ -327,6 +327,99 @@ namespace Mpv.Sys.Internal
         public IntPtr Data;
     }
 
+    /// <summary>
+    /// Constants for mpv property names.
+    /// Provides a single source of truth for all property name strings used throughout the application.
+    /// </summary>
+    public static class MpvPropertyNames
+    {
+        /// <summary>
+        /// Whether the player is currently idle (no file loaded).
+        /// Type: Flag (bool)
+        /// </summary>
+        public const string IdleActive = "idle-active";
+
+        /// <summary>
+        /// Whether playback is paused.
+        /// Type: Flag (bool)
+        /// </summary>
+        public const string Pause = "pause";
+
+        /// <summary>
+        /// Whether playback is paused due to cache buffering.
+        /// Type: Flag (bool)
+        /// </summary>
+        public const string PausedForCache = "paused-for-cache";
+
+        /// <summary>
+        /// Whether the playback core is idle (not actively decoding).
+        /// Type: Flag (bool)
+        /// </summary>
+        public const string CoreIdle = "core-idle";
+
+        /// <summary>
+        /// Whether the end of file has been reached.
+        /// Type: Flag (bool)
+        /// </summary>
+        public const string EofReached = "eof-reached";
+
+        /// <summary>
+        /// Duration of the current file in seconds.
+        /// Type: Double
+        /// </summary>
+        public const string Duration = "duration";
+
+        /// <summary>
+        /// Current playback position in seconds.
+        /// Type: Double
+        /// </summary>
+        public const string TimePos = "time-pos";
+
+        /// <summary>
+        /// Whether to loop the current file.
+        /// Type: String ("inf" or "no")
+        /// </summary>
+        public const string LoopFile = "loop-file";
+
+        /// <summary>
+        /// Whether to enable input media keys.
+        /// Type: String ("yes" or "no")
+        /// </summary>
+        public const string InputMediaKeys = "input-media-keys";
+    }
+
+    /// <summary>
+    /// Enum for identifying observed mpv properties.
+    /// Used as user data when observing properties.
+    /// </summary>
+    public enum ObservedProperty : ulong
+    {
+        None = 0,
+        IdleActive = 1,
+        Pause = 2,
+        PausedForCache = 3,
+        CoreIdle = 4,
+        EofReached = 5,
+        Duration = 6,
+        TimePos = 7,
+    }
+
+    /// <summary>
+    /// Event args for property change events with property identification.
+    /// </summary>
+    public class MpvPropertyChangeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The property that changed, identified by the ObservedProperty enum.
+        /// </summary>
+        public required ObservedProperty Property { get; init; }
+
+        /// <summary>
+        /// The raw event data from mpv.
+        /// </summary>
+        public required MpvEventProperty EventData { get; init; }
+    }
+
     public enum MpvEndFileReason
     {
         Eof = 0,

@@ -1,8 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
-
 using Microsoft.Extensions.Logging;
-
 using Mpv.Maui.Controls;
 using Mpv.Sys;
 using Mpv.Sys.Internal;
@@ -24,6 +22,41 @@ public partial class MauiVideoPlayer
     private readonly MpvClient _mpvClient;
     private readonly ILogger<MauiVideoPlayer> _logger;
 
+    // Cached property values from mpv property change events
+    private bool _idleActive;
+    private bool _pause;
+    private bool _pausedForCache;
+    private bool _coreIdle;
+    private bool _eofReached;
+    private double _duration;
+    private double _timePos;
+
+    // Property observation configuration
+    private static readonly (
+        ObservedProperty Property,
+        string Name,
+        MpvFormat Format
+    )[] ObservedProperties =
+    [
+        (ObservedProperty.IdleActive, MpvPropertyNames.IdleActive, MpvFormat.Flag),
+        (ObservedProperty.Pause, MpvPropertyNames.Pause, MpvFormat.Flag),
+        (ObservedProperty.PausedForCache, MpvPropertyNames.PausedForCache, MpvFormat.Flag),
+        (ObservedProperty.CoreIdle, MpvPropertyNames.CoreIdle, MpvFormat.Flag),
+        (ObservedProperty.EofReached, MpvPropertyNames.EofReached, MpvFormat.Flag),
+        (ObservedProperty.Duration, MpvPropertyNames.Duration, MpvFormat.Double),
+        (ObservedProperty.TimePos, MpvPropertyNames.TimePos, MpvFormat.Double),
+    ];
+
+    /// <summary>
+    /// Gets or sets the Video control this platform view is rendering.
+    /// This is set during construction and should match the VirtualView from the handler.
+    /// </summary>
+    public Video? Video
+    {
+        get => _video;
+        set => _video = value;
+    }
+
     private void LogLines(object? sender, MpvLogMessage e)
     {
 #if IOS || MACCATALYST
@@ -32,13 +65,80 @@ public partial class MauiVideoPlayer
         _logger.LogWarning("{Level} {Prefix} {Text}", e.Level, e.Prefix, e.Text);
     }
 
-    private void OnMpvPropertyChange(object? sender, MpvEventProperty e)
+    private void OnMpvPropertyChange(object? sender, MpvPropertyChangeEventArgs e)
     {
-        UpdateStatus();
-        string name = Marshal.PtrToStringUTF8(e.Name) ?? "";
-        if (name == "time-pos" || name == "duration")
+        // Cache the property value from the event data
+        switch (e.Property)
         {
-            SyncPositionFromMpv();
+            case ObservedProperty.IdleActive:
+                _idleActive = GetBoolFromEventData(e.EventData);
+                UpdateStatus();
+                break;
+
+            case ObservedProperty.Pause:
+                _pause = GetBoolFromEventData(e.EventData);
+                UpdateStatus();
+                break;
+
+            case ObservedProperty.PausedForCache:
+                _pausedForCache = GetBoolFromEventData(e.EventData);
+                UpdateStatus();
+                break;
+
+            case ObservedProperty.CoreIdle:
+                _coreIdle = GetBoolFromEventData(e.EventData);
+                UpdateStatus();
+                break;
+
+            case ObservedProperty.EofReached:
+                _eofReached = GetBoolFromEventData(e.EventData);
+                UpdateStatus();
+                break;
+
+            case ObservedProperty.Duration:
+                _duration = GetDoubleFromEventData(e.EventData);
+                // Only sync position when actually playing
+                if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
+                {
+                    SyncPositionFromMpv();
+                }
+                break;
+
+            case ObservedProperty.TimePos:
+                _timePos = GetDoubleFromEventData(e.EventData);
+                // Only sync position when actually playing
+                if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
+                {
+                    SyncPositionFromMpv();
+                }
+                break;
+        }
+    }
+
+    private bool GetBoolFromEventData(MpvEventProperty eventData)
+    {
+        try
+        {
+            return eventData.Data.ToInt64() == 1;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read boolean property from event data.");
+            return false;
+        }
+    }
+
+    private double GetDoubleFromEventData(MpvEventProperty eventData)
+    {
+        try
+        {
+            var bytes = BitConverter.GetBytes(eventData.Data);
+            return BitConverter.ToDouble(bytes, 0);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read double property from event data.");
+            return 0;
         }
     }
 
@@ -47,101 +147,88 @@ public partial class MauiVideoPlayer
         _mpvClient.OnLog += LogLines;
         _mpvClient.OnPropertyChange += OnMpvPropertyChange;
 
-        _mpvClient.SetOption("input-media-keys", "yes");
+        _mpvClient.SetOption(MpvPropertyNames.InputMediaKeys, "yes");
 
-        _mpvClient.ObserveProperty(0, "idle-active", MpvFormat.Flag);
-        _mpvClient.ObserveProperty(0, "pause", MpvFormat.Flag);
-        _mpvClient.ObserveProperty(0, "paused-for-cache", MpvFormat.Flag);
-        _mpvClient.ObserveProperty(0, "core-idle", MpvFormat.Flag);
-        _mpvClient.ObserveProperty(0, "eof-reached", MpvFormat.Flag);
-        _mpvClient.ObserveProperty(0, "duration", MpvFormat.Double);
-        _mpvClient.ObserveProperty(0, "time-pos", MpvFormat.Double);
+        // Observe all properties
+        foreach (var (property, name, format) in ObservedProperties)
+        {
+            _mpvClient.ObserveProperty((ulong)property, name, format);
+        }
+    }
+
+    private void UninitializeMpvCommon()
+    {
+        _mpvClient.Command("stop");
+        // Unobserve all properties
+        foreach (var (property, _, _) in ObservedProperties)
+        {
+            _mpvClient.UnobserveProperty((ulong)property);
+        }
     }
 
     public void UpdateStatus()
     {
+        if (_video == null)
+            return;
+
         VideoStatus status = VideoStatus.NotReady;
 
-        bool idleActive = GetPropertyBool("idle-active");
-        bool pause = GetPropertyBool("pause");
-        bool pausedForCache = GetPropertyBool("paused-for-cache");
-        bool coreIdle = GetPropertyBool("core-idle");
-        bool eofReached = GetPropertyBool("eof-reached");
-
-        if (idleActive && !eofReached)
+        // Use cached property values from mpv events - no need to query
+        if (_idleActive && !_eofReached)
         {
             status = VideoStatus.Opening;
         }
-        else if (pausedForCache)
+        else if (_pausedForCache)
         {
             status = VideoStatus.Buffering;
         }
-        else if (pause || coreIdle)
+        else if (_pause || _coreIdle)
         {
             status = VideoStatus.Paused;
         }
-        else if (!idleActive)
+        else if (!_idleActive)
         {
             status = VideoStatus.Playing;
         }
-        else if (eofReached)
+        else if (_eofReached)
         {
             status = VideoStatus.Paused; // Treat EOF as paused/finished
         }
 
         // TODO: Detect failure state
 
-        if (_video != null)
-        {
-            ((IVideoController)_video).Status = status;
-        }
+        ((IVideoController)_video).Status = status;
     }
 
-    private bool GetPropertyBool(string property)
+    public void UpdateSource(Video? video = null)
     {
-        try
-        {
-            var ptr = _mpvClient.GetPropertyPtr(property, MpvFormat.Flag);
-            return ptr.ToInt32() == 1;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get boolean property '{Property}'.", property);
-            return false;
-        }
-    }
+        // Use the passed video parameter if provided, otherwise fall back to _video
+        var sourceVideo = video ?? _video;
 
-    private double GetPropertyDouble(string property)
-
-    {
-        IntPtr ptr;
-
-        try
+        if (sourceVideo == null)
         {
-            ptr = _mpvClient.GetPropertyPtr(property, MpvFormat.Double);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get double property '{Property}'.", property);
-            return 0;
+            _logger.LogWarning("UpdateSource called but video is null");
+            return;
         }
 
-        var bytes = BitConverter.GetBytes(ptr);
-        return BitConverter.ToDouble(bytes, 0);
-    }
-
-    public void UpdateSource()
-    {
-        if (_video?.Source is UriVideoSource uriSource)
+        if (sourceVideo.Source is UriVideoSource uriSource)
         {
             string uri = uriSource.Uri;
             if (!string.IsNullOrWhiteSpace(uri))
             {
+                _logger.LogInformation("Loading video from URI: {Uri}", uri);
                 _mpvClient.Command("loadfile", uri);
+            }
+            else
+            {
+                _logger.LogWarning("UpdateSource called with UriVideoSource but URI is empty");
             }
         }
         else
         {
+            _logger.LogInformation(
+                "UpdateSource called with non-URI source, using platform-specific handler"
+            );
             UpdateSourcePlatform();
         }
     }
@@ -152,19 +239,22 @@ public partial class MauiVideoPlayer
 
     private bool _isSyncingPosition;
 
-    public void UpdatePosition()
+    public void UpdatePosition(Video? video = null)
     {
-        if (_isSyncingPosition || _video == null)
+        // Use the passed video parameter if provided, otherwise fall back to _video
+        var sourceVideo = video ?? _video;
+
+        if (_isSyncingPosition || sourceVideo == null)
             return;
 
         // If total seconds is 0, we can skip the seek command
         // This avoids issues during initial load where position might be 0
-        if (_video.Position.TotalSeconds == 0)
+        if (sourceVideo.Position.TotalSeconds == 0)
             return;
 
         _mpvClient.Command(
             "seek",
-            _video.Position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+            sourceVideo.Position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
             "absolute"
         );
     }
@@ -174,8 +264,13 @@ public partial class MauiVideoPlayer
         if (_video == null)
             return;
 
-        var duration = GetPropertyDouble("duration");
-        var position = GetPropertyDouble("time-pos");
+        // Only sync position when actually playing
+        if (((IVideoController)_video).Status != VideoStatus.Playing)
+            return;
+
+        // Use cached values from mpv events - no need to query
+        var duration = _duration;
+        var position = _timePos;
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -192,13 +287,24 @@ public partial class MauiVideoPlayer
         });
     }
 
-    public void UpdateIsLooping()
+    public void UpdateIsLooping(Video? video = null)
     {
-        _mpvClient.Command("set", "loop-file", (_video?.IsLooping ?? false) ? "inf" : "no");
+        // Use the passed video parameter if provided, otherwise fall back to _video
+        var sourceVideo = video ?? _video;
+
+        _mpvClient.Command(
+            "set",
+            MpvPropertyNames.LoopFile,
+            (sourceVideo?.IsLooping ?? false) ? "inf" : "no"
+        );
     }
 
     private void DisposeMpvCommon()
     {
+        // First unobserve all properties
+        UninitializeMpvCommon();
+
+        // Then unsubscribe from events
         _mpvClient.OnLog -= LogLines;
         _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
     }
@@ -210,13 +316,13 @@ public partial class MauiVideoPlayer
             position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
             "absolute"
         );
-        _mpvClient.SetOption("pause", "no");
+        _mpvClient.SetOption(MpvPropertyNames.Pause, "no");
         _logger.LogDebug("Video playback from {Position}.", position);
     }
 
     public void PauseRequested(TimeSpan position)
     {
-        _mpvClient.SetOption("pause", "yes");
+        _mpvClient.SetOption(MpvPropertyNames.Pause, "yes");
         _logger.LogDebug("Video paused at {Position}.", position);
     }
 

@@ -66,6 +66,9 @@ internal static partial class MpvClientInternal
     [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_create")]
     internal static partial IntPtr Create();
 
+    [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_destroy")]
+    internal static partial void Destroy(IntPtr ptr);
+
     [LibraryImport(Constants.LibraryName, EntryPoint = "mpv_free")]
     internal static partial void Free(IntPtr ptr);
 

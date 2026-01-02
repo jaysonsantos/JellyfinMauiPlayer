@@ -18,9 +18,25 @@ public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
         return new(VirtualView, mpvClient, logger);
     }
 
+    protected override void ConnectHandler(MauiVideoPlayer platformView)
+    {
+        base.ConnectHandler(platformView);
+
+        // Update source after handler is connected, in case it was set before handler creation
+        if (VirtualView?.Source != null)
+        {
+            platformView.UpdateSource(VirtualView);
+        }
+    }
+
     protected override void DisconnectHandler(MauiVideoPlayer platformView)
     {
+        // Dispose the virtual view first (stops timer and clears events)
+        VirtualView?.Dispose();
+
+        // Dispose the platform view
         platformView.Dispose();
+
         base.DisconnectHandler(platformView);
     }
 }

@@ -18,7 +18,7 @@
     </Grid.RowDefinitions>
     <!-- Video Player -->
 
-    <views:Video x:Name="MpvElement" Grid.Row="0" Source="{Binding VideoUrl}" />
+    <views:Video x:Name="MpvElement" Grid.Row="0" Source="{Binding VideoSource}" />
 
     <!-- Loading Indicator -->
     <ActivityIndicator

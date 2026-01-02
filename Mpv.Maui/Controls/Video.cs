@@ -2,8 +2,10 @@ using System.ComponentModel;
 
 namespace Mpv.Maui.Controls
 {
-    public class Video : View, IVideoController
+    public class Video : View, IVideoController, IDisposable
     {
+        private bool _disposed;
+
         #region Bindable Properties
 
         public static readonly BindableProperty AreTransportControlsEnabledProperty =
@@ -17,8 +19,7 @@ namespace Mpv.Maui.Controls
         public static readonly BindableProperty SourceProperty = BindableProperty.Create(
             nameof(Source),
             typeof(VideoSource),
-            typeof(Video),
-            null
+            typeof(Video)
         );
 
         public static readonly BindableProperty AutoPlayProperty = BindableProperty.Create(
@@ -50,8 +51,8 @@ namespace Mpv.Maui.Controls
                 nameof(Duration),
                 typeof(TimeSpan),
                 typeof(Video),
-                new TimeSpan(),
-                propertyChanged: (bindable, oldValue, newValue) => ((Video)bindable).SetTimeToEnd()
+                TimeSpan.Zero,
+                propertyChanged: (bindable, _, _) => ((Video)bindable).SetTimeToEnd()
             );
 
         public static readonly BindableProperty DurationProperty =
@@ -61,8 +62,8 @@ namespace Mpv.Maui.Controls
             nameof(Position),
             typeof(TimeSpan),
             typeof(Video),
-            new TimeSpan(),
-            propertyChanged: (bindable, oldValue, newValue) => ((Video)bindable).SetTimeToEnd()
+            TimeSpan.Zero,
+            propertyChanged: (bindable, _, _) => ((Video)bindable).SetTimeToEnd()
         );
 
         private static readonly BindablePropertyKey TimeToEndPropertyKey =
@@ -70,7 +71,7 @@ namespace Mpv.Maui.Controls
                 nameof(TimeToEnd),
                 typeof(TimeSpan),
                 typeof(Video),
-                new TimeSpan()
+                TimeSpan.Zero
             );
 
         public static readonly BindableProperty TimeToEndProperty =
@@ -146,7 +147,7 @@ namespace Mpv.Maui.Controls
 
         #endregion
 
-        IDispatcherTimer _timer;
+        private IDispatcherTimer? _timer;
 
         public Video()
         {
@@ -155,8 +156,6 @@ namespace Mpv.Maui.Controls
             _timer.Tick += OnTimerTick;
             _timer.Start();
         }
-
-        ~Video() => _timer.Tick -= OnTimerTick;
 
         public void Play()
         {
@@ -188,6 +187,39 @@ namespace Mpv.Maui.Controls
         void SetTimeToEnd()
         {
             TimeToEnd = Duration - Position;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            if (disposing)
+            {
+                // Stop and dispose the timer
+                if (_timer != null)
+                {
+                    _timer.Stop();
+                    _timer.Tick -= OnTimerTick;
+                    _timer = null;
+                }
+
+                // Clear event handlers to prevent memory leaks
+                UpdateStatus = null;
+                PlayRequested = null;
+                PauseRequested = null;
+                StopRequested = null;
+            }
         }
     }
 }

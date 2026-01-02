@@ -25,6 +25,26 @@ public sealed partial class VideoPlayerViewModel(
     public partial string VideoUrl { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial VideoSource? VideoSource { get; set; }
+
+    partial void OnVideoUrlChanged(string value)
+    {
+        logger.LogInformation("[VideoPlayerViewModel] VideoUrl changed to: {Url}", value);
+
+        // Convert string URL to VideoSource when URL changes
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            VideoSource = Mpv.Maui.Controls.VideoSource.FromUri(value);
+            logger.LogInformation("[VideoPlayerViewModel] VideoSource created from URL");
+        }
+        else
+        {
+            VideoSource = null;
+            logger.LogInformation("[VideoPlayerViewModel] VideoSource set to null (empty URL)");
+        }
+    }
+
+    [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
@@ -113,46 +133,26 @@ public sealed partial class VideoPlayerViewModel(
     [RelayCommand]
     private async Task LoadPlaybackInfoAsync()
     {
+        logger.LogInformation(
+            "[VideoPlayerViewModel] LoadPlaybackInfoAsync started for ItemId: {ItemId}",
+            ItemId
+        );
+
         if (string.IsNullOrWhiteSpace(ItemId))
+        {
+            logger.LogWarning(
+                "[VideoPlayerViewModel] ItemId is null or empty, cannot load playback info"
+            );
             return;
+        }
 
         IsLoading = true;
         ErrorMessage = null;
 
         try
         {
-            _playbackInfo = await playbackService
-                .GetPlaybackInfoAsync(ItemId, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (_playbackInfo is null)
-            {
-                ErrorMessage = "Failed to get playback information from server.";
-                logger.LogError("Could not get playback info for item {ItemId}", ItemId);
-                return;
-            }
-
-            // Set the video URL - the stream URL from playback info should be a full URL
-            VideoUrl = _playbackInfo.StreamUrl;
-            logger.LogInformation(
-                "Loaded playback info for item {ItemId}, URL: {Url}",
-                ItemId,
-                VideoUrl
-            );
-
-            // Try to load previous playback state for resume functionality
-            var previousState = await playbackService
-                .GetPlaybackStateAsync(ItemId, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (previousState is not null && previousState.PositionTicks > 0)
-            {
-                // Will be used to seek when MediaElement is ready
-                logger.LogInformation(
-                    "Found previous playback position: {Ticks} ticks",
-                    previousState.PositionTicks
-                );
-            }
+            await LoadPlaybackDataAsync();
+            await LoadPreviousPlaybackStateAsync();
         }
         catch (Exception ex)
         {
@@ -162,6 +162,47 @@ public sealed partial class VideoPlayerViewModel(
         finally
         {
             IsLoading = false;
+            logger.LogInformation("[VideoPlayerViewModel] LoadPlaybackInfoAsync completed");
+        }
+    }
+
+    private async Task LoadPlaybackDataAsync()
+    {
+        logger.LogInformation("[VideoPlayerViewModel] Requesting playback info from service...");
+        _playbackInfo = await playbackService
+            .GetPlaybackInfoAsync(ItemId, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        if (_playbackInfo is null)
+        {
+            ErrorMessage = "Failed to get playback information from server.";
+            logger.LogError("Could not get playback info for item {ItemId}", ItemId);
+            return;
+        }
+
+        logger.LogInformation(
+            "[VideoPlayerViewModel] Setting VideoUrl to: {Url}",
+            _playbackInfo.StreamUrl
+        );
+        VideoUrl = _playbackInfo.StreamUrl;
+        logger.LogInformation(
+            "[VideoPlayerViewModel] VideoUrl has been set. Current value: {Url}",
+            VideoUrl
+        );
+    }
+
+    private async Task LoadPreviousPlaybackStateAsync()
+    {
+        var previousState = await playbackService
+            .GetPlaybackStateAsync(ItemId, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        if (previousState is not null && previousState.PositionTicks > 0)
+        {
+            logger.LogInformation(
+                "Found previous playback position: {Ticks} ticks",
+                previousState.PositionTicks
+            );
         }
     }
 
@@ -262,8 +303,13 @@ public sealed partial class VideoPlayerViewModel(
 
     partial void OnItemIdChanged(string value)
     {
+        logger.LogInformation(
+            "[VideoPlayerViewModel] OnItemIdChanged called with: {ItemId}",
+            value
+        );
         if (!string.IsNullOrWhiteSpace(value))
         {
+            logger.LogInformation("[VideoPlayerViewModel] Executing LoadPlaybackInfoCommand");
             LoadPlaybackInfoCommand.Execute(null);
         }
     }

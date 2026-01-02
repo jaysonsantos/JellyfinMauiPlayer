@@ -98,6 +98,7 @@ public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPrepare
         {
             _video = null;
             DisposeMpvCommon();
+            _mpvClient.Dispose();
         }
 
         base.Dispose(disposing);

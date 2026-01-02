@@ -84,17 +84,7 @@ public sealed class WindowsMouseButtonHandler
             if (button == XBUTTON1 && _backNavigationCallback is not null)
             {
                 // Back button clicked - invoke on main thread
-                MainThread.BeginInvokeOnMainThread(async () =>
-                {
-                    try
-                    {
-                        await _backNavigationCallback();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error during mouse button navigation");
-                    }
-                });
+                MainThread.BeginInvokeOnMainThread(() => HandleBackNavigationAsync());
 
                 // Return 1 to indicate we handled the message
                 return new IntPtr(1);
@@ -104,5 +94,20 @@ public sealed class WindowsMouseButtonHandler
 
         // Call the original window procedure for all other messages
         return CallWindowProc(_originalWndProc, hWnd, msg, wParam, lParam);
+    }
+
+    private async void HandleBackNavigationAsync()
+    {
+        try
+        {
+            if (_backNavigationCallback is not null)
+            {
+                await _backNavigationCallback();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during mouse button navigation");
+        }
     }
 }

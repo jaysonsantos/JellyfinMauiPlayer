@@ -67,17 +67,22 @@ public sealed class WindowsKeyboardHandler
         if (_backNavigationCallback is not null)
         {
             args.Handled = true;
-            MainThread.BeginInvokeOnMainThread(async () =>
+            MainThread.BeginInvokeOnMainThread(() => HandleBackNavigationAsync());
+        }
+    }
+
+    private async void HandleBackNavigationAsync()
+    {
+        try
+        {
+            if (_backNavigationCallback is not null)
             {
-                try
-                {
-                    await _backNavigationCallback();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error during keyboard shortcut navigation");
-                }
-            });
+                await _backNavigationCallback();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during keyboard shortcut navigation");
         }
     }
 }

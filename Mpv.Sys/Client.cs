@@ -14,7 +14,7 @@ public sealed class MpvClient : IDisposable
     private bool _initialized;
 
     public event EventHandler<MpvLogMessage>? OnLog;
-    public event EventHandler<MpvEventProperty>? OnPropertyChange;
+    public event EventHandler<MpvPropertyChangeEventArgs>? OnPropertyChange;
     public event EventHandler? OnVideoReconfigure;
 
     public MpvClient()
@@ -54,7 +54,14 @@ public sealed class MpvClient : IDisposable
             case MpvEventId.PropertyChange:
             {
                 var mpvEvent = Marshal.PtrToStructure<MpvEventProperty>(evt.data);
-                OnPropertyChange?.Invoke(this, mpvEvent);
+                OnPropertyChange?.Invoke(
+                    this,
+                    new MpvPropertyChangeEventArgs
+                    {
+                        Property = (ObservedProperty)evt.replyUserData,
+                        EventData = mpvEvent,
+                    }
+                );
                 break;
             }
             case MpvEventId.VideoReconfig:
@@ -94,12 +101,7 @@ public sealed class MpvClient : IDisposable
 
     public IntPtr GetPropertyPtr(string property, MpvFormat format = MpvFormat.Int64)
     {
-        var error = MpvClientInternal.GetProperty(
-            _handle,
-            property,
-            format,
-            out IntPtr output
-        );
+        var error = MpvClientInternal.GetProperty(_handle, property, format, out IntPtr output);
         if (error != 0)
             throw new Exception($"Failed to get property: {property} " + ErrorToString(error));
 
@@ -209,13 +211,13 @@ public sealed class MpvClient : IDisposable
 
         if (disposing)
         {
-            MpvClientInternal.Free(handleToFree);
+            MpvClientInternal.Destroy(handleToFree);
             return;
         }
 
         try
         {
-            MpvClientInternal.Free(handleToFree);
+            MpvClientInternal.Destroy(handleToFree);
         }
         catch
         {
@@ -236,11 +238,14 @@ public sealed class MpvClient : IDisposable
             throw new Exception($"Failed to observe property {name}: " + ErrorToString(error));
     }
 
-    public void UnobserveProperty(ulong userData)
+    public int UnobserveProperty(ulong userData)
     {
         var error = MpvClientInternal.UnobserveProperty(_handle, userData);
-        if (error != 0)
+        if (error < 0)
             throw new Exception("Failed to unobserve property: " + ErrorToString(error));
+
+        // Number of properties unobserved
+        return error;
     }
 
     public IntPtr GetHandle()

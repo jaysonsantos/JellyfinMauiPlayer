@@ -97,6 +97,7 @@ namespace Mpv.Maui.Platforms.MaciOS
             {
                 DisposeMpvCommon();
                 _mpvClient.OnVideoReconfigure -= OnVideoReconfigure;
+                _mpvClient.Dispose();
             }
 
             base.Dispose(disposing);
