@@ -40,4 +40,9 @@ $(MOLTENVK_DESTINATION): $(MOLTENVK_TAR)
 	@mkdir -p $@
 	@tar -xf $(MOLTENVK_TAR) -C $@
 
+# Platform-specific dependency targets
+ifeq ($(OS),Windows_NT)
+deps: .cache/mpv/windows-x86_64
+else
 deps: $(MPV_TARGETS_DESTINATION) $(MOLTENVK_DESTINATION)
+endif
