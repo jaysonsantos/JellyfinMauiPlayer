@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
 <ContentPage
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
   xmlns:viewModels="clr-namespace:Player.ViewModels"
-  xmlns:models="using:JellyfinPlayer.Lib.Models"
+  xmlns:models="clr-namespace:JellyfinPlayer.Lib.Models;assembly=Lib"
   xmlns:controls="clr-namespace:Player.Controls"
   x:Class="Player.Pages.HomePage"
   x:DataType="viewModels:HomeViewModel"
@@ -45,7 +44,7 @@
                 <DataTemplate x:DataType="{x:Type models:MediaItem}">
                   <controls:MediaCard
                     MediaItem="{Binding}"
-                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToLibraryCommand}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToLibraryCommand, x:DataType=viewModels:HomeViewModel}"
                     CardWidth="370"
                     CardHeight="320"
                     ImageHeight="210"
@@ -78,7 +77,7 @@
                 <DataTemplate x:DataType="{x:Type models:MediaItem}">
                   <controls:MediaCard
                     MediaItem="{Binding}"
-                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand, x:DataType=viewModels:HomeViewModel}"
                     CardWidth="200"
                     CardHeight="380"
                     ImageHeight="300"
@@ -108,7 +107,7 @@
                 <DataTemplate x:DataType="{x:Type models:MediaItem}">
                   <controls:MediaCard
                     MediaItem="{Binding}"
-                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand}"
+                    TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewModels:HomeViewModel}}, Path=NavigateToItemCommand, x:DataType=viewModels:HomeViewModel}"
                     CardWidth="200"
                     CardHeight="380"
                     ImageHeight="300"

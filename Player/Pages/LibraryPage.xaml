@@ -3,7 +3,7 @@
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
   xmlns:viewmodels="clr-namespace:Player.ViewModels"
-  xmlns:models="using:JellyfinPlayer.Lib.Models"
+  xmlns:models="clr-namespace:JellyfinPlayer.Lib.Models;assembly=Lib"
   xmlns:controls="clr-namespace:Player.Controls"
   x:Class="Player.Pages.LibraryPage"
   x:DataType="viewmodels:LibraryViewModel"
@@ -37,7 +37,7 @@
           <DataTemplate x:DataType="{x:Type models:MediaItem}">
             <controls:MediaCard
               MediaItem="{Binding}"
-              TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LibraryViewModel}}, Path=NavigateToItemCommand}"
+              TappedCommand="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:LibraryViewModel}}, Path=NavigateToItemCommand, x:DataType=viewmodels:LibraryViewModel}"
               ImageHeight="300"
               ShowTitle="True"
               ShowType="True"

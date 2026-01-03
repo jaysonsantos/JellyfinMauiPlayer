@@ -2,13 +2,15 @@
 <ContentView
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:controls="clr-namespace:Player.Controls"
   x:Class="Player.Controls.SectionHeader"
-  x:Name="this"
+  x:Name="This"
+  x:DataType="controls:SectionHeader"
 >
   <HorizontalStackLayout Spacing="10" Margin="0,10,0,10">
     <!-- Title -->
     <Label
-      Text="{Binding Source={x:Reference this}, Path=Title}"
+      Text="{Binding Source={x:Reference This}, Path=Title}"
       FontSize="20"
       FontAttributes="Bold"
       TextColor="{DynamicResource PrimaryTextColor}"
@@ -18,9 +20,9 @@
 
     <!-- Optional Action Button -->
     <Button
-      Text="{Binding Source={x:Reference this}, Path=ActionText}"
-      Command="{Binding Source={x:Reference this}, Path=ActionCommand}"
-      IsVisible="{Binding Source={x:Reference this}, Path=ShowAction}"
+      Text="{Binding Source={x:Reference This}, Path=ActionText}"
+      Command="{Binding Source={x:Reference This}, Path=ActionCommand}"
+      IsVisible="{Binding Source={x:Reference This}, Path=ShowAction}"
       BackgroundColor="{DynamicResource TransparentColor}"
       TextColor="{DynamicResource PrimaryColor}"
       FontSize="14"

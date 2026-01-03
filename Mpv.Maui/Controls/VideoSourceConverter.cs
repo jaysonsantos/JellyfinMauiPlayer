@@ -18,12 +18,16 @@ namespace Mpv.Maui.Controls
                 if (Uri.TryCreate(value, UriKind.Absolute, out uri) && uri.Scheme != "file")
                 {
                     result = VideoSource.FromUri(value);
-                    Debug.WriteLine($"[VideoSourceConverter] Created UriVideoSource from: '{value}'");
+                    Debug.WriteLine(
+                        $"[VideoSourceConverter] Created UriVideoSource from: '{value}'"
+                    );
                 }
                 else
                 {
                     result = VideoSource.FromResource(value);
-                    Debug.WriteLine($"[VideoSourceConverter] Created ResourceVideoSource from: '{value}'");
+                    Debug.WriteLine(
+                        $"[VideoSourceConverter] Created ResourceVideoSource from: '{value}'"
+                    );
                 }
 
                 return result;

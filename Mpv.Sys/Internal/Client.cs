@@ -175,95 +175,6 @@ internal static partial class MpvRenderInternal
     );
 }
 
-public class MpvRenderContext
-{
-    private readonly IntPtr _context;
-    private readonly IntPtr _initParams;
-
-    public MpvRenderContext(IntPtr client, string apiType, MpvOpenGlInitParmsInner.GetProc getProc)
-    {
-        MpvOpenGlInitParmsInner mpvOpenGlInitParmsInner = new()
-        {
-            get_proc_address = getProc,
-            get_proc_address_ctx = IntPtr.Zero,
-        };
-        _initParams = Marshal.AllocHGlobal(Marshal.SizeOf<MpvOpenGlInitParmsInner>());
-        Marshal.StructureToPtr(mpvOpenGlInitParmsInner, _initParams, false);
-
-        MpvParameter[] renderParams =
-        [
-            new() { type = 1, data = Marshal.StringToHGlobalAnsi(apiType) },
-            new() { type = 2, data = _initParams },
-            new() { type = 0, data = IntPtr.Zero },
-        ];
-
-        var parameters = new ArrayPtr<MpvParameter>(renderParams);
-
-        var error = MpvRenderInternal.Create(out _context, client, parameters.Get());
-        if (error != 0)
-            throw new Exception(
-                Marshal.PtrToStringAnsi(MpvClientInternal.ErrorToString(error)) + " " + error
-            );
-    }
-
-    //
-    // public void SetUpdateCallback(IntPtr callback, IntPtr callbackCtx)
-    // {
-    //     MpvRenderInternal.SetUpdateCallback(_context, callback, callbackCtx);
-    // }
-    //
-    // public void Render()
-    // {
-    //     var parameters = new ArrayPtr<MpvParameter>([
-    //         new MpvParameter
-    //         {
-    //             type = 0, data = IntPtr.Zero, // Null terminator
-    //         },
-    //     ]);
-    //
-    //     var error = MpvRenderInternal.Render(_context, parameters.Get());
-    //     if (error != 0)
-    //         throw new Exception(
-    //             Marshal.PtrToStringAnsi(MpvClientInternal.ErrorToString(error)) + " " + error
-    //         );
-    // }
-    //
-    // public void Render(int width, int height, int fbo = 0, bool flipY = true)
-    // {
-    //     // Create FBO struct as int array
-    //     int[] fboStruct = [fbo, width, height, 0]; // fbo, width, height, internal_format
-    //     var fboArray = new ArrayPtr<int>(fboStruct);
-    //
-    //     // Create flipY parameter as int array
-    //     int[] flipYArray = [flipY ? 1 : 0];
-    //     var flipYPtr = new ArrayPtr<int>(flipYArray);
-    //
-    //     MpvParameter[] renderParams =
-    //     [
-    //         new() { type = 3, data = fboArray.Get() },
-    //         new() { type = 4, data = flipYPtr.Get() },
-    //         new() { type = 0, data = IntPtr.Zero },
-    //     ];
-    //
-    //     var parameters = new ArrayPtr<MpvParameter>(renderParams);
-    //
-    //     var error = MpvRenderInternal.Render(_context, parameters.Get());
-    //     if (error != 0)
-    //         throw new Exception(
-    //             Marshal.PtrToStringAnsi(MpvClientInternal.ErrorToString(error)) + " " + error
-    //         );
-    // }
-
-    ~MpvRenderContext()
-    {
-        if (_context != IntPtr.Zero)
-            MpvRenderInternal.Free(_context);
-
-        if (_initParams != IntPtr.Zero)
-            Marshal.FreeHGlobal(_initParams);
-    }
-}
-
 [StructLayout(LayoutKind.Sequential)]
 public struct MpvOpenGlInitParmsInner
 {
@@ -271,13 +182,6 @@ public struct MpvOpenGlInitParmsInner
 
     public GetProc get_proc_address;
     public IntPtr get_proc_address_ctx;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct MpvOpenGlInitParms
-{
-    public int type;
-    public MpvOpenGlInitParmsInner? data;
 }
 
 public static partial class FfmpegLibs

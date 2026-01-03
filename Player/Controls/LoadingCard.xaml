@@ -2,21 +2,23 @@
 <ContentView
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:controls="clr-namespace:Player.Controls"
   x:Class="Player.Controls.LoadingCard"
-  x:Name="this"
+  x:Name="This"
+  x:DataType="controls:LoadingCard"
 >
   <Border
     Padding="0"
     StrokeThickness="0"
     BackgroundColor="{DynamicResource TransparentColor}"
-    MinimumWidthRequest="{Binding Source={x:Reference this}, Path=CardWidth}"
-    MinimumHeightRequest="{Binding Source={x:Reference this}, Path=CardHeight}"
+    MinimumWidthRequest="{Binding Source={x:Reference This}, Path=CardWidth}"
+    MinimumHeightRequest="{Binding Source={x:Reference This}, Path=CardHeight}"
   >
     <VerticalStackLayout Spacing="6">
       <!-- Skeleton Image -->
       <Border
         StrokeThickness="0"
-        HeightRequest="{Binding Source={x:Reference this}, Path=ImageHeight}"
+        HeightRequest="{Binding Source={x:Reference This}, Path=ImageHeight}"
         BackgroundColor="{DynamicResource PrimaryColor}"
       >
         <Border.StrokeShape>
@@ -29,7 +31,7 @@
         StrokeThickness="0"
         HeightRequest="16"
         BackgroundColor="{DynamicResource PrimaryColor}"
-        IsVisible="{Binding Source={x:Reference this}, Path=ShowTitle}"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowTitle}"
       >
         <Border.StrokeShape>
           <RoundRectangle CornerRadius="4" />
@@ -42,7 +44,7 @@
         WidthRequest="100"
         BackgroundColor="{DynamicResource PrimaryColor}"
         HorizontalOptions="Start"
-        IsVisible="{Binding Source={x:Reference this}, Path=ShowTitle}"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowTitle}"
       >
         <Border.StrokeShape>
           <RoundRectangle CornerRadius="4" />
@@ -56,7 +58,7 @@
         WidthRequest="80"
         BackgroundColor="{DynamicResource PrimaryColor}"
         HorizontalOptions="Start"
-        IsVisible="{Binding Source={x:Reference this}, Path=ShowMetadata}"
+        IsVisible="{Binding Source={x:Reference This}, Path=ShowMetadata}"
       >
         <Border.StrokeShape>
           <RoundRectangle CornerRadius="4" />

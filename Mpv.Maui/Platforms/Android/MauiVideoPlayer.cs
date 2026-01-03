@@ -17,6 +17,8 @@ namespace Mpv.Maui.Platforms.Android;
 public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListener
 {
     readonly Context _context;
+    private SurfaceView? _surface;
+    private RelativeLayout? _relativeLayout;
 
     private static readonly AtomicBoolean JvmSet = new(false);
 
@@ -39,11 +41,11 @@ public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPrepare
         _mpvClient.SetOption("vo", "gpu-next");
         _mpvClient.SetOption("hwdec", "mediacodec");
         _mpvClient.SetOption("gpu-context", "android");
-        var surface = new SurfaceView(_context);
+        _surface = new SurfaceView(_context);
 
         // TODO: Get the right size for pointer on platform
         var ptr = Marshal.AllocHGlobal(8);
-        Marshal.WriteInt64(ptr, surface.Holder!.Surface!.Handle.ToInt64());
+        Marshal.WriteInt64(ptr, _surface.Holder!.Surface!.Handle.ToInt64());
 
         _mpvClient.Initialize();
         _mpvClient.SetOption("wid", 4, ptr);
@@ -54,7 +56,7 @@ public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPrepare
         SetBackgroundColor(Color.Black);
 
         // Create a RelativeLayout for sizing the video
-        RelativeLayout relativeLayout = new(_context)
+        _relativeLayout = new(_context)
         {
             LayoutParameters = new LayoutParams(LayoutParams.MatchParent, LayoutParams.MatchParent)
             {
@@ -63,8 +65,8 @@ public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPrepare
         };
 
         // Add to the layouts
-        relativeLayout.AddView(surface);
-        AddView(relativeLayout);
+        _relativeLayout.AddView(_surface);
+        AddView(_relativeLayout);
     }
 
     private partial void UpdateSourcePlatform()
@@ -92,11 +94,40 @@ public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPrepare
         }
     }
 
+    private partial void UpdateSizePlatform()
+    {
+        if (_surface == null || _relativeLayout == null)
+            return;
+
+        // Request layout update for the surface view
+        _surface.RequestLayout();
+        _relativeLayout.RequestLayout();
+
+        _logger.LogDebug("Updated Android surface size to {Width}x{Height}", Width, Height);
+    }
+
+    protected override void OnLayout(bool changed, int left, int top, int right, int bottom)
+    {
+        base.OnLayout(changed, left, top, right, bottom);
+
+        // Trigger size update when layout changes
+        if (changed && _surface != null)
+        {
+            _logger.LogDebug(
+                "Android layout changed: {Width}x{Height}",
+                right - left,
+                bottom - top
+            );
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _video = null;
+            _surface = null;
+            _relativeLayout = null;
             DisposeMpvCommon();
             _mpvClient.Dispose();
         }

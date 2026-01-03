@@ -1,12 +1,6 @@
-namespace Mpv.Maui.Controls
-{
-    public class VideoPositionEventArgs : EventArgs
-    {
-        public TimeSpan? Position { get; }
+namespace Mpv.Maui.Controls;
 
-        public VideoPositionEventArgs(TimeSpan? position = null)
-        {
-            Position = position;
-        }
-    }
+public class VideoPositionEventArgs(TimeSpan? position = null) : EventArgs
+{
+    public TimeSpan? Position { get; } = position;
 }

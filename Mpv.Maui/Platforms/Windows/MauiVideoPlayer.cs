@@ -1,15 +1,10 @@
 using System.Runtime.InteropServices;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
-
 using Mpv.Maui.Controls;
 using Mpv.Sys;
-
 using Windows.Storage;
-
 using WinRT;
-
 using Grid = Microsoft.UI.Xaml.Controls.Grid;
 
 namespace Mpv.Maui.Platforms.Windows;
@@ -128,6 +123,23 @@ public partial class MauiVideoPlayer : Grid, IDisposable
             {
                 _mpvClient.Command("loadfile", path);
             }
+        }
+    }
+
+    private partial void UpdateSizePlatform()
+    {
+        // Update d3d11 composition size based on current grid size
+        var width = ActualWidth;
+        var height = ActualHeight;
+
+        if (width > 0 && height > 0)
+        {
+            _mpvClient.SetOption("d3d11-composition-size", $"{width}x{height}");
+            _logger.LogDebug(
+                "Updated Windows d3d11 composition size to {Width}x{Height}",
+                width,
+                height
+            );
         }
     }
 

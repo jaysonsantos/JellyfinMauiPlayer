@@ -1,6 +1,6 @@
 namespace Player.Controls;
 
-public partial class LoadingCard : ContentView
+public partial class LoadingCard
 {
     public static readonly BindableProperty CardWidthProperty = BindableProperty.Create(
         nameof(CardWidth),

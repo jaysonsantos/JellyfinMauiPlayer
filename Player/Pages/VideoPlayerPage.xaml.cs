@@ -11,6 +11,8 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
     private IDispatcherTimer? _hideControlsTimer;
     private bool _controlsVisible = true;
     private bool _disposed;
+    private bool _isSliderDragging;
+    private DisplayOrientation _previousOrientation;
 
     private const uint FadeAnimationDuration = 250;
     private const int AutoHideDelayMs = 4000;
@@ -22,13 +24,19 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         _logger = logger;
         BindingContext = viewModel;
 
-        _logger.LogInformation(
-            "[VideoPlayerPage] Constructor - VideoUrl in ViewModel: '{Url}'",
-            _viewModel.VideoUrl
-        );
-
         InitializeAutoHideTimer();
         SubscribeToVideoEvents();
+
+        // Wire up the seek command directly
+        PositionSlider.SeekCommand = MpvElement.SeekCommand;
+
+        // Track slider drag state
+        PositionSlider.DragStarted += OnSliderDragStarted;
+        PositionSlider.DragCompleted += OnSliderDragCompleted;
+
+        // Subscribe to orientation changes
+        DeviceDisplay.MainDisplayInfoChanged += OnDisplayInfoChanged;
+        _previousOrientation = DeviceDisplay.MainDisplayInfo.Orientation;
     }
 
     private void InitializeAutoHideTimer()
@@ -43,7 +51,20 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         MpvElement.PropertyChanged += OnVideoPropertyChanged;
     }
 
-    private void OnVideoPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnSliderDragStarted(object? sender, EventArgs e)
+    {
+        _isSliderDragging = true;
+    }
+
+    private void OnSliderDragCompleted(object? sender, EventArgs e)
+    {
+        _isSliderDragging = false;
+    }
+
+    private void OnVideoPropertyChanged(
+        object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e
+    )
     {
         if (string.Equals(e.PropertyName, nameof(Video.Status), StringComparison.Ordinal))
         {
@@ -58,10 +79,21 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         else if (string.Equals(e.PropertyName, nameof(Video.Position), StringComparison.Ordinal))
         {
             _viewModel.HandlePositionChanged(MpvElement.Position);
+            // Sync position to slider only when not dragging
+            if (!_isSliderDragging)
+            {
+                PositionSlider.Position = MpvElement.Position;
+            }
         }
         else if (string.Equals(e.PropertyName, nameof(Video.Duration), StringComparison.Ordinal))
         {
             _viewModel.UpdateDuration(MpvElement.Duration);
+            // Sync duration to slider (XAML binding doesn't work reliably)
+            PositionSlider.Duration = MpvElement.Duration;
+            _logger.LogDebug(
+                "[VideoPlayerPage] Duration synced to slider: {Duration}",
+                MpvElement.Duration
+            );
         }
     }
 
@@ -77,6 +109,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
             MpvElement.Source?.ToString() ?? "NULL"
         );
 
+        // Set preferred orientation for video playback (landscape preferred)
+        SetPreferredOrientation();
+
         // Show controls initially and start auto-hide timer
         ShowControls();
     }
@@ -85,6 +120,16 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
     {
         base.OnDisappearing();
         StopAutoHideTimer();
+
+        // Restore default orientation when leaving video player
+        RestoreDefaultOrientation();
+
+        // Pause video when page disappears (e.g., user presses home button)
+        if (_viewModel.IsPlaying)
+        {
+            MpvElement.Pause();
+            _viewModel.IsPlaying = false;
+        }
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -106,6 +151,64 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         {
             _viewModel.ItemName = itemName;
         }
+    }
+
+    private void OnDisplayInfoChanged(object? sender, DisplayInfoChangedEventArgs e)
+    {
+        var newOrientation = e.DisplayInfo.Orientation;
+
+        if (newOrientation != _previousOrientation)
+        {
+            _logger.LogInformation(
+                "[VideoPlayerPage] Orientation changed from {Previous} to {New}",
+                _previousOrientation,
+                newOrientation
+            );
+
+            _previousOrientation = newOrientation;
+
+            // Notify the video element about the size change (it will handle the resize)
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Force layout update for the video element
+                MpvElement.InvalidateMeasure();
+
+                // Reset auto-hide timer to show controls briefly after rotation
+                if (_viewModel.IsPlaying)
+                {
+                    ShowControls();
+                }
+            });
+        }
+    }
+
+    private static void SetPreferredOrientation()
+    {
+#if ANDROID
+        var activity = Platform.CurrentActivity;
+        if (activity != null)
+        {
+            // Allow sensor-based landscape orientation (both landscape directions)
+            activity.RequestedOrientation = Android.Content.PM.ScreenOrientation.SensorLandscape;
+        }
+#elif IOS || MACCATALYST
+        // iOS handles orientation through the Info.plist or can be controlled via UIViewController
+        // For now, we allow the system to handle it
+#endif
+    }
+
+    private static void RestoreDefaultOrientation()
+    {
+#if ANDROID
+        var activity = Platform.CurrentActivity;
+        if (activity != null)
+        {
+            // Restore to unspecified (follow system/sensor)
+            activity.RequestedOrientation = Android.Content.PM.ScreenOrientation.Unspecified;
+        }
+#elif IOS || MACCATALYST
+        // iOS handles orientation through the Info.plist
+#endif
     }
 
     private void OnVideoTapped(object? sender, TappedEventArgs e)
@@ -235,6 +338,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
         _disposed = true;
 
+        // Unsubscribe from orientation changes
+        DeviceDisplay.MainDisplayInfoChanged -= OnDisplayInfoChanged;
+
         if (_hideControlsTimer is not null)
         {
             _hideControlsTimer.Stop();
@@ -243,5 +349,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
 
         MpvElement.PropertyChanged -= OnVideoPropertyChanged;
+        PositionSlider.DragStarted -= OnSliderDragStarted;
+        PositionSlider.DragCompleted -= OnSliderDragCompleted;
     }
 }

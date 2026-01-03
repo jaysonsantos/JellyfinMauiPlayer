@@ -5,19 +5,14 @@ namespace JellyfinPlayer.Lib.Api;
 /// <summary>
 /// Authentication provider for Jellyfin API that includes device information in the Authorization header.
 /// </summary>
-public sealed class JellyfinAuthenticationProvider : IAuthenticationProvider
+public sealed class JellyfinAuthenticationProvider(
+    IDictionary<string, string> deviceInfo,
+    string? accessToken = null
+) : IAuthenticationProvider
 {
-    private readonly IDictionary<string, string> _deviceInfo;
-    private string? _accessToken;
-
-    public JellyfinAuthenticationProvider(
-        IDictionary<string, string> deviceInfo,
-        string? accessToken = null
-    )
-    {
-        _deviceInfo = deviceInfo ?? throw new ArgumentNullException(nameof(deviceInfo));
-        _accessToken = accessToken;
-    }
+    private readonly IDictionary<string, string> _deviceInfo =
+        deviceInfo ?? throw new ArgumentNullException(nameof(deviceInfo));
+    private string? _accessToken = accessToken;
 
     public string? AccessToken
     {
