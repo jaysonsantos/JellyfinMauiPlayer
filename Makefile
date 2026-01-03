@@ -3,7 +3,7 @@ MPV_BUILDS_BASE_URL=https://github.com/jaysonsantos/mpv-builds/releases/download
 
 MPV_TARGETS=windows-x86_64 android-x86_64 android-aarch64 macos-aarch64 ios-aarch64
 MPV_TARGETS_DESTINATION=$(addprefix .cache/mpv/,$(MPV_TARGETS))
-MPV_TARGETS_TAR=$(addsuffix .tar.xz,$(MPV_TARGETS_DESTINATION))
+MPV_TARGETS_TAR=$(addsuffix .tar.gz,$(MPV_TARGETS_DESTINATION))
 
 MOLTENVK_VERSION=1.4.1
 MOLTENVK_URL=https://github.com/KhronosGroup/MoltenVK/releases/download/v$(MOLTENVK_VERSION)/MoltenVK-all.tar
@@ -18,16 +18,17 @@ jellyfin-openapi.json:
 
 $(MPV_TARGETS_TAR):
 	@mkdir -p .cache/mpv
-	@target=$(@:.cache/mpv/%.tar.xz=%); \
-	url="$(MPV_BUILDS_BASE_URL)/$$target-mpv-$(MPV_VERSION)/$$target-mpv-$(MPV_VERSION).tar.gz"; \
+	@target=$(@:.cache/mpv/%.tar.gz=%); \
+	url="$(MPV_BUILDS_BASE_URL)/$$target-mpv-$(MPV_VERSION)/$$target.tar.gz"; \
 	echo "Downloading mpv for $$target from $$url"; \
 	curl --fail -Lsqo $@ "$$url"
 
 
 $(MPV_TARGETS_DESTINATION): $(MPV_TARGETS_TAR)
-	@target=$(@:.cache/mpv/%=%); \
+	@set -x; target=$(@:.cache/mpv/%=%); \
 	echo "Extracting mpv for $$target"; \
-	tar -xf .cache/mpv/$$target.tar.xz -C .cache/
+	mkdir -p .cache/mpv/$$target; \
+	tar -xvf .cache/mpv/$$target.tar.gz -C .cache/mpv
 
 $(MOLTENVK_TAR):
 	@mkdir -p .cache

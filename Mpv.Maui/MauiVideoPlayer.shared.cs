@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
 using Mpv.Sys;
@@ -71,32 +70,32 @@ public partial class MauiVideoPlayer
         switch (e.Property)
         {
             case ObservedProperty.IdleActive:
-                _idleActive = GetBoolFromEventData(e.EventData);
+                _idleActive = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.Pause:
-                _pause = GetBoolFromEventData(e.EventData);
+                _pause = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.PausedForCache:
-                _pausedForCache = GetBoolFromEventData(e.EventData);
+                _pausedForCache = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.CoreIdle:
-                _coreIdle = GetBoolFromEventData(e.EventData);
+                _coreIdle = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.EofReached:
-                _eofReached = GetBoolFromEventData(e.EventData);
+                _eofReached = e.UnwrapBool();
                 UpdateStatus();
                 break;
 
             case ObservedProperty.Duration:
-                _duration = GetDoubleFromEventData(e.EventData);
+                _duration = e.UnwrapDouble();
                 // Only sync position when actually playing
                 if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
                 {
@@ -105,40 +104,13 @@ public partial class MauiVideoPlayer
                 break;
 
             case ObservedProperty.TimePos:
-                _timePos = GetDoubleFromEventData(e.EventData);
+                _timePos = e.UnwrapDouble();
                 // Only sync position when actually playing
                 if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
                 {
                     SyncPositionFromMpv();
                 }
                 break;
-        }
-    }
-
-    private bool GetBoolFromEventData(MpvEventProperty eventData)
-    {
-        try
-        {
-            return eventData.Data.ToInt64() == 1;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to read boolean property from event data.");
-            return false;
-        }
-    }
-
-    private double GetDoubleFromEventData(MpvEventProperty eventData)
-    {
-        try
-        {
-            var bytes = BitConverter.GetBytes(eventData.Data);
-            return BitConverter.ToDouble(bytes, 0);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to read double property from event data.");
-            return 0;
         }
     }
 
@@ -309,13 +281,14 @@ public partial class MauiVideoPlayer
         _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
     }
 
-    public void PlayRequested(TimeSpan position)
+    public void PlayRequested(TimeSpan? position)
     {
-        _mpvClient.Command(
-            "seek",
-            position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-            "absolute"
-        );
+        if (position != null)
+            _mpvClient.Command(
+                "seek",
+                position.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+                "absolute"
+            );
         _mpvClient.SetOption(MpvPropertyNames.Pause, "no");
         _logger.LogDebug("Video playback from {Position}.", position);
     }

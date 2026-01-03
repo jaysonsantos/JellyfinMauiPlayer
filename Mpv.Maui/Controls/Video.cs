@@ -159,29 +159,29 @@ namespace Mpv.Maui.Controls
 
         public void Play()
         {
-            VideoPositionEventArgs args = new VideoPositionEventArgs(Position);
+            VideoPositionEventArgs args = new();
             PlayRequested?.Invoke(this, args);
-            Handler?.Invoke(nameof(Video.PlayRequested), args);
+            Handler?.Invoke(nameof(PlayRequested), args);
         }
 
         public void Pause()
         {
-            VideoPositionEventArgs args = new VideoPositionEventArgs(Position);
+            VideoPositionEventArgs args = new(Position);
             PauseRequested?.Invoke(this, args);
             Handler?.Invoke(nameof(Video.PauseRequested), args);
         }
 
         public void Stop()
         {
-            VideoPositionEventArgs args = new VideoPositionEventArgs(Position);
+            VideoPositionEventArgs args = new(Position);
             StopRequested?.Invoke(this, args);
-            Handler?.Invoke(nameof(Video.StopRequested), args);
+            Handler?.Invoke(nameof(StopRequested), args);
         }
 
         void OnTimerTick(object? sender, EventArgs e)
         {
             UpdateStatus?.Invoke(this, EventArgs.Empty);
-            Handler?.Invoke(nameof(Video.UpdateStatus));
+            Handler?.Invoke(nameof(UpdateStatus));
         }
 
         void SetTimeToEnd()

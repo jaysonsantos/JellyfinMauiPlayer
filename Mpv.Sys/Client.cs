@@ -40,9 +40,6 @@ public sealed class MpvClient : IDisposable
     {
         var evt = WaitEvent();
 
-        if (evt.eventId != MpvEventId.LogMessage)
-            Console.WriteLine($"EVENT: {evt}");
-
         switch (evt.eventId)
         {
             case MpvEventId.LogMessage:
@@ -54,12 +51,26 @@ public sealed class MpvClient : IDisposable
             case MpvEventId.PropertyChange:
             {
                 var mpvEvent = Marshal.PtrToStructure<MpvEventProperty>(evt.data);
+                object? output;
+                try
+                {
+                    output = ReadEventOutput(mpvEvent);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to read event data: {ex}");
+                    return;
+                }
+
+                var name = Marshal.PtrToStringAnsi(mpvEvent.Name);
+                Console.WriteLine($"PROPERTY {name} {output}");
+
                 OnPropertyChange?.Invoke(
                     this,
                     new MpvPropertyChangeEventArgs
                     {
                         Property = (ObservedProperty)evt.replyUserData,
-                        EventData = mpvEvent,
+                        EventData = output,
                     }
                 );
                 break;
@@ -67,6 +78,55 @@ public sealed class MpvClient : IDisposable
             case MpvEventId.VideoReconfig:
                 OnVideoReconfigure?.Invoke(this, EventArgs.Empty);
                 break;
+        }
+    }
+
+    private static object? ReadEventOutput(MpvEventProperty mpvEvent)
+    {
+        switch (mpvEvent.Format)
+        {
+            case MpvFormat.None:
+                return null;
+            case MpvFormat.String:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.String is not available."
+                );
+            case MpvFormat.OsdString:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.OsdString is not available."
+                );
+            case MpvFormat.Flag:
+                return Marshal.ReadIntPtr(mpvEvent.Data) == 1;
+            case MpvFormat.Int64:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.Int64 is not available."
+                );
+            case MpvFormat.Double:
+                var bytes = BitConverter.GetBytes(Marshal.ReadIntPtr(mpvEvent.Data));
+                return BitConverter.ToDouble(bytes, 0);
+                break;
+            case MpvFormat.Node:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.Node is not available."
+                );
+                break;
+            case MpvFormat.NodeArray:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.NodeArray is not available."
+                );
+                break;
+            case MpvFormat.NodeMap:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.NodeMap is not available."
+                );
+                break;
+            case MpvFormat.ByteArray:
+                throw new NotImplementedException(
+                    "Implementation for MpvFormat.ByteArray is not available."
+                );
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
