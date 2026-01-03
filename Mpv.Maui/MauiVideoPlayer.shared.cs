@@ -58,9 +58,6 @@ public partial class MauiVideoPlayer
 
     private void LogLines(object? sender, MpvLogMessage e)
     {
-#if IOS || MACCATALYST
-        Console.WriteLine($"[{e.Level}] {e.Prefix}: {e.Text}");
-#endif
         // Map mpv log levels to appropriate .NET logging levels
         switch (e.LogLevel)
         {
@@ -76,12 +73,12 @@ public partial class MauiVideoPlayer
             case MpvLogLevel.Info:
                 _logger.LogInformation("[{Prefix}] {Text}", e.Prefix, e.Text);
                 break;
-            case MpvLogLevel.V:
             case MpvLogLevel.Debug:
                 _logger.LogDebug("[{Prefix}] {Text}", e.Prefix, e.Text);
                 break;
             case MpvLogLevel.None:
             case MpvLogLevel.Trace:
+            case MpvLogLevel.V:
             default:
                 _logger.LogTrace("[{Prefix}] {Text}", e.Prefix, e.Text);
                 break;
@@ -187,8 +184,6 @@ public partial class MauiVideoPlayer
         {
             status = VideoStatus.Paused; // Treat EOF as paused/finished
         }
-
-        // TODO: Detect failure state
 
         ((IVideoController)_video).Status = status;
     }
