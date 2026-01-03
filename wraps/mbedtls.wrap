@@ -1,9 +1,0 @@
-[wrap-file]
-directory = mbedtls-3.6.3.1
-source_url = https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.6.3.1.tar.gz
-source_filename = mbedtls-3.6.3.1.tar.gz
-source_hash = 5344d16a64932b9956e2c9422fc5925ce480d570732f4379226888fffc19ed00
-method = cmake
-
-[provide]
-mbedtls = mbedtls_dep

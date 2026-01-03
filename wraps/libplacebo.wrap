@@ -1,9 +1,0 @@
-[wrap-git]
-directory = libplacebo
-url = https://github.com/haasn/libplacebo.git
-revision = v7.351.0
-depth = 1
-clone-recursive = true
-
-[provide]
-libplacebo = libplacebo_dep
