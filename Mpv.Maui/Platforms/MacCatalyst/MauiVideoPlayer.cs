@@ -14,6 +14,7 @@ namespace Mpv.Maui.Platforms.MaciOS
     public sealed partial class MauiVideoPlayer : MTKView
     {
         private bool _disposed;
+        private readonly CAMetalLayer _layer;
 
         public MauiVideoPlayer(
             Video virtualView,
@@ -33,10 +34,10 @@ namespace Mpv.Maui.Platforms.MaciOS
             // Subscribe to events
             _mpvClient.OnVideoReconfigure += OnVideoReconfigure;
 
-            CAMetalLayer layer = new MetalLayer();
-            layer.Frame = Frame;
-            layer.FramebufferOnly = true;
-            Layer.AddSublayer(layer);
+            _layer = new MetalLayer();
+            _layer.Frame = Frame;
+            _layer.FramebufferOnly = true;
+            Layer.AddSublayer(_layer);
 
             // This will break on 32-bit systems
             var ptr = Marshal.AllocHGlobal(sizeof(Int64));
@@ -54,6 +55,31 @@ namespace Mpv.Maui.Platforms.MaciOS
         private void OnVideoReconfigure(object? sender, EventArgs e)
         {
             _logger.LogInformation("Video reconfigured.");
+        }
+
+        private partial void UpdateSizePlatform()
+        {
+            if (_layer == null)
+                return;
+
+            // Update the Metal layer frame to match the view bounds
+            _layer.Frame = Bounds;
+            _logger.LogDebug(
+                "Updated Metal layer size to {Width}x{Height}",
+                Bounds.Width,
+                Bounds.Height
+            );
+        }
+
+        public override void LayoutSubviews()
+        {
+            base.LayoutSubviews();
+
+            // Update Metal layer frame when view layout changes
+            if (_layer != null)
+            {
+                _layer.Frame = Bounds;
+            }
         }
 
         private partial void UpdateSourcePlatform()

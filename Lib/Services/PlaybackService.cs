@@ -186,7 +186,8 @@ public sealed class PlaybackService(
                             BitRate = stream.BitRate,
                         }
                 )
-                .ToArray() ?? [];
+                .ToArray()
+            ?? [];
     }
 
     private static SubtitleTrack[] GetSubtitleTracks(MediaSourceInfo mediaSource)
@@ -208,7 +209,8 @@ public sealed class PlaybackService(
                             IsForced = stream.IsForced ?? false,
                         }
                 )
-                .ToArray() ?? [];
+                .ToArray()
+            ?? [];
     }
 
     public async Task<bool> ReportPlaybackStartAsync(

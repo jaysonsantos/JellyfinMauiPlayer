@@ -1,7 +1,7 @@
 MPV_VERSION=0.41.0
 MPV_BUILDS_BASE_URL=https://github.com/jaysonsantos/mpv-builds/releases/download
 
-MPV_TARGETS=windows-x86_64 android-x86_64 android-aarch64 macos-aarch64 ios-aarch64
+MPV_TARGETS=windows-x86_64 android-x86_64 android-aarch64 android-armv7a macos-aarch64 ios-aarch64
 MPV_TARGETS_DESTINATION=$(addprefix .cache/mpv/,$(MPV_TARGETS))
 MPV_TARGETS_TAR=$(addsuffix .tar.gz,$(MPV_TARGETS_DESTINATION))
 

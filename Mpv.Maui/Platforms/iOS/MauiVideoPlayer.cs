@@ -54,6 +54,31 @@ namespace Mpv.Maui.Platforms.MaciOS
             _logger.LogInformation("Video reconfigured.");
         }
 
+        private partial void UpdateSizePlatform()
+        {
+            if (_layer == null)
+                return;
+
+            // Update the Metal layer frame to match the view bounds
+            _layer.Frame = Bounds;
+            _logger.LogDebug(
+                "Updated Metal layer size to {Width}x{Height}",
+                Bounds.Width,
+                Bounds.Height
+            );
+        }
+
+        public override void LayoutSubviews()
+        {
+            base.LayoutSubviews();
+
+            // Update Metal layer frame when view layout changes
+            if (_layer != null)
+            {
+                _layer.Frame = Bounds;
+            }
+        }
+
         private partial void UpdateSourcePlatform()
         {
             if (_video == null)

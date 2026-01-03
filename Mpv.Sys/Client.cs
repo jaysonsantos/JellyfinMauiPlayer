@@ -62,9 +62,6 @@ public sealed class MpvClient : IDisposable
                     return;
                 }
 
-                var name = Marshal.PtrToStringAnsi(mpvEvent.Name);
-                Console.WriteLine($"PROPERTY {name} {output}");
-
                 OnPropertyChange?.Invoke(
                     this,
                     new MpvPropertyChangeEventArgs
@@ -104,27 +101,22 @@ public sealed class MpvClient : IDisposable
             case MpvFormat.Double:
                 var bytes = BitConverter.GetBytes(Marshal.ReadIntPtr(mpvEvent.Data));
                 return BitConverter.ToDouble(bytes, 0);
-                break;
             case MpvFormat.Node:
                 throw new NotImplementedException(
                     "Implementation for MpvFormat.Node is not available."
                 );
-                break;
             case MpvFormat.NodeArray:
                 throw new NotImplementedException(
                     "Implementation for MpvFormat.NodeArray is not available."
                 );
-                break;
             case MpvFormat.NodeMap:
                 throw new NotImplementedException(
                     "Implementation for MpvFormat.NodeMap is not available."
                 );
-                break;
             case MpvFormat.ByteArray:
                 throw new NotImplementedException(
                     "Implementation for MpvFormat.ByteArray is not available."
                 );
-                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -179,11 +171,6 @@ public sealed class MpvClient : IDisposable
         var error = MpvClientInternal.Command(_handle, outputParameters);
         if (error != 0)
             throw new Exception("Failed to execute command: " + ErrorToString(error));
-    }
-
-    public MpvRenderContext GetRenderContext(MpvOpenGlInitParmsInner.GetProc getProc)
-    {
-        return new(this._handle, "opengl", getProc);
     }
 
     private MpvEvent WaitEvent()

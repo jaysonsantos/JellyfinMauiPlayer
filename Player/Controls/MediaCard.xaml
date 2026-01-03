@@ -2,8 +2,10 @@
 <ContentView
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:controls="clr-namespace:Player.Controls"
   x:Class="Player.Controls.MediaCard"
   x:Name="This"
+  x:DataType="controls:MediaCard"
 >
   <Border
     Padding="0"

@@ -34,7 +34,7 @@ public sealed partial class VideoPlayerViewModel(
         // Convert string URL to VideoSource when URL changes
         if (!string.IsNullOrWhiteSpace(value))
         {
-            VideoSource = Mpv.Maui.Controls.VideoSource.FromUri(value);
+            VideoSource = VideoSource.FromUri(value);
             logger.LogInformation("[VideoPlayerViewModel] VideoSource created from URL");
         }
         else
@@ -50,7 +50,7 @@ public sealed partial class VideoPlayerViewModel(
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
-[ObservableProperty]
+    [ObservableProperty]
     public partial bool IsPlaying { get; set; }
 
     [ObservableProperty]

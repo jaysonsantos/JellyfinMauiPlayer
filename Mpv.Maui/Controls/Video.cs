@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows.Input;
 
 namespace Mpv.Maui.Controls
 {
@@ -77,6 +78,22 @@ namespace Mpv.Maui.Controls
         public static readonly BindableProperty TimeToEndProperty =
             TimeToEndPropertyKey.BindableProperty;
 
+        private static readonly BindablePropertyKey SeekCommandPropertyKey =
+            BindableProperty.CreateReadOnly(
+                nameof(SeekCommand),
+                typeof(ICommand),
+                typeof(Video),
+                null,
+                defaultValueCreator: (bindable) =>
+                {
+                    var video = (Video)bindable;
+                    return new Command<TimeSpan>(position => video.Seek(position));
+                }
+            );
+
+        public static readonly BindableProperty SeekCommandProperty =
+            SeekCommandPropertyKey.BindableProperty;
+
         public bool AreTransportControlsEnabled
         {
             get { return (bool)GetValue(AreTransportControlsEnabledProperty); }
@@ -136,25 +153,36 @@ namespace Mpv.Maui.Controls
             private set { SetValue(TimeToEndPropertyKey, value); }
         }
 
+        public ICommand SeekCommand
+        {
+            get { return (ICommand)GetValue(SeekCommandProperty); }
+        }
+
         #endregion
 
         #region Events
 
         public event EventHandler? UpdateStatus;
+        public event EventHandler? UpdateSize;
         public event EventHandler<VideoPositionEventArgs>? PlayRequested;
         public event EventHandler<VideoPositionEventArgs>? PauseRequested;
         public event EventHandler<VideoPositionEventArgs>? StopRequested;
+        public event EventHandler<VideoPositionEventArgs>? SeekRequested;
 
         #endregion
 
-        private IDispatcherTimer? _timer;
 
         public Video()
         {
-            _timer = Dispatcher.CreateTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(100);
-            _timer.Tick += OnTimerTick;
-            _timer.Start();
+            // Subscribe to size changes (VisualElement.SizeChanged)
+            SizeChanged += OnViewSizeChanged;
+        }
+
+        void OnViewSizeChanged(object? sender, EventArgs e)
+        {
+            // Notify handler about size change
+            UpdateSize?.Invoke(this, EventArgs.Empty);
+            Handler?.Invoke(nameof(UpdateSize));
         }
 
         public void Play()
@@ -168,7 +196,7 @@ namespace Mpv.Maui.Controls
         {
             VideoPositionEventArgs args = new(Position);
             PauseRequested?.Invoke(this, args);
-            Handler?.Invoke(nameof(Video.PauseRequested), args);
+            Handler?.Invoke(nameof(PauseRequested), args);
         }
 
         public void Stop()
@@ -178,10 +206,11 @@ namespace Mpv.Maui.Controls
             Handler?.Invoke(nameof(StopRequested), args);
         }
 
-        void OnTimerTick(object? sender, EventArgs e)
+        public void Seek(TimeSpan position)
         {
-            UpdateStatus?.Invoke(this, EventArgs.Empty);
-            Handler?.Invoke(nameof(UpdateStatus));
+            VideoPositionEventArgs args = new(position);
+            SeekRequested?.Invoke(this, args);
+            Handler?.Invoke(nameof(SeekRequested), args);
         }
 
         void SetTimeToEnd()
@@ -206,19 +235,15 @@ namespace Mpv.Maui.Controls
 
             if (disposing)
             {
-                // Stop and dispose the timer
-                if (_timer != null)
-                {
-                    _timer.Stop();
-                    _timer.Tick -= OnTimerTick;
-                    _timer = null;
-                }
-
+                // Unsubscribe from size changes
+                SizeChanged -= OnViewSizeChanged;
                 // Clear event handlers to prevent memory leaks
                 UpdateStatus = null;
+                UpdateSize = null;
                 PlayRequested = null;
                 PauseRequested = null;
                 StopRequested = null;
+                SeekRequested = null;
             }
         }
     }

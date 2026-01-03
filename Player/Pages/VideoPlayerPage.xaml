@@ -3,7 +3,6 @@
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
   xmlns:viewModels="clr-namespace:Player.ViewModels"
-  xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
   xmlns:views="clr-namespace:Mpv.Maui.Controls;assembly=Mpv.Maui"
   x:Class="Player.Pages.VideoPlayerPage"
   x:DataType="viewModels:VideoPlayerViewModel"
@@ -128,7 +127,7 @@
         <Label
           x:Name="PlayPauseIcon"
           Text="{Binding IsPlaying, Converter={StaticResource PlayPauseConverter}}"
-          FontSize="36"
+          FontSize="20"
           TextColor="{DynamicResource VideoTextColor}"
           HorizontalOptions="Center"
           VerticalOptions="Center"
@@ -148,8 +147,8 @@
           <views:PositionSlider
             x:Name="PositionSlider"
             Grid.Row="0"
-            Duration="{Binding Source={x:Reference MpvElement}, Path=Duration}"
-            Position="{Binding Source={x:Reference MpvElement}, Path=Position, Mode=TwoWay}"
+            Duration="{Binding Source={x:Reference MpvElement}, Path=Duration, x:DataType=views:Video}"
+            Position="{Binding Source={x:Reference MpvElement}, Path=Position, x:DataType=views:Video}"
             MinimumTrackColor="{DynamicResource PrimaryColor}"
             MaximumTrackColor="{DynamicResource MutedTextColor}"
             ThumbColor="{DynamicResource PrimaryColor}"

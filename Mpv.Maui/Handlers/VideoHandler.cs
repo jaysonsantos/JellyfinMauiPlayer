@@ -27,10 +27,20 @@ namespace Mpv.Maui.Handlers
         public static CommandMapper<Video, VideoHandler> CommandMapper = new(ViewCommandMapper)
         {
             [nameof(Video.UpdateStatus)] = MapUpdateStatus,
+            [nameof(Video.UpdateSize)] = MapUpdateSize,
             [nameof(Video.PlayRequested)] = MapPlayRequested,
             [nameof(Video.PauseRequested)] = MapPauseRequested,
             [nameof(Video.StopRequested)] = MapStopRequested,
+            [nameof(Video.SeekRequested)] = MapSeekRequested,
         };
+
+        private static void MapSeekRequested(VideoHandler handler, Video video, object? args)
+        {
+            if (args is VideoPositionEventArgs { Position: { } position })
+            {
+                handler.PlatformView?.SeekRequested(position);
+            }
+        }
 
         public VideoHandler()
             : base(PropertyMapper, CommandMapper) { }
@@ -58,6 +68,11 @@ namespace Mpv.Maui.Handlers
         public static void MapUpdateStatus(VideoHandler handler, Video video, object? args)
         {
             handler.PlatformView?.UpdateStatus();
+        }
+
+        public static void MapUpdateSize(VideoHandler handler, Video video, object? args)
+        {
+            handler.PlatformView?.UpdateSize();
         }
 
         public static void MapPlayRequested(VideoHandler handler, Video video, object? args)

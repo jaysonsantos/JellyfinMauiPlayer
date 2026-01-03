@@ -61,7 +61,31 @@ public partial class MauiVideoPlayer
 #if IOS || MACCATALYST
         Console.WriteLine($"[{e.Level}] {e.Prefix}: {e.Text}");
 #endif
-        _logger.LogWarning("{Level} {Prefix} {Text}", e.Level, e.Prefix, e.Text);
+        // Map mpv log levels to appropriate .NET logging levels
+        switch (e.LogLevel)
+        {
+            case MpvLogLevel.Fatal:
+                _logger.LogCritical("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+            case MpvLogLevel.Error:
+                _logger.LogError("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+            case MpvLogLevel.Warn:
+                _logger.LogWarning("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+            case MpvLogLevel.Info:
+                _logger.LogInformation("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+            case MpvLogLevel.V:
+            case MpvLogLevel.Debug:
+                _logger.LogDebug("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+            case MpvLogLevel.None:
+            case MpvLogLevel.Trace:
+            default:
+                _logger.LogTrace("[{Prefix}] {Text}", e.Prefix, e.Text);
+                break;
+        }
     }
 
     private void OnMpvPropertyChange(object? sender, MpvPropertyChangeEventArgs e)
@@ -96,11 +120,8 @@ public partial class MauiVideoPlayer
 
             case ObservedProperty.Duration:
                 _duration = e.UnwrapDouble();
-                // Only sync position when actually playing
-                if (_video != null && ((IVideoController)_video).Status == VideoStatus.Playing)
-                {
-                    SyncPositionFromMpv();
-                }
+                // Always sync duration when it changes
+                SyncDurationFromMpv();
                 break;
 
             case ObservedProperty.TimePos:
@@ -231,6 +252,19 @@ public partial class MauiVideoPlayer
         );
     }
 
+    private void SyncDurationFromMpv()
+    {
+        if (_video == null)
+            return;
+
+        var duration = _duration;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            ((IVideoController)_video).Duration = TimeSpan.FromSeconds(duration);
+        });
+    }
+
     private void SyncPositionFromMpv()
     {
         if (_video == null)
@@ -290,18 +324,35 @@ public partial class MauiVideoPlayer
                 "absolute"
             );
         _mpvClient.SetOption(MpvPropertyNames.Pause, "no");
-        _logger.LogDebug("Video playback from {Position}.", position);
+        _logger.LogDebug("Video playback from {Position}", position);
     }
 
     public void PauseRequested(TimeSpan position)
     {
         _mpvClient.SetOption(MpvPropertyNames.Pause, "yes");
-        _logger.LogDebug("Video paused at {Position}.", position);
+        _logger.LogDebug("Video paused at {Position}", position);
     }
 
     public void StopRequested(TimeSpan position)
     {
         _mpvClient.Command("stop");
-        _logger.LogDebug("Video stopped at {Position}.", position);
+        _logger.LogDebug("Video stopped at {Position}", position);
+    }
+
+    public void UpdateSize()
+    {
+        UpdateSizePlatform();
+    }
+
+    private partial void UpdateSizePlatform();
+
+    public void SeekRequested(TimeSpan position)
+    {
+        _mpvClient.Command(
+            "seek",
+            position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+            "absolute"
+        );
+        _logger.LogDebug("Seek requested to {Position}", position);
     }
 }
