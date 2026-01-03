@@ -92,7 +92,7 @@ jobs:
           dotnet-quality: "preview"
 
       - name: Install MAUI workloads
-        run: dotnet workload install maui-windows
+        run: dotnet workload install 
 
       - name: Cache MPV dependencies
         uses: actions/cache@v4
