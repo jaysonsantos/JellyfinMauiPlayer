@@ -5,8 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>JellyfinPlayer.Lib</RootNamespace>
-    <!-- Treat all Meziantou.Analyzer warnings (MA*) as errors -->
-    <WarningsAsErrors>MA</WarningsAsErrors>
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 

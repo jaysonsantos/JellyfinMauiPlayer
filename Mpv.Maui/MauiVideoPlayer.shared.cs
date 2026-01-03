@@ -15,7 +15,7 @@ namespace Mpv.Maui.Platforms.Windows;
 
 #endif
 
-public partial class MauiVideoPlayer
+public sealed partial class MauiVideoPlayer
 {
     private Video? _video;
     private readonly MpvClient _mpvClient;

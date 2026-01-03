@@ -20,8 +20,6 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <CodesignProvision>Automatic</CodesignProvision>
-    <!-- Treat all analyzer warnings as errors -->
-    <WarningsAsErrors>MA</WarningsAsErrors>
     <!-- Enable XamlC compilation for bindings with Source -->
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 

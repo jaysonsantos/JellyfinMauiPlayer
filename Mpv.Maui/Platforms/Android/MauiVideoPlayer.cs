@@ -14,7 +14,7 @@ using Color = Android.Graphics.Color;
 
 namespace Mpv.Maui.Platforms.Android;
 
-public partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListener
+public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOnPreparedListener
 {
     readonly Context _context;
     private SurfaceView? _surface;
