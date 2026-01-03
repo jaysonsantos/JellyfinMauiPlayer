@@ -13,18 +13,18 @@ namespace Mpv.Maui.Handlers
 {
     public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
     {
-        public static IPropertyMapper<Video, VideoHandler> PropertyMapper = new PropertyMapper<
-            Video,
-            VideoHandler
-        >(ViewMapper)
-        {
-            [nameof(Video.AreTransportControlsEnabled)] = MapAreTransportControlsEnabled,
-            [nameof(Video.Source)] = MapSource,
-            [nameof(Video.IsLooping)] = MapIsLooping,
-            [nameof(Video.Position)] = MapPosition,
-        };
+        private static readonly IPropertyMapper<Video, VideoHandler> PropertyMapper =
+            new PropertyMapper<Video, VideoHandler>(ViewMapper)
+            {
+                [nameof(Video.AreTransportControlsEnabled)] = MapAreTransportControlsEnabled,
+                [nameof(Video.Source)] = MapSource,
+                [nameof(Video.IsLooping)] = MapIsLooping,
+                [nameof(Video.Position)] = MapPosition,
+            };
 
-        public static CommandMapper<Video, VideoHandler> CommandMapper = new(ViewCommandMapper)
+        private static readonly CommandMapper<Video, VideoHandler> CommandMapper = new(
+            ViewCommandMapper
+        )
         {
             [nameof(Video.UpdateStatus)] = MapUpdateStatus,
             [nameof(Video.UpdateSize)] = MapUpdateSize,

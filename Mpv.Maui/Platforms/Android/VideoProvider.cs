@@ -30,17 +30,17 @@ public class VideoProvider : ContentProvider
 
     public override int Delete(Uri uri, string? selection, string[]? selectionArgs)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override string? GetType(Uri uri)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override Uri? Insert(Uri uri, ContentValues? values)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override bool OnCreate()
@@ -56,7 +56,7 @@ public class VideoProvider : ContentProvider
         string? sortOrder
     )
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override int Update(
@@ -66,6 +66,6 @@ public class VideoProvider : ContentProvider
         string[]? selectionArgs
     )
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }

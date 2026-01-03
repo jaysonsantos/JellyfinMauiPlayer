@@ -43,7 +43,7 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         _mpvClient.SetOption("gpu-context", "android");
         _surface = new SurfaceView(_context);
 
-        // TODO: Get the right size for pointer on platform
+        // MPV expects a 64-bit pointer for the wid option regardless of platform
         var ptr = Marshal.AllocHGlobal(8);
         Marshal.WriteInt64(ptr, _surface.Holder!.Surface!.Handle.ToInt64());
 
