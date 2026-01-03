@@ -17,6 +17,9 @@ jobs:
           - target: android-aarch64
             framework: net10.0-android
             runtime: android-arm64
+          - target: android-armv7a
+            framework: net10.0-android
+            runtime: android-arm
           - target: android-x86_64
             framework: net10.0-android
             runtime: android-x64
