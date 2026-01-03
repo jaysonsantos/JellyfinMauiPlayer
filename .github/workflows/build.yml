@@ -62,7 +62,8 @@ jobs:
             -f ${{ matrix.framework }} \
             -r ${{ matrix.runtime }} \
             -o publish/${{ matrix.target }} \
-            -warnaserror
+            -warnaserror \
+            ${{ matrix.target == 'maccatalyst-arm64' && '-p:EnableCodeSigning=false' || '' }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
