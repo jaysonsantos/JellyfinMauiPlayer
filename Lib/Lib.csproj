@@ -11,13 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Kiota-generated client dependencies - Bundle includes all required packages -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
-    <PackageReference Include="Microsoft.Kiota.Bundle" Version="1.21.0" />
 
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
 
@@ -38,5 +36,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lib.JellyfinApi\Lib.JellyfinApi.csproj" />
   </ItemGroup>
 </Project>

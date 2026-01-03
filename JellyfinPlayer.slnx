@@ -12,6 +12,7 @@
     <Project Path="Mpv.Sys.Tests/Mpv.Sys.Tests.csproj" />
     <Project Path="Mpv.Sys/Mpv.Sys.csproj" />
   </Folder>
+  <Project Path="Lib.JellyfinApi/Lib.JellyfinApi.csproj" />
   <Project Path="Lib.Tests/Lib.Tests.csproj" />
   <Project Path="Lib/Lib.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />

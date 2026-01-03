@@ -11,7 +11,7 @@ MOLTENVK_TAR=.cache/MoltenVK-all.tar
 MOLTENVK_DESTINATION=.cache/MoltenVK
 
 Lib/Generated: jellyfin-openapi.json
-	kiota generate -l CSharp -n JellyfinPlayer.Lib.Api -c JellyfinApiClient --exclude-backward-compatible -d $< -o ./Lib/Generated
+	kiota generate -l CSharp -n JellyfinPlayer.Lib.Api -c JellyfinApiClient --exclude-backward-compatible -d $< -o ./Lib.JellyfinApi/Generated
 
 jellyfin-openapi.json:
 	curl -Lsqo $@ https://api.jellyfin.org/openapi/jellyfin-openapi-stable.json
