@@ -377,31 +377,31 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnAudioTrackSelected(object? sender, int trackId)
+    private void OnAudioTrackSelected(object? sender, TrackSelectedEventArgs e)
     {
         try
         {
-            MpvElement.SetAudioTrack(trackId);
-            _viewModel.UpdateCurrentTracks(trackId, _viewModel.CurrentSubtitleTrackId);
-            _logger.LogInformation("Audio track changed to {TrackId}", trackId);
+            MpvElement.SetAudioTrack(e.TrackId);
+            _viewModel.UpdateCurrentTracks(e.TrackId, _viewModel.CurrentSubtitleTrackId);
+            _logger.LogInformation("Audio track changed to {TrackId}", e.TrackId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to change audio track to {TrackId}", trackId);
+            _logger.LogError(ex, "Failed to change audio track to {TrackId}", e.TrackId);
         }
     }
 
-    private void OnSubtitleTrackSelected(object? sender, int trackId)
+    private void OnSubtitleTrackSelected(object? sender, TrackSelectedEventArgs e)
     {
         try
         {
-            MpvElement.SetSubtitleTrack(trackId);
-            _viewModel.UpdateCurrentTracks(_viewModel.CurrentAudioTrackId, trackId);
-            _logger.LogInformation("Subtitle track changed to {TrackId}", trackId);
+            MpvElement.SetSubtitleTrack(e.TrackId);
+            _viewModel.UpdateCurrentTracks(_viewModel.CurrentAudioTrackId, e.TrackId);
+            _logger.LogInformation("Subtitle track changed to {TrackId}", e.TrackId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to change subtitle track to {TrackId}", trackId);
+            _logger.LogError(ex, "Failed to change subtitle track to {TrackId}", e.TrackId);
         }
     }
 

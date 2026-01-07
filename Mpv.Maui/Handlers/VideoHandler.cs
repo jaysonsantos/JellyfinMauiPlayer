@@ -106,9 +106,9 @@ namespace Mpv.Maui.Handlers
             object? args
         )
         {
-            if (args is int trackId)
+            if (args is TrackChangeEventArgs trackChangeArgs)
             {
-                handler.PlatformView?.SetAudioTrack(trackId);
+                handler.PlatformView?.SetAudioTrack(trackChangeArgs.TrackId);
             }
         }
 
@@ -118,9 +118,9 @@ namespace Mpv.Maui.Handlers
             object? args
         )
         {
-            if (args is int trackId)
+            if (args is TrackChangeEventArgs trackChangeArgs)
             {
-                handler.PlatformView?.SetSubtitleTrack(trackId);
+                handler.PlatformView?.SetSubtitleTrack(trackChangeArgs.TrackId);
             }
         }
 

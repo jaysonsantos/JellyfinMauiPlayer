@@ -84,8 +84,8 @@ public sealed partial class VideoPlayerViewModel(
     [ObservableProperty]
     public partial bool ShowSubtitleTrackSelector { get; set; }
 
-    public event EventHandler<int>? AudioTrackSelected;
-    public event EventHandler<int>? SubtitleTrackSelected;
+    public event EventHandler<TrackSelectedEventArgs>? AudioTrackSelected;
+    public event EventHandler<TrackSelectedEventArgs>? SubtitleTrackSelected;
 
     private TimeSpan _currentPosition;
     private TimeSpan _duration;
@@ -353,7 +353,7 @@ public sealed partial class VideoPlayerViewModel(
     {
         CurrentAudioTrackId = trackId;
         ShowAudioTrackSelector = false;
-        AudioTrackSelected?.Invoke(this, trackId);
+        AudioTrackSelected?.Invoke(this, new TrackSelectedEventArgs(trackId));
         logger.LogInformation("Audio track selected: {TrackId}", trackId);
     }
 
@@ -362,7 +362,7 @@ public sealed partial class VideoPlayerViewModel(
     {
         CurrentSubtitleTrackId = trackId;
         ShowSubtitleTrackSelector = false;
-        SubtitleTrackSelected?.Invoke(this, trackId);
+        SubtitleTrackSelected?.Invoke(this, new TrackSelectedEventArgs(trackId));
         logger.LogInformation("Subtitle track selected: {TrackId}", trackId);
     }
 

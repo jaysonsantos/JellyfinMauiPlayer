@@ -72,3 +72,17 @@
       - Documentation: `ThirdParty/mpv/docs/` contains `input.rst` (commands like loadfile), `options.rst`, `lua.rst`, `client-api-changes.rst`
       - Source: https://github.com/mpv-player/mpv
     - When implementing mpv integration, refer to the headers and command documentation in `ThirdParty/mpv/`.
+26. **Event Handlers and EventArgs:**
+    - All event handlers MUST follow the standard .NET pattern: `EventHandler<TEventArgs>` where `TEventArgs` derives from `System.EventArgs`.
+    - NEVER use `EventHandler<int>`, `EventHandler<string>`, or other primitive types directly as the generic parameter.
+    - Create a custom EventArgs class (e.g., `TrackChangeEventArgs`, `TrackSelectedEventArgs`) that derives from `EventArgs` to hold the data.
+    - Example pattern:
+      ```csharp
+      public sealed class TrackChangeEventArgs(int trackId) : EventArgs
+      {
+          public int TrackId { get; } = trackId;
+      }
+      public event EventHandler<TrackChangeEventArgs>? AudioTrackChanged;
+      // Usage: AudioTrackChanged?.Invoke(this, new TrackChangeEventArgs(trackId));
+      ```
+    - See existing examples: `VideoPositionEventArgs`, `TrackChangeEventArgs`, `TrackSelectedEventArgs`.
