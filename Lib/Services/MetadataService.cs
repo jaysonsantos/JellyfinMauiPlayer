@@ -228,8 +228,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new MovieInfoRemoteSearchQuery
         {
             SearchInfo = new MovieInfo { Name = query },
@@ -246,8 +244,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new SeriesInfoRemoteSearchQuery
         {
             SearchInfo = new SeriesInfo { Name = query },
@@ -264,8 +260,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new AlbumInfoRemoteSearchQuery
         {
             SearchInfo = new AlbumInfo { Name = query },
@@ -285,8 +279,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new ArtistInfoRemoteSearchQuery
         {
             SearchInfo = new ArtistInfo { Name = query },
@@ -306,8 +298,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new BookInfoRemoteSearchQuery
         {
             SearchInfo = new BookInfo { Name = query },
@@ -324,8 +314,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new BoxSetInfoRemoteSearchQuery
         {
             SearchInfo = new BoxSetInfo { Name = query },
@@ -342,8 +330,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new MusicVideoInfoRemoteSearchQuery
         {
             SearchInfo = new MusicVideoInfo { Name = query },
@@ -363,8 +349,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new PersonLookupInfoRemoteSearchQuery
         {
             SearchInfo = new PersonLookupInfo { Name = query },
@@ -381,8 +365,6 @@ public sealed class MetadataService(
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(apiClient);
-
         var searchQuery = new TrailerInfoRemoteSearchQuery
         {
             SearchInfo = new TrailerInfo { Name = query },
