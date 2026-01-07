@@ -60,3 +60,9 @@
     - If you must use `.ConfigureAwait(false)` and then perform UI operations, explicitly dispatch to the UI thread using `MainThread.InvokeOnMainThreadAsync()`.
     - Common UI operations that require UI thread: `Shell.Current.GoToAsync()`, setting observable properties bound to UI, `Application.Current.MainPage` access.
     - Failure to follow this will result in `UIKit.UIKitThreadAccessException` on iOS/Mac or similar exceptions on other platforms.
+25. **Third-Party Dependencies:**
+    - mpv headers and documentation are located in `ThirdParty/mpv/`:
+      - Headers: `ThirdParty/mpv/include/` contains `client.h`, `render.h`, `render_gl.h`, `stream_cb.h`
+      - Documentation: `ThirdParty/mpv/docs/` contains `input.rst` (commands like loadfile), `options.rst`, `lua.rst`, `client-api-changes.rst`
+      - Source: https://github.com/mpv-player/mpv
+    - When implementing mpv integration, refer to the headers and command documentation in `ThirdParty/mpv/`.
