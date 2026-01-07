@@ -377,7 +377,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnAudioTrackSelected(int trackId)
+    private void OnAudioTrackSelected(object? sender, int trackId)
     {
         try
         {
@@ -391,7 +391,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnSubtitleTrackSelected(int trackId)
+    private void OnSubtitleTrackSelected(object? sender, int trackId)
     {
         try
         {
