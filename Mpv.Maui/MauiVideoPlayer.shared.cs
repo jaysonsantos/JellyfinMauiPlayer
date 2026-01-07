@@ -138,11 +138,15 @@ public sealed partial class MauiVideoPlayer
         {
             int currentAudioTrack = _mpvClient.GetCurrentAudioTrack();
             int currentSubtitleTrack = _mpvClient.GetCurrentSubtitleTrack();
+            string? audioLanguage = _mpvClient.GetCurrentAudioTrackLanguage();
+            string? subtitleLanguage = _mpvClient.GetCurrentSubtitleTrackLanguage();
 
             _logger.LogInformation(
-                "File loaded - Current audio track: {AudioTrack}, Current subtitle track: {SubtitleTrack}",
+                "File loaded - Current audio track: {AudioTrack} (language: {AudioLang}), Current subtitle track: {SubtitleTrack} (language: {SubtitleLang})",
                 currentAudioTrack,
-                currentSubtitleTrack
+                audioLanguage ?? "unknown",
+                currentSubtitleTrack,
+                subtitleLanguage ?? "unknown"
             );
         }
         catch (Exception ex)

@@ -214,6 +214,97 @@ public sealed class MpvClient : IDisposable
     }
 
     /// <summary>
+    /// Gets the language of the current audio track.
+    /// </summary>
+    /// <returns>The language code (e.g., "eng", "jpn") or null if not available.</returns>
+    public string? GetCurrentAudioTrackLanguage()
+    {
+        int trackId = GetCurrentAudioTrack();
+        if (trackId == 0)
+            return null;
+
+        return GetTrackLanguage(trackId, "audio");
+    }
+
+    /// <summary>
+    /// Gets the language of the current subtitle track.
+    /// </summary>
+    /// <returns>The language code (e.g., "eng", "jpn") or null if not available.</returns>
+    public string? GetCurrentSubtitleTrackLanguage()
+    {
+        int trackId = GetCurrentSubtitleTrack();
+        if (trackId == 0)
+            return null;
+
+        return GetTrackLanguage(trackId, "sub");
+    }
+
+    /// <summary>
+    /// Gets the language for a specific track by ID and type.
+    /// Uses the track-list property to find the track and retrieve its language.
+    /// See: https://mpv.io/manual/stable/#command-interface-track-list
+    /// </summary>
+    /// <param name="trackId">The track ID (as used in aid/sid).</param>
+    /// <param name="trackType">The track type ("audio" or "sub").</param>
+    /// <returns>The language code or null if not found or not available.</returns>
+    private string? GetTrackLanguage(int trackId, string trackType)
+    {
+        // Get the track list count
+        IntPtr countPtr = GetPropertyPtr("track-list/count", MpvFormat.Int64);
+        int trackCount = (int)(long)countPtr;
+
+        // Iterate through all tracks to find the one matching the ID and type
+        for (int i = 0; i < trackCount; i++)
+        {
+            // Check if this track matches our type
+            string typeProperty = $"track-list/{i}/type";
+            IntPtr typePtr = GetPropertyPtr(typeProperty, MpvFormat.String);
+            try
+            {
+                string? type = Marshal.PtrToStringAnsi(typePtr);
+                if (!string.Equals(type, trackType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+            }
+            finally
+            {
+                MpvClientInternal.Free(typePtr);
+            }
+
+            // Check if this track's ID matches
+            string idProperty = $"track-list/{i}/id";
+            IntPtr idPtr = GetPropertyPtr(idProperty, MpvFormat.Int64);
+            int id = (int)(long)idPtr;
+
+            if (id == trackId)
+            {
+                // Found the matching track, get its language
+                string langProperty = $"track-list/{i}/lang";
+                try
+                {
+                    IntPtr langPtr = GetPropertyPtr(langProperty, MpvFormat.String);
+                    try
+                    {
+                        return Marshal.PtrToStringAnsi(langPtr);
+                    }
+                    finally
+                    {
+                        MpvClientInternal.Free(langPtr);
+                    }
+                }
+                catch
+                {
+                    // Language property might not be available for this track
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Helper method to get a track ID property (aid/sid) from MPV.
     /// These properties return strings that can be "auto", "no", or numeric values.
     /// See: https://mpv.io/manual/stable/#options (--aid, --sid)
