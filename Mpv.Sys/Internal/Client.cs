@@ -13,7 +13,7 @@ public struct Constants
 #elif LINUX || ANDROID
     public const string LibraryName = "libmpv.so";
 #else
-#error Unsupported platform
+    public const string LibraryName = "mpv";
 #endif
 }
 
