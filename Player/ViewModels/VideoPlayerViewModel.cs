@@ -148,18 +148,13 @@ public sealed partial class VideoPlayerViewModel(
         DurationSeconds = duration.TotalSeconds > 0 ? duration.TotalSeconds : 1.0;
     }
 
-    private static string FormatTimeSpan(TimeSpan timeSpan)
+    public static string FormatTimeSpan(TimeSpan timeSpan)
     {
         if (timeSpan.TotalHours >= 1)
         {
             return timeSpan.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture);
         }
         return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
-    }
-
-    public static string FormatTimeSpanForDisplay(TimeSpan timeSpan)
-    {
-        return FormatTimeSpan(timeSpan);
     }
 
     /// <summary>

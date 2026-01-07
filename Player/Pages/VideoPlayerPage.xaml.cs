@@ -438,7 +438,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
             resumePosition
         );
 
-        var formattedPosition = VideoPlayerViewModel.FormatTimeSpanForDisplay(resumePosition);
+        var formattedPosition = VideoPlayerViewModel.FormatTimeSpan(resumePosition);
         var resumeAction = ResumeActionPrefix + formattedPosition;
 
         var action = await Shell.Current.DisplayActionSheet(
