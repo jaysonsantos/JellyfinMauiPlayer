@@ -132,10 +132,30 @@ public sealed partial class MauiVideoPlayer
         }
     }
 
+    private void OnFileLoaded(object? sender, EventArgs e)
+    {
+        try
+        {
+            int currentAudioTrack = _mpvClient.GetCurrentAudioTrack();
+            int currentSubtitleTrack = _mpvClient.GetCurrentSubtitleTrack();
+
+            _logger.LogInformation(
+                "File loaded - Current audio track: {AudioTrack}, Current subtitle track: {SubtitleTrack}",
+                currentAudioTrack,
+                currentSubtitleTrack
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get current track information after file loaded");
+        }
+    }
+
     private void InitializeMpvCommon()
     {
         _mpvClient.OnLog += LogLines;
         _mpvClient.OnPropertyChange += OnMpvPropertyChange;
+        _mpvClient.OnFileLoaded += OnFileLoaded;
 
         _mpvClient.SetOption(MpvPropertyNames.InputMediaKeys, "yes");
 
@@ -308,6 +328,7 @@ public sealed partial class MauiVideoPlayer
         // Then unsubscribe from events
         _mpvClient.OnLog -= LogLines;
         _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
+        _mpvClient.OnFileLoaded -= OnFileLoaded;
     }
 
     public void PlayRequested(TimeSpan? position)

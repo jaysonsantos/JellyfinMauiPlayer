@@ -16,6 +16,7 @@ public sealed class MpvClient : IDisposable
     public event EventHandler<MpvLogMessage>? OnLog;
     public event EventHandler<MpvPropertyChangeEventArgs>? OnPropertyChange;
     public event EventHandler? OnVideoReconfigure;
+    public event EventHandler? OnFileLoaded;
 
     public MpvClient()
     {
@@ -74,6 +75,9 @@ public sealed class MpvClient : IDisposable
             }
             case MpvEventId.VideoReconfig:
                 OnVideoReconfigure?.Invoke(this, EventArgs.Empty);
+                break;
+            case MpvEventId.FileLoaded:
+                OnFileLoaded?.Invoke(this, EventArgs.Empty);
                 break;
         }
     }
@@ -171,6 +175,70 @@ public sealed class MpvClient : IDisposable
         var error = MpvClientInternal.Command(_handle, outputParameters);
         if (error != 0)
             throw new Exception("Failed to execute command: " + ErrorToString(error));
+    }
+
+    /// <summary>
+    /// Sets the audio track by track ID.
+    /// </summary>
+    /// <param name="trackId">The audio track ID to switch to.</param>
+    public void SetAudioTrack(int trackId)
+    {
+        Command("set", "aid", trackId.ToString());
+    }
+
+    /// <summary>
+    /// Sets the subtitle track by track ID. Use 0 to disable subtitles.
+    /// </summary>
+    /// <param name="trackId">The subtitle track ID to switch to, or 0 to disable.</param>
+    public void SetSubtitleTrack(int trackId)
+    {
+        Command("set", "sid", trackId.ToString());
+    }
+
+    /// <summary>
+    /// Gets the current audio track ID.
+    /// </summary>
+    /// <returns>The current audio track ID, or 0 if no audio track is selected.</returns>
+    public int GetCurrentAudioTrack()
+    {
+        IntPtr ptr = GetPropertyPtr("aid", MpvFormat.Int64);
+        return (int)Marshal.ReadInt64(ptr);
+    }
+
+    /// <summary>
+    /// Gets the current subtitle track ID.
+    /// </summary>
+    /// <returns>The current subtitle track ID, or 0 if subtitles are disabled.</returns>
+    public int GetCurrentSubtitleTrack()
+    {
+        IntPtr ptr = GetPropertyPtr("sid", MpvFormat.Int64);
+        return (int)Marshal.ReadInt64(ptr);
+    }
+
+    /// <summary>
+    /// Sets subtitle visibility.
+    /// </summary>
+    /// <param name="visible">True to show subtitles, false to hide them.</param>
+    public void SetSubtitleVisibility(bool visible)
+    {
+        if (visible)
+        {
+            // If subtitles should be visible but sid is 0, we can't enable them
+            // without knowing which track to enable. This method assumes a subtitle
+            // track was previously set.
+            var currentSid = GetCurrentSubtitleTrack();
+            if (currentSid == 0)
+            {
+                // No subtitle track is set, we cannot make subtitles visible
+                // This is expected behavior - caller should use SetSubtitleTrack first
+                return;
+            }
+        }
+        else
+        {
+            // Disable subtitles by setting sid to 0
+            SetSubtitleTrack(0);
+        }
     }
 
     private MpvEvent WaitEvent()
