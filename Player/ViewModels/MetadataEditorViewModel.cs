@@ -13,6 +13,8 @@ public sealed partial class MetadataEditorViewModel(
     ILogger<MetadataEditorViewModel> logger
 ) : ObservableObject
 {
+    private const int MetadataRefreshDelayMilliseconds = 2000;
+
     [ObservableProperty]
     public partial string ItemId { get; set; } = string.Empty;
 
@@ -103,6 +105,14 @@ public sealed partial class MetadataEditorViewModel(
             return;
         }
 
+        // Validate ItemId is a valid GUID
+        if (!Guid.TryParse(ItemId, out Guid itemGuid))
+        {
+            ErrorMessage = "Invalid item ID.";
+            logger.LogError("Invalid ItemId format: {ItemId}", ItemId);
+            return;
+        }
+
         IsSaving = true;
         ErrorMessage = null;
         SuccessMessage = null;
@@ -126,7 +136,7 @@ public sealed partial class MetadataEditorViewModel(
             };
 
             var result = await metadataService
-                .UpdateItemAsync(Guid.Parse(ItemId), updatedItem)
+                .UpdateItemAsync(itemGuid, updatedItem)
                 .ConfigureAwait(false);
 
             if (result is ServiceResult<bool>.Success)
@@ -165,6 +175,14 @@ public sealed partial class MetadataEditorViewModel(
         if (IsSaving || string.IsNullOrWhiteSpace(ItemId))
             return;
 
+        // Validate ItemId is a valid GUID
+        if (!Guid.TryParse(ItemId, out Guid itemGuid))
+        {
+            ErrorMessage = "Invalid item ID.";
+            logger.LogError("Invalid ItemId format: {ItemId}", ItemId);
+            return;
+        }
+
         IsSaving = true;
         ErrorMessage = null;
         SuccessMessage = null;
@@ -172,11 +190,7 @@ public sealed partial class MetadataEditorViewModel(
         try
         {
             var result = await metadataService
-                .RefreshMetadataAsync(
-                    Guid.Parse(ItemId),
-                    replaceAllMetadata: false,
-                    replaceAllImages: false
-                )
+                .RefreshMetadataAsync(itemGuid, replaceAllMetadata: false, replaceAllImages: false)
                 .ConfigureAwait(false);
 
             if (result is ServiceResult<bool>.Success)
@@ -188,7 +202,7 @@ public sealed partial class MetadataEditorViewModel(
                 );
 
                 // Wait a moment then reload
-                await Task.Delay(2000).ConfigureAwait(false);
+                await Task.Delay(MetadataRefreshDelayMilliseconds).ConfigureAwait(false);
                 await LoadItemAsync().ConfigureAwait(false);
             }
             else if (result is ServiceResult<bool>.Error errorResult)
