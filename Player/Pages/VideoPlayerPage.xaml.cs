@@ -17,6 +17,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
     private const uint FadeAnimationDuration = 250;
     private const int AutoHideDelayMs = 4000;
+    private const string ResumeActionPrefix = "Resume from ";
+    private const string StartFromBeginningAction = "Start from Beginning";
+    private const string CancelAction = "Cancel";
 
     public VideoPlayerPage(VideoPlayerViewModel viewModel, ILogger<VideoPlayerPage> logger)
     {
@@ -435,18 +438,20 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
             resumePosition
         );
 
-        var formattedPosition = FormatTimeSpan(resumePosition);
+        var formattedPosition = VideoPlayerViewModel.FormatTimeSpanForDisplay(resumePosition);
+        var resumeAction = ResumeActionPrefix + formattedPosition;
+
         var action = await Shell.Current.DisplayActionSheet(
             "Resume Playback",
-            "Cancel",
+            CancelAction,
             null,
-            $"Resume from {formattedPosition}",
-            "Start from Beginning"
+            resumeAction,
+            StartFromBeginningAction
         );
 
         _logger.LogInformation("[VideoPlayerPage] User selected: {Action}", action ?? "null");
 
-        if (string.Equals(action, $"Resume from {formattedPosition}", StringComparison.Ordinal))
+        if (string.Equals(action, resumeAction, StringComparison.Ordinal))
         {
             _logger.LogInformation(
                 "[VideoPlayerPage] User chose to resume from {Position}",
@@ -454,7 +459,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
             );
             MpvElement.Seek(resumePosition);
         }
-        else if (string.Equals(action, "Start from Beginning", StringComparison.Ordinal))
+        else if (string.Equals(action, StartFromBeginningAction, StringComparison.Ordinal))
         {
             _logger.LogInformation("[VideoPlayerPage] User chose to start from beginning");
             MpvElement.Seek(TimeSpan.Zero);
@@ -465,18 +470,6 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
             // User cancelled, start from beginning as default
             MpvElement.Seek(TimeSpan.Zero);
         }
-    }
-
-    private static string FormatTimeSpan(TimeSpan timeSpan)
-    {
-        if (timeSpan.TotalHours >= 1)
-        {
-            return timeSpan.ToString(
-                @"h\:mm\:ss",
-                System.Globalization.CultureInfo.InvariantCulture
-            );
-        }
-        return timeSpan.ToString(@"mm\:ss", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public void Dispose()

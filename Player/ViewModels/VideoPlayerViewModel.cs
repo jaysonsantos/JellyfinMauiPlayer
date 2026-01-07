@@ -157,6 +157,11 @@ public sealed partial class VideoPlayerViewModel(
         return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
     }
 
+    public static string FormatTimeSpanForDisplay(TimeSpan timeSpan)
+    {
+        return FormatTimeSpan(timeSpan);
+    }
+
     /// <summary>
     /// Loads playback information and prepares the video URL
     /// </summary>
@@ -331,12 +336,6 @@ public sealed partial class VideoPlayerViewModel(
         // This will be handled by the MediaElement's built-in controls
         // or can be extended with custom logic
         logger.LogInformation("Toggle play/pause requested");
-    }
-
-    public void SeekToPosition(TimeSpan position)
-    {
-        logger.LogInformation("Seeking to position: {Position}", position);
-        // The actual seek will be triggered by the page through the MpvElement
     }
 
     [RelayCommand]
