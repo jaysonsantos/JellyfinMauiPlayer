@@ -242,26 +242,6 @@ public sealed class MpvClient : IDisposable
     }
 
     /// <summary>
-    /// Gets the language of the current audio track.
-    /// </summary>
-    /// <returns>The language code (e.g., "eng", "jpn") or null if not available.</returns>
-    [Obsolete("Use GetCurrentAudioTrack().Language instead")]
-    public string? GetCurrentAudioTrackLanguage()
-    {
-        return GetCurrentAudioTrack()?.Language;
-    }
-
-    /// <summary>
-    /// Gets the language of the current subtitle track.
-    /// </summary>
-    /// <returns>The language code (e.g., "eng", "jpn") or null if not available.</returns>
-    [Obsolete("Use GetCurrentSubtitleTrack().Language instead")]
-    public string? GetCurrentSubtitleTrackLanguage()
-    {
-        return GetCurrentSubtitleTrack()?.Language;
-    }
-
-    /// <summary>
     /// Gets all available audio tracks.
     /// </summary>
     /// <returns>A list of audio track information.</returns>
