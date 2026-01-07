@@ -213,6 +213,32 @@ public sealed partial class ItemDetailViewModel(
             .ConfigureAwait(false);
     }
 
+    [RelayCommand]
+    private async Task EditMetadataAsync()
+    {
+        if (Item is null)
+            return;
+
+        try
+        {
+            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+            {
+                { "ItemId", ItemId },
+            };
+
+            await Shell.Current.GoToAsync(Routes.MetadataEditor, navigationParams);
+
+            logger.LogInformation("Navigating to metadata editor for item {ItemId}", ItemId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to navigate to metadata editor for item {ItemId}", ItemId);
+            await Shell
+                .Current.DisplayAlertAsync("Navigation Error", ex.Message, "OK")
+                .ConfigureAwait(false);
+        }
+    }
+
     partial void OnItemIdChanged(string value)
     {
         if (!string.IsNullOrWhiteSpace(value))

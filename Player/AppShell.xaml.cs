@@ -12,6 +12,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.Library, typeof(Pages.LibraryPage));
         Routing.RegisterRoute(Routes.ItemDetail, typeof(Pages.ItemDetailPage));
         Routing.RegisterRoute(Routes.VideoPlayer, typeof(Pages.VideoPlayerPage));
+        Routing.RegisterRoute(Routes.MetadataEditor, typeof(Pages.MetadataEditorPage));
 
         // Check authentication after shell is loaded
         Loaded += OnShellLoaded;
