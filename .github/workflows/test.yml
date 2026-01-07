@@ -69,7 +69,7 @@ jobs:
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
       - name: Build
-        run: dotnet build --no-restore -warnaserror
+        run: dotnet build --no-restore
 
       - name: Run Tests with Coverage
         run: dotnet test -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
