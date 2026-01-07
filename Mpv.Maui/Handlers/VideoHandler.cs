@@ -106,10 +106,10 @@ namespace Mpv.Maui.Handlers
             object? args
         )
         {
-            if (args is TrackChangeEventArgs trackChangeArgs)
-            {
-                handler.PlatformView?.SetAudioTrack(trackChangeArgs.TrackId);
-            }
+            if (args is not TrackChangeEventArgs trackChangeArgs)
+                return;
+
+            handler.PlatformView?.SetAudioTrack(trackChangeArgs.TrackId);
         }
 
         public static void MapSubtitleTrackChangeRequested(
@@ -118,10 +118,10 @@ namespace Mpv.Maui.Handlers
             object? args
         )
         {
-            if (args is TrackChangeEventArgs trackChangeArgs)
-            {
-                handler.PlatformView?.SetSubtitleTrack(trackChangeArgs.TrackId);
-            }
+            if (args is not TrackChangeEventArgs trackChangeArgs)
+                return;
+
+            handler.PlatformView?.SetSubtitleTrack(trackChangeArgs.TrackId);
         }
 
         public static void MapGetTracksRequested(VideoHandler handler, Video video, object? args)
