@@ -371,15 +371,24 @@ public sealed partial class VideoPlayerViewModel(
     {
         try
         {
+            // Define subtitle file types for each platform
+            // iOS: Uses Uniform Type Identifiers (UTIs)
+            // Android: Uses MIME types
+            // Windows: Uses file extensions with dots
+            // MacCatalyst: Uses file extensions without dots
             FilePickerFileType subtitleFileTypes = new(
                 new Dictionary<DevicePlatform, IEnumerable<string>>
                 {
+                    // iOS UTIs for subtitle formats
                     { DevicePlatform.iOS, new[] { "public.srt", "public.ssa", "public.ass" } },
+                    // Android MIME types (text/plain covers .srt files)
                     {
                         DevicePlatform.Android,
                         new[] { "application/x-subrip", "text/x-ssa", "text/x-ass", "text/plain" }
                     },
+                    // Windows file extensions (with dots)
                     { DevicePlatform.WinUI, new[] { ".srt", ".ass", ".ssa", ".sub", ".vtt" } },
+                    // MacCatalyst file extensions (without dots)
                     { DevicePlatform.MacCatalyst, new[] { "srt", "ass", "ssa", "sub", "vtt" } },
                 }
             );

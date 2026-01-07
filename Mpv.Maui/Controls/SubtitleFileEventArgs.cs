@@ -9,5 +9,5 @@ public sealed class SubtitleFileEventArgs(string filePath) : EventArgs
     /// <summary>
     /// Gets the path to the subtitle file.
     /// </summary>
-    public string FilePath { get; } = filePath;
+    public string FilePath { get; } = filePath ?? throw new ArgumentNullException(nameof(filePath));
 }

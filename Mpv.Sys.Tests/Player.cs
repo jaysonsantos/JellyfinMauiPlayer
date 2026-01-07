@@ -392,17 +392,24 @@ public class Player
         IReadOnlyList<TrackInfo> initialSubtitleTracks = client.GetSubtitleTracks();
         int initialCount = initialSubtitleTracks.Count;
 
-        // Add external subtitle file
-        string subtitlePath = Path.Combine(
-            Directory.GetCurrentDirectory(),
+        // Add external subtitle file using a more robust path resolution
+        string testAssetsDir = Path.Combine(
+            Path.GetDirectoryName(typeof(Player).Assembly.Location)!,
             "..",
             "..",
             "..",
             "..",
-            "test-assets",
-            "test_subtitle.srt"
+            "test-assets"
         );
+        string subtitlePath = Path.Combine(testAssetsDir, "test_subtitle.srt");
         string absolutePath = Path.GetFullPath(subtitlePath);
+
+        if (!File.Exists(absolutePath))
+        {
+            throw new FileNotFoundException(
+                $"Test subtitle file not found at: {absolutePath}. Please ensure test-assets/test_subtitle.srt exists."
+            );
+        }
 
         client.AddSubtitleFile(absolutePath);
 
