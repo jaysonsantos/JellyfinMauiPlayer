@@ -13,7 +13,7 @@ namespace Mpv.Maui.Handlers
 {
     public partial class VideoHandler : ViewHandler<Video, MauiVideoPlayer>
     {
-        public static IPropertyMapper<Video, VideoHandler> PropertyMapper = new PropertyMapper<
+        private static IPropertyMapper<Video, VideoHandler> PropertyMapper = new PropertyMapper<
             Video,
             VideoHandler
         >(ViewMapper)
@@ -24,7 +24,7 @@ namespace Mpv.Maui.Handlers
             [nameof(Video.Position)] = MapPosition,
         };
 
-        public static CommandMapper<Video, VideoHandler> CommandMapper = new(ViewCommandMapper)
+        private static CommandMapper<Video, VideoHandler> CommandMapper = new(ViewCommandMapper)
         {
             [nameof(Video.UpdateStatus)] = MapUpdateStatus,
             [nameof(Video.UpdateSize)] = MapUpdateSize,
