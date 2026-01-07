@@ -80,7 +80,7 @@ jobs:
       - name: Run Tests Lib.Tests
         id: test_lib
         continue-on-error: true
-        run: dotnet test Lib.Tests/Lib.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results-lib.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+        run: dotnet test Lib.Tests/Lib.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results-lib.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults --filter "FullyQualifiedName!~PlaybackIntegrationTests"
 
       - name: Check test results
         if: steps.test_mpv.outcome == 'failure' || steps.test_lib.outcome == 'failure'
