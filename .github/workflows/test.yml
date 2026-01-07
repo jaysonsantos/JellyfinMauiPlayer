@@ -35,18 +35,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Cache .NET workloads
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~\AppData\Local\Microsoft\dotnet\workloads
-            C:\Program Files\dotnet\sdk-manifests
-            C:\Program Files\dotnet\metadata
-            C:\Program Files\dotnet\packs
-          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-dotnet-workloads-
-
       - name: Cache mpv libraries
         uses: actions/cache@v4
         with:
@@ -58,9 +46,6 @@ jobs:
       - name: Download mpv
         run: make deps
         shell: bash
-
-      - name: Restore workloads
-        run: dotnet workload restore
 
       - name: Restore dependencies
         run: dotnet restore
