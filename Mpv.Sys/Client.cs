@@ -201,7 +201,7 @@ public sealed class MpvClient : IDisposable
     /// <returns>The current audio track ID, or 0 if no audio track is selected.</returns>
     public int GetCurrentAudioTrack()
     {
-        return GetInt64Property("aid");
+        return GetTrackIdProperty("aid");
     }
 
     /// <summary>
@@ -210,7 +210,45 @@ public sealed class MpvClient : IDisposable
     /// <returns>The current subtitle track ID, or 0 if subtitles are disabled.</returns>
     public int GetCurrentSubtitleTrack()
     {
-        return GetInt64Property("sid");
+        return GetTrackIdProperty("sid");
+    }
+
+    /// <summary>
+    /// Helper method to get a track ID property (aid/sid) from MPV.
+    /// These properties return strings that can be "auto", "no", or numeric values.
+    /// See: https://mpv.io/manual/stable/#options (--aid, --sid)
+    /// </summary>
+    /// <param name="propertyName">The name of the MPV property to retrieve (aid or sid).</param>
+    /// <returns>The property value as an integer, or 0 if the track is disabled or not set.</returns>
+    private int GetTrackIdProperty(string propertyName)
+    {
+        IntPtr ptr = GetPropertyPtr(propertyName, MpvFormat.String);
+        try
+        {
+            string? value = Marshal.PtrToStringAnsi(ptr);
+            // MPV returns "no", "auto", or a numeric string
+            // Return 0 for "no" or "auto", otherwise parse the numeric value
+            if (
+                string.IsNullOrEmpty(value)
+                || string.Equals(value, "no", StringComparison.Ordinal)
+                || string.Equals(value, "auto", StringComparison.Ordinal)
+            )
+            {
+                return 0;
+            }
+
+            if (int.TryParse(value, out int trackId))
+            {
+                return trackId;
+            }
+
+            return 0;
+        }
+        finally
+        {
+            // For string format, MPV allocates memory that must be freed
+            MpvClientInternal.Free(ptr);
+        }
     }
 
     /// <summary>
