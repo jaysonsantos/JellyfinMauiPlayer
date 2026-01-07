@@ -202,7 +202,14 @@ public sealed class MpvClient : IDisposable
     public int GetCurrentAudioTrack()
     {
         IntPtr ptr = GetPropertyPtr("aid", MpvFormat.Int64);
-        return (int)Marshal.ReadInt64(ptr);
+        try
+        {
+            return (int)Marshal.ReadInt64(ptr);
+        }
+        finally
+        {
+            MpvClientInternal.Free(ptr);
+        }
     }
 
     /// <summary>
@@ -212,7 +219,14 @@ public sealed class MpvClient : IDisposable
     public int GetCurrentSubtitleTrack()
     {
         IntPtr ptr = GetPropertyPtr("sid", MpvFormat.Int64);
-        return (int)Marshal.ReadInt64(ptr);
+        try
+        {
+            return (int)Marshal.ReadInt64(ptr);
+        }
+        finally
+        {
+            MpvClientInternal.Free(ptr);
+        }
     }
 
     /// <summary>
