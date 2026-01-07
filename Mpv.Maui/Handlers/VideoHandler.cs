@@ -32,6 +32,9 @@ namespace Mpv.Maui.Handlers
             [nameof(Video.PauseRequested)] = MapPauseRequested,
             [nameof(Video.StopRequested)] = MapStopRequested,
             [nameof(Video.SeekRequested)] = MapSeekRequested,
+            [nameof(Video.AudioTrackChangeRequested)] = MapAudioTrackChangeRequested,
+            [nameof(Video.SubtitleTrackChangeRequested)] = MapSubtitleTrackChangeRequested,
+            [nameof(Video.GetTracksRequested)] = MapGetTracksRequested,
         };
 
         private static void MapSeekRequested(VideoHandler handler, Video video, object? args)
@@ -95,6 +98,36 @@ namespace Mpv.Maui.Handlers
                 return;
 
             handler.PlatformView?.StopRequested(position);
+        }
+
+        public static void MapAudioTrackChangeRequested(
+            VideoHandler handler,
+            Video video,
+            object? args
+        )
+        {
+            if (args is int trackId)
+            {
+                handler.PlatformView?.SetAudioTrack(trackId);
+            }
+        }
+
+        public static void MapSubtitleTrackChangeRequested(
+            VideoHandler handler,
+            Video video,
+            object? args
+        )
+        {
+            if (args is int trackId)
+            {
+                handler.PlatformView?.SetSubtitleTrack(trackId);
+            }
+        }
+
+        public static void MapGetTracksRequested(VideoHandler handler, Video video, object? args)
+        {
+            // This is a no-op mapping since track retrieval is done directly
+            // via the platform view's GetAudioTracks() and GetSubtitleTracks() methods
         }
     }
 }

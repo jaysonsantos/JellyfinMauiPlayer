@@ -3,6 +3,7 @@
   xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
   xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
   xmlns:viewModels="clr-namespace:Player.ViewModels"
+  xmlns:models="clr-namespace:Player.Models"
   xmlns:views="clr-namespace:Mpv.Maui.Controls;assembly=Mpv.Maui"
   x:Class="Player.Pages.VideoPlayerPage"
   x:DataType="viewModels:VideoPlayerViewModel"
@@ -207,6 +208,45 @@
                   VerticalOptions="Center"
                 />
               </Border>
+
+              <!-- Audio Track Button -->
+              <Border
+                BackgroundColor="Transparent"
+                WidthRequest="44"
+                HeightRequest="44"
+                StrokeThickness="0"
+              >
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding ToggleAudioTrackSelectorCommand}" />
+                </Border.GestureRecognizers>
+                <Label
+                  Text="🔊"
+                  FontSize="20"
+                  TextColor="{DynamicResource VideoTextColor}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                />
+              </Border>
+
+              <!-- Subtitle Track Button -->
+              <Border
+                BackgroundColor="Transparent"
+                WidthRequest="44"
+                HeightRequest="44"
+                StrokeThickness="0"
+              >
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding ToggleSubtitleTrackSelectorCommand}" />
+                </Border.GestureRecognizers>
+                <Label
+                  Text="CC"
+                  FontSize="14"
+                  FontAttributes="Bold"
+                  TextColor="{DynamicResource VideoTextColor}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                />
+              </Border>
             </HorizontalStackLayout>
 
             <!-- Duration -->
@@ -221,5 +261,124 @@
         </Grid>
       </Border>
     </Grid>
+
+    <!-- Audio Track Selector Overlay -->
+    <Border
+      IsVisible="{Binding ShowAudioTrackSelector}"
+      VerticalOptions="End"
+      BackgroundColor="{DynamicResource VideoOverlay87}"
+      Padding="16"
+      StrokeThickness="0"
+      MaximumHeightRequest="400"
+    >
+      <Border.StrokeShape>
+        <RoundRectangle CornerRadius="12,12,0,0" />
+      </Border.StrokeShape>
+      <VerticalStackLayout Spacing="12">
+        <Label
+          Text="Audio Tracks"
+          FontSize="18"
+          FontAttributes="Bold"
+          TextColor="{DynamicResource VideoTextColor}"
+        />
+        <ScrollView MaximumHeightRequest="300">
+          <CollectionView ItemsSource="{Binding AudioTracks}" SelectionMode="None">
+            <CollectionView.ItemTemplate>
+              <DataTemplate x:DataType="models:TrackInfo">
+                <Border Padding="12,8" Margin="0,4" StrokeThickness="0" BackgroundColor="#40FFFFFF">
+                  <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                  </Border.StrokeShape>
+                  <Border.GestureRecognizers>
+                    <TapGestureRecognizer
+                      Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:VideoPlayerViewModel}}, Path=SelectAudioTrackCommand}"
+                      CommandParameter="{Binding Id}"
+                    />
+                  </Border.GestureRecognizers>
+                  <Label
+                    Text="{Binding DisplayName}"
+                    TextColor="{DynamicResource VideoTextColor}"
+                    FontSize="14"
+                  />
+                </Border>
+              </DataTemplate>
+            </CollectionView.ItemTemplate>
+          </CollectionView>
+        </ScrollView>
+      </VerticalStackLayout>
+    </Border>
+
+    <!-- Subtitle Track Selector Overlay -->
+    <Border
+      IsVisible="{Binding ShowSubtitleTrackSelector}"
+      VerticalOptions="End"
+      BackgroundColor="{DynamicResource VideoOverlay87}"
+      Padding="16"
+      StrokeThickness="0"
+      MaximumHeightRequest="400"
+    >
+      <Border.StrokeShape>
+        <RoundRectangle CornerRadius="12,12,0,0" />
+      </Border.StrokeShape>
+      <VerticalStackLayout Spacing="12">
+        <Label
+          Text="Subtitle Tracks"
+          FontSize="18"
+          FontAttributes="Bold"
+          TextColor="{DynamicResource VideoTextColor}"
+        />
+        <ScrollView MaximumHeightRequest="300">
+          <VerticalStackLayout Spacing="4">
+            <!-- Off Option -->
+            <Border BackgroundColor="#40FFFFFF" Padding="12,8" StrokeThickness="0">
+              <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+              </Border.StrokeShape>
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer
+                  Command="{Binding SelectSubtitleTrackCommand}"
+                  CommandParameter="0"
+                />
+              </Border.GestureRecognizers>
+              <Label
+                Text="Off"
+                TextColor="{DynamicResource VideoTextColor}"
+                FontSize="14"
+                FontAttributes="Bold"
+              />
+            </Border>
+
+            <!-- Subtitle Tracks -->
+            <CollectionView ItemsSource="{Binding SubtitleTracks}" SelectionMode="None">
+              <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:TrackInfo">
+                  <Border
+                    Padding="12,8"
+                    Margin="0,4"
+                    StrokeThickness="0"
+                    BackgroundColor="#40FFFFFF"
+                  >
+                    <Border.StrokeShape>
+                      <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                      <TapGestureRecognizer
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:VideoPlayerViewModel}}, Path=SelectSubtitleTrackCommand}"
+                        CommandParameter="{Binding Id}"
+                      />
+                    </Border.GestureRecognizers>
+                    <Label
+                      Text="{Binding DisplayName}"
+                      TextColor="{DynamicResource VideoTextColor}"
+                      FontSize="14"
+                    />
+                  </Border>
+                </DataTemplate>
+              </CollectionView.ItemTemplate>
+            </CollectionView>
+          </VerticalStackLayout>
+        </ScrollView>
+      </VerticalStackLayout>
+    </Border>
   </Grid>
 </ContentPage>

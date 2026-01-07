@@ -405,4 +405,36 @@ public sealed partial class MauiVideoPlayer
         );
         _logger.LogDebug("Seek requested to {Position}", position);
     }
+
+    public void SetAudioTrack(int trackId)
+    {
+        _mpvClient.SetAudioTrack(trackId);
+        _logger.LogInformation("Audio track changed to {TrackId}", trackId);
+    }
+
+    public void SetSubtitleTrack(int trackId)
+    {
+        _mpvClient.SetSubtitleTrack(trackId);
+        _logger.LogInformation("Subtitle track changed to {TrackId}", trackId);
+    }
+
+    public IReadOnlyList<TrackInfo> GetAudioTracks()
+    {
+        return _mpvClient.GetAudioTracks();
+    }
+
+    public IReadOnlyList<TrackInfo> GetSubtitleTracks()
+    {
+        return _mpvClient.GetSubtitleTracks();
+    }
+
+    public TrackInfo? GetCurrentAudioTrack()
+    {
+        return _mpvClient.GetCurrentAudioTrack();
+    }
+
+    public TrackInfo? GetCurrentSubtitleTrack()
+    {
+        return _mpvClient.GetCurrentSubtitleTrack();
+    }
 }

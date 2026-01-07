@@ -5,6 +5,7 @@ using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
+using Player.Models;
 
 namespace Player.ViewModels;
 
@@ -64,6 +65,27 @@ public sealed partial class VideoPlayerViewModel(
 
     [ObservableProperty]
     public partial string DurationText { get; set; } = "00:00";
+
+    [ObservableProperty]
+    public partial IReadOnlyList<TrackInfo> AudioTracks { get; set; } = [];
+
+    [ObservableProperty]
+    public partial IReadOnlyList<TrackInfo> SubtitleTracks { get; set; } = [];
+
+    [ObservableProperty]
+    public partial int? CurrentAudioTrackId { get; set; }
+
+    [ObservableProperty]
+    public partial int? CurrentSubtitleTrackId { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShowAudioTrackSelector { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShowSubtitleTrackSelector { get; set; }
+
+    public event EventHandler<int>? AudioTrackSelected;
+    public event EventHandler<int>? SubtitleTrackSelected;
 
     private TimeSpan _currentPosition;
     private TimeSpan _duration;
@@ -304,6 +326,74 @@ public sealed partial class VideoPlayerViewModel(
 
         // Navigate back - must be on UI thread
         await Shell.Current.GoToAsync("..", true);
+    }
+
+    [RelayCommand]
+    private void ToggleAudioTrackSelector()
+    {
+        ShowAudioTrackSelector = !ShowAudioTrackSelector;
+        if (ShowAudioTrackSelector)
+        {
+            ShowSubtitleTrackSelector = false;
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleSubtitleTrackSelector()
+    {
+        ShowSubtitleTrackSelector = !ShowSubtitleTrackSelector;
+        if (ShowSubtitleTrackSelector)
+        {
+            ShowAudioTrackSelector = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SelectAudioTrack(int trackId)
+    {
+        CurrentAudioTrackId = trackId;
+        ShowAudioTrackSelector = false;
+        AudioTrackSelected?.Invoke(this, trackId);
+        logger.LogInformation("Audio track selected: {TrackId}", trackId);
+    }
+
+    [RelayCommand]
+    private void SelectSubtitleTrack(int trackId)
+    {
+        CurrentSubtitleTrackId = trackId;
+        ShowSubtitleTrackSelector = false;
+        SubtitleTrackSelected?.Invoke(this, trackId);
+        logger.LogInformation("Subtitle track selected: {TrackId}", trackId);
+    }
+
+    public void LoadTracks(
+        IReadOnlyList<Mpv.Sys.TrackInfo> audioTracks,
+        IReadOnlyList<Mpv.Sys.TrackInfo> subtitleTracks
+    )
+    {
+        ArgumentNullException.ThrowIfNull(audioTracks);
+        ArgumentNullException.ThrowIfNull(subtitleTracks);
+
+        // Convert MPV tracks to Player models
+        AudioTracks = audioTracks.Select(TrackInfo.FromMpvTrackInfo).ToList();
+        SubtitleTracks = subtitleTracks.Select(TrackInfo.FromMpvTrackInfo).ToList();
+
+        logger.LogInformation(
+            "Loaded {AudioCount} audio tracks and {SubtitleCount} subtitle tracks",
+            AudioTracks.Count,
+            SubtitleTracks.Count
+        );
+    }
+
+    public void UpdateCurrentTracks(int? audioTrackId, int? subtitleTrackId)
+    {
+        CurrentAudioTrackId = audioTrackId;
+        CurrentSubtitleTrackId = subtitleTrackId;
+        logger.LogInformation(
+            "Current tracks updated - Audio: {AudioId}, Subtitle: {SubtitleId}",
+            audioTrackId,
+            subtitleTrackId
+        );
     }
 
     partial void OnItemIdChanged(string value)

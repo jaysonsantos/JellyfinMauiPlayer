@@ -37,6 +37,10 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Subscribe to orientation changes
         DeviceDisplay.MainDisplayInfoChanged += OnDisplayInfoChanged;
         _previousOrientation = DeviceDisplay.MainDisplayInfo.Orientation;
+
+        // Subscribe to track selection events
+        _viewModel.AudioTrackSelected += OnAudioTrackSelected;
+        _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
     }
 
     private void InitializeAutoHideTimer()
@@ -94,6 +98,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
                 "[VideoPlayerPage] Duration synced to slider: {Duration}",
                 MpvElement.Duration
             );
+
+            // Load tracks when duration is available (file is loaded)
+            LoadTracksFromPlayer();
         }
     }
 
@@ -329,6 +336,75 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
+    private void LoadTracksFromPlayer()
+    {
+        try
+        {
+            // Access the platform view via the handler - it's platform-specific type
+            if (
+                MpvElement.Handler?.PlatformView
+                is not
+#if ANDROID
+                Mpv.Maui.Platforms.Android.MauiVideoPlayer
+#elif IOS || MACCATALYST
+                Mpv.Maui.Platforms.MaciOS.MauiVideoPlayer
+#elif WINDOWS
+                Mpv.Maui.Platforms.Windows.MauiVideoPlayer
+#else
+                object
+#endif
+                platformView
+            )
+            {
+                _logger.LogWarning("Could not access platform view to load tracks");
+                return;
+            }
+
+            IReadOnlyList<Mpv.Sys.TrackInfo> audioTracks = platformView.GetAudioTracks();
+            IReadOnlyList<Mpv.Sys.TrackInfo> subtitleTracks = platformView.GetSubtitleTracks();
+
+            _viewModel.LoadTracks(audioTracks, subtitleTracks);
+
+            // Update current track IDs
+            Mpv.Sys.TrackInfo? currentAudio = platformView.GetCurrentAudioTrack();
+            Mpv.Sys.TrackInfo? currentSubtitle = platformView.GetCurrentSubtitleTrack();
+
+            _viewModel.UpdateCurrentTracks(currentAudio?.Id, currentSubtitle?.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load tracks from player");
+        }
+    }
+
+    private void OnAudioTrackSelected(int trackId)
+    {
+        try
+        {
+            MpvElement.SetAudioTrack(trackId);
+            _viewModel.UpdateCurrentTracks(trackId, _viewModel.CurrentSubtitleTrackId);
+            _logger.LogInformation("Audio track changed to {TrackId}", trackId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to change audio track to {TrackId}", trackId);
+        }
+    }
+
+    private void OnSubtitleTrackSelected(int trackId)
+    {
+        try
+        {
+            MpvElement.SetSubtitleTrack(trackId);
+            _viewModel.UpdateCurrentTracks(_viewModel.CurrentAudioTrackId, trackId);
+            _logger.LogInformation("Subtitle track changed to {TrackId}", trackId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to change subtitle track to {TrackId}", trackId);
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -340,6 +416,10 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
         // Unsubscribe from orientation changes
         DeviceDisplay.MainDisplayInfoChanged -= OnDisplayInfoChanged;
+
+        // Unsubscribe from track selection events
+        _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
+        _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
 
         if (_hideControlsTimer is not null)
         {

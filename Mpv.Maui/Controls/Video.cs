@@ -168,6 +168,9 @@ namespace Mpv.Maui.Controls
         public event EventHandler<VideoPositionEventArgs>? PauseRequested;
         public event EventHandler<VideoPositionEventArgs>? StopRequested;
         public event EventHandler<VideoPositionEventArgs>? SeekRequested;
+        public event EventHandler<int>? AudioTrackChangeRequested;
+        public event EventHandler<int>? SubtitleTrackChangeRequested;
+        public event EventHandler? GetTracksRequested;
 
         #endregion
 
@@ -213,6 +216,24 @@ namespace Mpv.Maui.Controls
             Handler?.Invoke(nameof(SeekRequested), args);
         }
 
+        public void SetAudioTrack(int trackId)
+        {
+            AudioTrackChangeRequested?.Invoke(this, trackId);
+            Handler?.Invoke(nameof(AudioTrackChangeRequested), trackId);
+        }
+
+        public void SetSubtitleTrack(int trackId)
+        {
+            SubtitleTrackChangeRequested?.Invoke(this, trackId);
+            Handler?.Invoke(nameof(SubtitleTrackChangeRequested), trackId);
+        }
+
+        public void RequestGetTracks()
+        {
+            GetTracksRequested?.Invoke(this, EventArgs.Empty);
+            Handler?.Invoke(nameof(GetTracksRequested), EventArgs.Empty);
+        }
+
         void SetTimeToEnd()
         {
             TimeToEnd = Duration - Position;
@@ -244,6 +265,9 @@ namespace Mpv.Maui.Controls
                 PauseRequested = null;
                 StopRequested = null;
                 SeekRequested = null;
+                AudioTrackChangeRequested = null;
+                SubtitleTrackChangeRequested = null;
+                GetTracksRequested = null;
             }
         }
     }
