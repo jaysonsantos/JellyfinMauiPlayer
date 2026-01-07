@@ -13,6 +13,9 @@ concurrency:
 jobs:
   test:
     runs-on: windows-latest
+    permissions:
+      checks: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -62,16 +65,34 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-
-      - name: Run Tests with Coverage
-        run: dotnet test -f net10.0 --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
-
       - name: Install ReportGenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
+      - name: Build
+        run: dotnet build --no-restore -warnaserror
+
+      - name: Run Tests with Coverage
+        run: dotnet test -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results
+          path: "**/TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
       - name: Generate coverage report
         if: always()
-        run: reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:"Html;Cobertura"
+        run: reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" -title:"Code Coverage Report"
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: TestResults/CoverageReport/SummaryGithub.md
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
