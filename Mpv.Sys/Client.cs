@@ -201,10 +201,7 @@ public sealed class MpvClient : IDisposable
     /// <returns>The current audio track ID, or 0 if no audio track is selected.</returns>
     public int GetCurrentAudioTrack()
     {
-        IntPtr ptr = GetPropertyPtr("aid", MpvFormat.Int64);
-        // For Int64 format, MPV returns the value directly in the IntPtr, not as allocated memory
-        // The value is stored in the pointer itself, so we cast directly without dereferencing
-        return (int)(long)ptr;
+        return GetInt64Property("aid");
     }
 
     /// <summary>
@@ -213,9 +210,18 @@ public sealed class MpvClient : IDisposable
     /// <returns>The current subtitle track ID, or 0 if subtitles are disabled.</returns>
     public int GetCurrentSubtitleTrack()
     {
-        IntPtr ptr = GetPropertyPtr("sid", MpvFormat.Int64);
-        // For Int64 format, MPV returns the value directly in the IntPtr, not as allocated memory
-        // The value is stored in the pointer itself, so we cast directly without dereferencing
+        return GetInt64Property("sid");
+    }
+
+    /// <summary>
+    /// Helper method to get an Int64 property from MPV.
+    /// For MpvFormat.Int64, MPV returns the value directly in the IntPtr (not as allocated memory).
+    /// See: https://mpv.io/manual/stable/#libmpv - mpv_get_property returns simple types by value.
+    /// </summary>
+    private int GetInt64Property(string propertyName)
+    {
+        IntPtr ptr = GetPropertyPtr(propertyName, MpvFormat.Int64);
+        // The value is stored in the pointer itself, cast directly without dereferencing
         return (int)(long)ptr;
     }
 
