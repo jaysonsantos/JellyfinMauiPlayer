@@ -383,6 +383,65 @@ public class Player
         Assert.NotEqual(track1, track3);
     }
 
+    [Fact]
+    public void AddSubtitleFile()
+    {
+        using var client = CreateInitializedClientWithVideo();
+
+        // Get initial subtitle track count
+        IReadOnlyList<TrackInfo> initialSubtitleTracks = client.GetSubtitleTracks();
+        int initialCount = initialSubtitleTracks.Count;
+
+        // Add external subtitle file
+        string subtitlePath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "..",
+            "..",
+            "..",
+            "..",
+            "test-assets",
+            "test_subtitle.srt"
+        );
+        string absolutePath = Path.GetFullPath(subtitlePath);
+
+        client.AddSubtitleFile(absolutePath);
+
+        // Wait for subtitle to be loaded
+        Thread.Sleep(500);
+
+        // Verify subtitle track was added
+        IReadOnlyList<TrackInfo> updatedSubtitleTracks = client.GetSubtitleTracks();
+        Assert.True(updatedSubtitleTracks.Count > initialCount);
+
+        // Verify the new track is selected
+        TrackInfo? currentSubtitle = client.GetCurrentSubtitleTrack();
+        Assert.NotNull(currentSubtitle);
+    }
+
+    [Fact]
+    public void AddSubtitleFileThrowsOnNullPath()
+    {
+        using var client = CreateInitializedClientWithVideo();
+
+        Assert.Throws<ArgumentException>(() => client.AddSubtitleFile(null!));
+    }
+
+    [Fact]
+    public void AddSubtitleFileThrowsOnEmptyPath()
+    {
+        using var client = CreateInitializedClientWithVideo();
+
+        Assert.Throws<ArgumentException>(() => client.AddSubtitleFile(string.Empty));
+    }
+
+    [Fact]
+    public void AddSubtitleFileThrowsOnWhitespacePath()
+    {
+        using var client = CreateInitializedClientWithVideo();
+
+        Assert.Throws<ArgumentException>(() => client.AddSubtitleFile("   "));
+    }
+
     /// <summary>
     /// Helper method to create an initialized MpvClient without loading a video.
     /// </summary>

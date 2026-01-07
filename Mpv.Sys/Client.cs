@@ -599,6 +599,21 @@ public sealed class MpvClient : IDisposable
         // a specific track ID to enable subtitles. Use SetSubtitleTrack() instead.
     }
 
+    /// <summary>
+    /// Adds an external subtitle file to the current video.
+    /// The subtitle will be added to the track list and can be selected via SetSubtitleTrack().
+    /// </summary>
+    /// <param name="path">The absolute path to the subtitle file (.srt, .ass, .ssa, .sub, etc.).</param>
+    /// <exception cref="ArgumentNullException">Thrown when path is null or whitespace.</exception>
+    /// <exception cref="Exception">Thrown when the command fails (e.g., file not found or invalid format).</exception>
+    public void AddSubtitleFile(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        
+        // Use the sub-add command with "select" flag to add and select the subtitle
+        Command("sub-add", path, "select");
+    }
+
     private MpvEvent WaitEvent()
     {
         var evt = MpvClientInternal.WaitEvent(_handle, 1000.0);

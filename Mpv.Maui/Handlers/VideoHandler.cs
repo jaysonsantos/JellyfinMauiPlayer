@@ -35,6 +35,7 @@ namespace Mpv.Maui.Handlers
             [nameof(Video.AudioTrackChangeRequested)] = MapAudioTrackChangeRequested,
             [nameof(Video.SubtitleTrackChangeRequested)] = MapSubtitleTrackChangeRequested,
             [nameof(Video.GetTracksRequested)] = MapGetTracksRequested,
+            [nameof(Video.AddSubtitleFileRequested)] = MapAddSubtitleFileRequested,
         };
 
         private static void MapSeekRequested(VideoHandler handler, Video video, object? args)
@@ -128,6 +129,18 @@ namespace Mpv.Maui.Handlers
         {
             // This is a no-op mapping since track retrieval is done directly
             // via the platform view's GetAudioTracks() and GetSubtitleTracks() methods
+        }
+
+        public static void MapAddSubtitleFileRequested(
+            VideoHandler handler,
+            Video video,
+            object? args
+        )
+        {
+            if (args is not SubtitleFileEventArgs subtitleFileArgs)
+                return;
+
+            handler.PlatformView?.AddSubtitleFile(subtitleFileArgs.FilePath);
         }
     }
 }

@@ -171,6 +171,7 @@ namespace Mpv.Maui.Controls
         public event EventHandler<TrackChangeEventArgs>? AudioTrackChangeRequested;
         public event EventHandler<TrackChangeEventArgs>? SubtitleTrackChangeRequested;
         public event EventHandler? GetTracksRequested;
+        public event EventHandler<SubtitleFileEventArgs>? AddSubtitleFileRequested;
 
         #endregion
 
@@ -236,6 +237,13 @@ namespace Mpv.Maui.Controls
             Handler?.Invoke(nameof(GetTracksRequested), EventArgs.Empty);
         }
 
+        public void AddSubtitleFile(string filePath)
+        {
+            SubtitleFileEventArgs args = new(filePath);
+            AddSubtitleFileRequested?.Invoke(this, args);
+            Handler?.Invoke(nameof(AddSubtitleFileRequested), args);
+        }
+
         void SetTimeToEnd()
         {
             TimeToEnd = Duration - Position;
@@ -270,6 +278,7 @@ namespace Mpv.Maui.Controls
                 AudioTrackChangeRequested = null;
                 SubtitleTrackChangeRequested = null;
                 GetTracksRequested = null;
+                AddSubtitleFileRequested = null;
             }
         }
     }

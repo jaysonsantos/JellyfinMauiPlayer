@@ -437,4 +437,10 @@ public sealed partial class MauiVideoPlayer
     {
         return _mpvClient.GetCurrentSubtitleTrack();
     }
+
+    public void AddSubtitleFile(string filePath)
+    {
+        _mpvClient.AddSubtitleFile(filePath);
+        _logger.LogInformation("External subtitle file added: {FilePath}", filePath);
+    }
 }

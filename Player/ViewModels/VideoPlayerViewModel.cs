@@ -366,6 +366,50 @@ public sealed partial class VideoPlayerViewModel(
         logger.LogInformation("Subtitle track selected: {TrackId}", trackId);
     }
 
+    [RelayCommand]
+    private async Task LoadSubtitleFileAsync()
+    {
+        try
+        {
+            FilePickerFileType subtitleFileTypes = new(
+                new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.srt", "public.ssa", "public.ass" } },
+                    {
+                        DevicePlatform.Android,
+                        new[] { "application/x-subrip", "text/x-ssa", "text/x-ass", "text/plain" }
+                    },
+                    { DevicePlatform.WinUI, new[] { ".srt", ".ass", ".ssa", ".sub", ".vtt" } },
+                    { DevicePlatform.MacCatalyst, new[] { "srt", "ass", "ssa", "sub", "vtt" } },
+                }
+            );
+
+            PickOptions options = new()
+            {
+                PickerTitle = "Select Subtitle File",
+                FileTypes = subtitleFileTypes,
+            };
+
+            FileResult? result = await FilePicker.Default.PickAsync(options);
+            if (result is not null)
+            {
+                logger.LogInformation(
+                    "Subtitle file selected: {FileName} ({Path})",
+                    result.FileName,
+                    result.FullPath
+                );
+                SubtitleFileSelected?.Invoke(this, new SubtitleFileEventArgs(result.FullPath));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to pick subtitle file");
+            ErrorMessage = $"Failed to load subtitle file: {ex.Message}";
+        }
+    }
+
+    public event EventHandler<SubtitleFileEventArgs>? SubtitleFileSelected;
+
     public void LoadTracks(
         IReadOnlyList<Mpv.Sys.TrackInfo> audioTracks,
         IReadOnlyList<Mpv.Sys.TrackInfo> subtitleTracks

@@ -331,6 +331,24 @@
           FontAttributes="Bold"
           TextColor="{DynamicResource VideoTextColor}"
         />
+        
+        <!-- Load Subtitle Button -->
+        <Border BackgroundColor="{DynamicResource PrimaryColor}" Padding="12,8" StrokeThickness="0">
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+          </Border.StrokeShape>
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding LoadSubtitleFileCommand}" />
+          </Border.GestureRecognizers>
+          <Label
+            Text="📂 Load External Subtitle..."
+            TextColor="{DynamicResource VideoTextColor}"
+            FontSize="14"
+            FontAttributes="Bold"
+            HorizontalOptions="Center"
+          />
+        </Border>
+        
         <ScrollView MaximumHeightRequest="300">
           <VerticalStackLayout Spacing="4">
             <!-- Off Option -->

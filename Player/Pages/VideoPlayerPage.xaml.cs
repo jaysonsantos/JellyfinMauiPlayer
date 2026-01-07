@@ -41,6 +41,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Subscribe to track selection events
         _viewModel.AudioTrackSelected += OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
+        _viewModel.SubtitleFileSelected += OnSubtitleFileSelected;
     }
 
     private void InitializeAutoHideTimer()
@@ -405,6 +406,26 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
+    private void OnSubtitleFileSelected(object? sender, Mpv.Maui.Controls.SubtitleFileEventArgs e)
+    {
+        try
+        {
+            MpvElement.AddSubtitleFile(e.FilePath);
+            _logger.LogInformation("External subtitle file loaded: {FilePath}", e.FilePath);
+            
+            // Reload tracks after adding subtitle
+            LoadTracksFromPlayer();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load external subtitle file: {FilePath}", e.FilePath);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _viewModel.ErrorMessage = $"Failed to load subtitle file: {ex.Message}";
+            });
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -420,6 +441,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Unsubscribe from track selection events
         _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
+        _viewModel.SubtitleFileSelected -= OnSubtitleFileSelected;
 
         if (_hideControlsTimer is not null)
         {
