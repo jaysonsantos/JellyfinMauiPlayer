@@ -60,6 +60,7 @@ public static class MauiProgram
         services.AddTransient<ViewModels.LibraryViewModel>();
         services.AddTransient<ViewModels.ItemDetailViewModel>();
         services.AddTransient<ViewModels.VideoPlayerViewModel>();
+        services.AddTransient<ViewModels.MetadataEditorViewModel>();
 
         // Register Pages
         services.AddTransient<Pages.LoginPage>();
@@ -67,6 +68,7 @@ public static class MauiProgram
         services.AddTransient<Pages.LibraryPage>();
         services.AddTransient<Pages.ItemDetailPage>();
         services.AddTransient<Pages.VideoPlayerPage>();
+        services.AddTransient<Pages.MetadataEditorPage>();
     }
 
     private static async Task InitializeDatabaseAsync(IServiceProvider services)

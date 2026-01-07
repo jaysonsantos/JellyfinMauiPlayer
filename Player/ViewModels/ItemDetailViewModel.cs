@@ -147,7 +147,7 @@ public sealed partial class ItemDetailViewModel(
         try
         {
             // Navigate to video player page - it will handle getting playback info
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+            var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 { "ItemId", ItemId },
                 { "ItemName", Item.Name },
@@ -211,6 +211,32 @@ public sealed partial class ItemDetailViewModel(
         await Shell
             .Current.DisplayAlertAsync("Additional Information", info, "OK")
             .ConfigureAwait(false);
+    }
+
+    [RelayCommand]
+    private async Task EditMetadataAsync()
+    {
+        if (Item is null)
+            return;
+
+        try
+        {
+            var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                { "ItemId", ItemId },
+            };
+
+            await Shell.Current.GoToAsync(Routes.MetadataEditor, navigationParams);
+
+            logger.LogInformation("Navigating to metadata editor for item {ItemId}", ItemId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to navigate to metadata editor for item {ItemId}", ItemId);
+            await Shell
+                .Current.DisplayAlertAsync("Navigation Error", ex.Message, "OK")
+                .ConfigureAwait(false);
+        }
     }
 
     partial void OnItemIdChanged(string value)

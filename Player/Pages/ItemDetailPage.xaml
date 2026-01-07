@@ -127,8 +127,8 @@
               HorizontalOptions="FillAndExpand"
             />
             <Button
-              Text="More Info"
-              Command="{Binding ShowMoreInfoCommand}"
+              Text="Edit"
+              Command="{Binding EditMetadataCommand}"
               BackgroundColor="{DynamicResource PrimaryColor}"
               TextColor="{DynamicResource PrimaryTextColor}"
               FontSize="16"
@@ -137,6 +137,15 @@
               HorizontalOptions="FillAndExpand"
             />
           </HorizontalStackLayout>
+          <Button
+            Text="More Info"
+            Command="{Binding ShowMoreInfoCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="16"
+            HeightRequest="44"
+            CornerRadius="8"
+          />
         </VerticalStackLayout>
 
         <!-- Overview -->

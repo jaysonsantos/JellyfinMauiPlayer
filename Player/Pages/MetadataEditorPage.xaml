@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:viewmodels="clr-namespace:Player.ViewModels"
+  x:Class="Player.Pages.MetadataEditorPage"
+  x:DataType="viewmodels:MetadataEditorViewModel"
+  Title="Edit Metadata"
+>
+  <Grid>
+    <!-- Loading Indicator -->
+    <ActivityIndicator
+      IsRunning="{Binding IsLoading}"
+      IsVisible="{Binding IsLoading}"
+      VerticalOptions="Center"
+      HorizontalOptions="Center"
+    />
+
+    <!-- Content -->
+    <ScrollView IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+      <VerticalStackLayout Padding="20" Spacing="16">
+        <!-- Success Message -->
+        <Border
+          IsVisible="{Binding SuccessMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+          BackgroundColor="{DynamicResource PrimaryColor}"
+          Padding="12"
+          StrokeThickness="0"
+        >
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+          </Border.StrokeShape>
+          <Label
+            Text="{Binding SuccessMessage}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="14"
+          />
+        </Border>
+
+        <!-- Error Message -->
+        <Border
+          IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+          BackgroundColor="{DynamicResource ErrorColor}"
+          Padding="12"
+          StrokeThickness="0"
+        >
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+          </Border.StrokeShape>
+          <Label
+            Text="{Binding ErrorMessage}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="14"
+          />
+        </Border>
+
+        <!-- Title Field -->
+        <VerticalStackLayout Spacing="8">
+          <Label
+            Text="Title"
+            FontSize="16"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource TextColor}"
+          />
+          <Entry
+            Text="{Binding Title}"
+            Placeholder="Enter title"
+            FontSize="16"
+            TextColor="{DynamicResource TextColor}"
+            PlaceholderColor="{DynamicResource MutedTextColor}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Year Field -->
+        <VerticalStackLayout Spacing="8">
+          <Label
+            Text="Year"
+            FontSize="16"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource TextColor}"
+          />
+          <Entry
+            Text="{Binding Year}"
+            Placeholder="Enter year (e.g., 2024)"
+            Keyboard="Numeric"
+            FontSize="16"
+            TextColor="{DynamicResource TextColor}"
+            PlaceholderColor="{DynamicResource MutedTextColor}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Overview Field -->
+        <VerticalStackLayout Spacing="8">
+          <Label
+            Text="Overview"
+            FontSize="16"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource TextColor}"
+          />
+          <Editor
+            Text="{Binding Overview}"
+            Placeholder="Enter overview/description"
+            MinimumHeightRequest="150"
+            FontSize="16"
+            TextColor="{DynamicResource TextColor}"
+            PlaceholderColor="{DynamicResource MutedTextColor}"
+            AutoSize="TextChanges"
+          />
+        </VerticalStackLayout>
+
+        <!-- Genres Field -->
+        <VerticalStackLayout Spacing="8">
+          <Label
+            Text="Genres"
+            FontSize="16"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource TextColor}"
+          />
+          <Label
+            Text="Separate multiple genres with commas"
+            FontSize="12"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+          <Entry
+            Text="{Binding Genres}"
+            Placeholder="e.g., Action, Drama, Sci-Fi"
+            FontSize="16"
+            TextColor="{DynamicResource TextColor}"
+            PlaceholderColor="{DynamicResource MutedTextColor}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Action Buttons -->
+        <VerticalStackLayout Spacing="12" Margin="0,24,0,0">
+          <Button
+            Text="Save Changes"
+            Command="{Binding SaveCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="18"
+            FontAttributes="Bold"
+            HeightRequest="50"
+            CornerRadius="8"
+            IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+          />
+          <Button
+            Text="Refresh Metadata from Providers"
+            Command="{Binding RefreshMetadataCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="16"
+            HeightRequest="44"
+            CornerRadius="8"
+            IsEnabled="{Binding IsSaving, Converter={StaticResource InvertedBoolConverter}}"
+          />
+        </VerticalStackLayout>
+
+        <!-- Help Text -->
+        <VerticalStackLayout Spacing="8" Margin="0,16,0,0">
+          <Label
+            Text="Tips:"
+            FontSize="14"
+            FontAttributes="Bold"
+            TextColor="{DynamicResource TextColor}"
+          />
+          <Label
+            Text="• Save Changes: Updates the metadata with your edits"
+            FontSize="12"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+          <Label
+            Text="• Refresh Metadata: Fetches updated information from online providers"
+            FontSize="12"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+          <Label
+            Text="• Changes are saved immediately to the Jellyfin server"
+            FontSize="12"
+            TextColor="{DynamicResource MutedTextColor}"
+          />
+        </VerticalStackLayout>
+      </VerticalStackLayout>
+    </ScrollView>
+  </Grid>
+</ContentPage>
