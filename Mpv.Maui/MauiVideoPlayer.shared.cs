@@ -148,6 +148,38 @@ public sealed partial class MauiVideoPlayer
                 currentSubtitleTrack,
                 subtitleLanguage ?? "unknown"
             );
+
+            // Log all available tracks
+            var audioTracks = _mpvClient.GetAudioTracks();
+            var subtitleTracks = _mpvClient.GetSubtitleTracks();
+
+            _logger.LogInformation("Available audio tracks: {Count}", audioTracks.Count);
+            foreach (var track in audioTracks)
+            {
+                _logger.LogInformation(
+                    "  Audio track {Id}: {Lang} - {Title} ({Codec}){Default}{Forced}",
+                    track.Id,
+                    track.Language ?? "unknown",
+                    track.Title ?? "no title",
+                    track.Codec ?? "unknown",
+                    track.IsDefault ? " [default]" : "",
+                    track.IsForced ? " [forced]" : ""
+                );
+            }
+
+            _logger.LogInformation("Available subtitle tracks: {Count}", subtitleTracks.Count);
+            foreach (var track in subtitleTracks)
+            {
+                _logger.LogInformation(
+                    "  Subtitle track {Id}: {Lang} - {Title} ({Codec}){Default}{Forced}",
+                    track.Id,
+                    track.Language ?? "unknown",
+                    track.Title ?? "no title",
+                    track.Codec ?? "unknown",
+                    track.IsDefault ? " [default]" : "",
+                    track.IsForced ? " [forced]" : ""
+                );
+            }
         }
         catch (Exception ex)
         {

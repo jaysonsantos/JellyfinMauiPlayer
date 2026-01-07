@@ -5,6 +5,26 @@ namespace Mpv.Sys;
 
 using Internal;
 
+/// <summary>
+/// Represents information about a media track (audio, subtitle, or video).
+/// </summary>
+/// <param name="Id">Track ID as used in aid/sid/vid properties.</param>
+/// <param name="Type">Track type: "audio", "sub", or "video".</param>
+/// <param name="Language">Language code (e.g., "eng", "jpn") or null if not available.</param>
+/// <param name="Title">Track title or null if not available.</param>
+/// <param name="Codec">Codec name (e.g., "h264", "aac") or null if not available.</param>
+/// <param name="IsDefault">True if this track has the default flag set.</param>
+/// <param name="IsForced">True if this track has the forced flag set.</param>
+public readonly record struct TrackInfo(
+    int Id,
+    string Type,
+    string? Language,
+    string? Title,
+    string? Codec,
+    bool IsDefault,
+    bool IsForced
+);
+
 public sealed class MpvClient : IDisposable
 {
     private IntPtr _handle;
@@ -237,6 +257,155 @@ public sealed class MpvClient : IDisposable
             return null;
 
         return GetTrackLanguage(trackId, "sub");
+    }
+
+    /// <summary>
+    /// Gets all available audio tracks.
+    /// </summary>
+    /// <returns>A list of audio track information.</returns>
+    public IReadOnlyList<TrackInfo> GetAudioTracks()
+    {
+        return GetTracksByType("audio");
+    }
+
+    /// <summary>
+    /// Gets all available subtitle tracks.
+    /// </summary>
+    /// <returns>A list of subtitle track information.</returns>
+    public IReadOnlyList<TrackInfo> GetSubtitleTracks()
+    {
+        return GetTracksByType("sub");
+    }
+
+    /// <summary>
+    /// Gets all available tracks of a specific type.
+    /// </summary>
+    /// <param name="trackType">The track type ("audio", "sub", or "video").</param>
+    /// <returns>A list of track information for the specified type.</returns>
+    private IReadOnlyList<TrackInfo> GetTracksByType(string trackType)
+    {
+        List<TrackInfo> tracks = new();
+
+        // Get the track list count
+        IntPtr countPtr = GetPropertyPtr("track-list/count", MpvFormat.Int64);
+        int trackCount = (int)(long)countPtr;
+
+        // Iterate through all tracks
+        for (int i = 0; i < trackCount; i++)
+        {
+            // Check if this track matches our type
+            string typeProperty = $"track-list/{i}/type";
+            IntPtr typePtr = GetPropertyPtr(typeProperty, MpvFormat.String);
+            string? type;
+            try
+            {
+                type = Marshal.PtrToStringAnsi(typePtr);
+            }
+            finally
+            {
+                MpvClientInternal.Free(typePtr);
+            }
+
+            if (!string.Equals(type, trackType, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Get track ID
+            string idProperty = $"track-list/{i}/id";
+            IntPtr idPtr = GetPropertyPtr(idProperty, MpvFormat.Int64);
+            int id = (int)(long)idPtr;
+
+            // Get track language (optional)
+            string? language = null;
+            try
+            {
+                string langProperty = $"track-list/{i}/lang";
+                IntPtr langPtr = GetPropertyPtr(langProperty, MpvFormat.String);
+                try
+                {
+                    language = Marshal.PtrToStringAnsi(langPtr);
+                }
+                finally
+                {
+                    MpvClientInternal.Free(langPtr);
+                }
+            }
+            catch
+            {
+                // Language not available
+            }
+
+            // Get track title (optional)
+            string? title = null;
+            try
+            {
+                string titleProperty = $"track-list/{i}/title";
+                IntPtr titlePtr = GetPropertyPtr(titleProperty, MpvFormat.String);
+                try
+                {
+                    title = Marshal.PtrToStringAnsi(titlePtr);
+                }
+                finally
+                {
+                    MpvClientInternal.Free(titlePtr);
+                }
+            }
+            catch
+            {
+                // Title not available
+            }
+
+            // Get track codec (optional)
+            string? codec = null;
+            try
+            {
+                string codecProperty = $"track-list/{i}/codec";
+                IntPtr codecPtr = GetPropertyPtr(codecProperty, MpvFormat.String);
+                try
+                {
+                    codec = Marshal.PtrToStringAnsi(codecPtr);
+                }
+                finally
+                {
+                    MpvClientInternal.Free(codecPtr);
+                }
+            }
+            catch
+            {
+                // Codec not available
+            }
+
+            // Get default flag (optional)
+            bool isDefault = false;
+            try
+            {
+                string defaultProperty = $"track-list/{i}/default";
+                IntPtr defaultPtr = GetPropertyPtr(defaultProperty, MpvFormat.Flag);
+                isDefault = (int)(long)defaultPtr != 0;
+            }
+            catch
+            {
+                // Default flag not available
+            }
+
+            // Get forced flag (optional)
+            bool isForced = false;
+            try
+            {
+                string forcedProperty = $"track-list/{i}/forced";
+                IntPtr forcedPtr = GetPropertyPtr(forcedProperty, MpvFormat.Flag);
+                isForced = (int)(long)forcedPtr != 0;
+            }
+            catch
+            {
+                // Forced flag not available
+            }
+
+            tracks.Add(new TrackInfo(id, trackType, language, title, codec, isDefault, isForced));
+        }
+
+        return tracks;
     }
 
     /// <summary>
