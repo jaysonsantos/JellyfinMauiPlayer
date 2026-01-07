@@ -29,10 +29,9 @@ public sealed partial class LibraryManagementViewModel(
     public partial string? SuccessMessage { get; set; }
 
     [RelayCommand]
-    private async Task LoadDataAsync()
+    private async Task LoadDataAsync(CancellationToken cancellationToken = default)
     {
-        var cancellationToken = CancellationToken.None;
-        if (IsLoading || cancellationToken.IsCancellationRequested)
+        if (IsLoading)
             return;
 
         IsLoading = true;
@@ -165,7 +164,7 @@ public sealed partial class LibraryManagementViewModel(
     }
 
     [RelayCommand]
-    private async Task ScanLibraryAsync()
+    private async Task ScanLibraryAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
         ErrorMessage = null;
@@ -173,7 +172,6 @@ public sealed partial class LibraryManagementViewModel(
 
         try
         {
-            var cancellationToken = CancellationToken.None;
             var result = await libraryManagementService.RefreshLibraryAsync(cancellationToken);
 
             if (result is ServiceResult<bool>.Success)
