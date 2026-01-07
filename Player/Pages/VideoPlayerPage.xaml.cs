@@ -13,6 +13,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
     private bool _disposed;
     private bool _isSliderDragging;
     private DisplayOrientation _previousOrientation;
+    private TimeSpan? _pendingResumePosition;
 
     private const uint FadeAnimationDuration = 250;
     private const int AutoHideDelayMs = 4000;
@@ -41,6 +42,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Subscribe to track selection events
         _viewModel.AudioTrackSelected += OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
+
+        // Subscribe to resume prompt event
+        _viewModel.ResumePromptRequested += OnResumePromptRequested;
     }
 
     private void InitializeAutoHideTimer()
@@ -121,6 +125,16 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
         // Show controls initially and start auto-hide timer
         ShowControls();
+
+        // Show resume prompt if there's a pending position
+        if (_pendingResumePosition.HasValue)
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await ShowResumePromptAsync(_pendingResumePosition.Value);
+                _pendingResumePosition = null;
+            });
+        }
     }
 
     protected override void OnDisappearing()
@@ -405,6 +419,66 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
+    private void OnResumePromptRequested(object? sender, TimeSpan resumePosition)
+    {
+        _logger.LogInformation(
+            "[VideoPlayerPage] Resume prompt requested for position: {Position}",
+            resumePosition
+        );
+        _pendingResumePosition = resumePosition;
+    }
+
+    private async Task ShowResumePromptAsync(TimeSpan resumePosition)
+    {
+        _logger.LogInformation(
+            "[VideoPlayerPage] Showing resume prompt for position: {Position}",
+            resumePosition
+        );
+
+        var formattedPosition = FormatTimeSpan(resumePosition);
+        var action = await Shell.Current.DisplayActionSheet(
+            "Resume Playback",
+            "Cancel",
+            null,
+            $"Resume from {formattedPosition}",
+            "Start from Beginning"
+        );
+
+        _logger.LogInformation("[VideoPlayerPage] User selected: {Action}", action ?? "null");
+
+        if (string.Equals(action, $"Resume from {formattedPosition}", StringComparison.Ordinal))
+        {
+            _logger.LogInformation(
+                "[VideoPlayerPage] User chose to resume from {Position}",
+                resumePosition
+            );
+            MpvElement.Seek(resumePosition);
+        }
+        else if (string.Equals(action, "Start from Beginning", StringComparison.Ordinal))
+        {
+            _logger.LogInformation("[VideoPlayerPage] User chose to start from beginning");
+            MpvElement.Seek(TimeSpan.Zero);
+        }
+        else
+        {
+            _logger.LogInformation("[VideoPlayerPage] User cancelled resume prompt");
+            // User cancelled, start from beginning as default
+            MpvElement.Seek(TimeSpan.Zero);
+        }
+    }
+
+    private static string FormatTimeSpan(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalHours >= 1)
+        {
+            return timeSpan.ToString(
+                @"h\:mm\:ss",
+                System.Globalization.CultureInfo.InvariantCulture
+            );
+        }
+        return timeSpan.ToString(@"mm\:ss", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -420,6 +494,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Unsubscribe from track selection events
         _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
+
+        // Unsubscribe from resume prompt event
+        _viewModel.ResumePromptRequested -= OnResumePromptRequested;
 
         if (_hideControlsTimer is not null)
         {

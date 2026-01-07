@@ -93,6 +93,9 @@ public sealed partial class VideoPlayerViewModel(
     private bool _hasReportedStart;
     private DateTime _lastProgressReport = DateTime.MinValue;
     private const int ProgressReportIntervalSeconds = 10;
+    private const long MinResumeThresholdTicks = 300_000_000; // 30 seconds in ticks
+
+    public event EventHandler<TimeSpan>? ResumePromptRequested;
 
     public void HandleMediaStateChanged(VideoStatus newState)
     {
@@ -224,10 +227,22 @@ public sealed partial class VideoPlayerViewModel(
             .GetPlaybackStateAsync(ItemId, CancellationToken.None)
             .ConfigureAwait(false);
 
-        if (previousState is not null && previousState.PositionTicks > 0)
+        if (previousState is not null && previousState.PositionTicks > MinResumeThresholdTicks)
         {
             logger.LogInformation(
-                "Found previous playback position: {Ticks} ticks",
+                "Found previous playback position: {Ticks} ticks ({Seconds} seconds)",
+                previousState.PositionTicks,
+                TimeSpan.FromTicks(previousState.PositionTicks).TotalSeconds
+            );
+
+            // Request resume prompt from the page
+            var resumePosition = TimeSpan.FromTicks(previousState.PositionTicks);
+            ResumePromptRequested?.Invoke(this, resumePosition);
+        }
+        else if (previousState is not null)
+        {
+            logger.LogInformation(
+                "Previous position {Ticks} ticks is below resume threshold, starting from beginning",
                 previousState.PositionTicks
             );
         }
@@ -316,6 +331,12 @@ public sealed partial class VideoPlayerViewModel(
         // This will be handled by the MediaElement's built-in controls
         // or can be extended with custom logic
         logger.LogInformation("Toggle play/pause requested");
+    }
+
+    public void SeekToPosition(TimeSpan position)
+    {
+        logger.LogInformation("Seeking to position: {Position}", position);
+        // The actual seek will be triggered by the page through the MpvElement
     }
 
     [RelayCommand]
