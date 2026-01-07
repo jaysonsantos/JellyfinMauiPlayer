@@ -210,6 +210,14 @@ public sealed partial class MetadataEditorViewModel(
                 ErrorMessage = errorResult.Message;
                 logger.LogWarning("Failed to refresh metadata: {Message}", errorResult.Message);
             }
+            else if (result is ServiceResult<bool>.ValidationError validationResult)
+            {
+                ErrorMessage = validationResult.Message;
+                logger.LogWarning(
+                    "Validation error refreshing metadata: {Message}",
+                    validationResult.Message
+                );
+            }
         }
         catch (Exception ex)
         {

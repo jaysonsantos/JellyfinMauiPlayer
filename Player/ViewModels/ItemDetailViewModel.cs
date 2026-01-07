@@ -147,7 +147,7 @@ public sealed partial class ItemDetailViewModel(
         try
         {
             // Navigate to video player page - it will handle getting playback info
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+            var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 { "ItemId", ItemId },
                 { "ItemName", Item.Name },
@@ -221,7 +221,7 @@ public sealed partial class ItemDetailViewModel(
 
         try
         {
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+            var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
             {
                 { "ItemId", ItemId },
             };
