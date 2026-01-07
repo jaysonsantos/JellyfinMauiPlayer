@@ -11,7 +11,10 @@
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  packages = [ pkgs.git ];
+  packages = [
+    pkgs.git
+    pkgs.vulkan-loader
+  ];
 
   apple.sdk = null;
   android.enable = true;
@@ -39,6 +42,7 @@
   enterShell = ''
     hello         # Run scripts directly
     git --version # Use packages
+    export DYLD_INSERT_LIBRARIES=${pkgs.vulkan-loader}/lib/libvulkan.dylib
   '';
 
   # https://devenv.sh/tasks/
