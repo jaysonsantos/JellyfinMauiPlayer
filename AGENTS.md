@@ -3,7 +3,13 @@
 1. Restore workloads first: `dotnet workload restore` (root).
 2. Build everything with `dotnet build JellyfinPlayer.slnx -warnaserror`.
 3. Player-only run/build: `dotnet build Player/Player.csproj -t:Run`.
-4. Tests absent today; future single test via `dotnet test JellyfinPlayer.slnx --filter FullyQualifiedName~TestName`.
+4. **Testing:**
+   - Run `Lib.Tests`: `dotnet test Lib.Tests -f net10.0`
+   - Run `Mpv.Sys.Tests`: `dotnet test Mpv.Sys.Tests -f net10.0`
+   - Run single test: `dotnet test <project> -f net10.0 --filter FullyQualifiedName~TestName`
+   - **Important:** Always use `-f net10.0` flag when running tests as these projects multi-target.
+   - Changes to `Lib` should include corresponding tests in `Lib.Tests`.
+   - Changes to `Mpv.Sys` should include corresponding tests in `Mpv.Sys.Tests`.
 5. Regenerate Kiota client using `make Lib/Generated` (needs `kiota generate`).
 6. Format C# via `dotnet tool restore` then `dotnet csharpier .`; no manual tweaks.
 7. `.editorconfig` rules apply: 4-space indent, insert final newline disabled, sorted/System-first usings.
@@ -60,3 +66,9 @@
     - If you must use `.ConfigureAwait(false)` and then perform UI operations, explicitly dispatch to the UI thread using `MainThread.InvokeOnMainThreadAsync()`.
     - Common UI operations that require UI thread: `Shell.Current.GoToAsync()`, setting observable properties bound to UI, `Application.Current.MainPage` access.
     - Failure to follow this will result in `UIKit.UIKitThreadAccessException` on iOS/Mac or similar exceptions on other platforms.
+25. **Third-Party Dependencies:**
+    - mpv headers and documentation are located in `ThirdParty/mpv/`:
+      - Headers: `ThirdParty/mpv/include/` contains `client.h`, `render.h`, `render_gl.h`, `stream_cb.h`
+      - Documentation: `ThirdParty/mpv/docs/` contains `input.rst` (commands like loadfile), `options.rst`, `lua.rst`, `client-api-changes.rst`
+      - Source: https://github.com/mpv-player/mpv
+    - When implementing mpv integration, refer to the headers and command documentation in `ThirdParty/mpv/`.

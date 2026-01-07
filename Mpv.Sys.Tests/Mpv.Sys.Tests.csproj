@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net10.0;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">
       $(TargetFrameworks);net10.0-windows10.0.19041.0
     </TargetFrameworks>
@@ -23,4 +23,50 @@
   <ItemGroup>
     <ProjectReference Include="..\Mpv.Sys\Mpv.Sys.csproj" />
   </ItemGroup>
+
+  <!-- Copy native MPV libraries after build -->
+  <Target
+    Name="CopyNativeMpvLibraries"
+    AfterTargets="Build"
+    Condition="'$(TargetFramework)' == 'net10.0'"
+  >
+    <PropertyGroup>
+      <MpvCacheDir>$(MSBuildProjectDirectory)/../.cache/mpv</MpvCacheDir>
+      <NativeLibSetupScript>$(MSBuildProjectDirectory)/setup-native-libs.sh</NativeLibSetupScript>
+    </PropertyGroup>
+
+    <!-- macOS: Copy dylibs and fix rpath -->
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('osx'))">
+      <MpvNativeLibs Include="$(MpvCacheDir)/macos-aarch64/*.dylib" />
+    </ItemGroup>
+    <Copy
+      Condition="$([MSBuild]::IsOSPlatform('osx'))"
+      SourceFiles="@(MpvNativeLibs)"
+      DestinationFolder="$(OutputPath)"
+      SkipUnchangedFiles="true"
+    />
+    <Exec
+      Condition="$([MSBuild]::IsOSPlatform('osx'))"
+      Command="bash $(NativeLibSetupScript) $(Configuration) $(TargetFramework)"
+      IgnoreExitCode="false"
+    />
+
+    <!-- Windows: Copy DLLs -->
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+      <MpvNativeLibs Include="$(MpvCacheDir)/windows-x86_64/*.dll" />
+    </ItemGroup>
+    <Copy
+      Condition="$([MSBuild]::IsOSPlatform('windows'))"
+      SourceFiles="@(MpvNativeLibs)"
+      DestinationFolder="$(OutputPath)"
+      SkipUnchangedFiles="true"
+    />
+
+    <!-- Linux: Use system libmpv (no copy needed) -->
+    <Message
+      Condition="$([MSBuild]::IsOSPlatform('linux'))"
+      Text="Linux detected: Using system libmpv"
+      Importance="high"
+    />
+  </Target>
 </Project>
