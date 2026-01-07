@@ -72,7 +72,7 @@ jobs:
         run: dotnet build --no-restore -f net10.0
 
       - name: Run Tests with Coverage
-        run: dotnet test -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+        run: dotnet test Mpv.Sys.Tests/Mpv.Sys.Tests.csproj Lib.Tests/Lib.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
 
       - name: Test Report
         uses: dorny/test-reporter@v1
