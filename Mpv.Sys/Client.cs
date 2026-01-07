@@ -216,29 +216,22 @@ public sealed class MpvClient : IDisposable
     }
 
     /// <summary>
-    /// Sets subtitle visibility.
+    /// Sets subtitle visibility by disabling subtitles (setting sid to 0) when visible is false.
+    /// Note: In MPV, subtitle visibility is controlled by the sid property. To make subtitles
+    /// visible, use SetSubtitleTrack() with a valid track ID. This method is provided as a
+    /// convenience for disabling subtitles.
     /// </summary>
-    /// <param name="visible">True to show subtitles, false to hide them.</param>
+    /// <param name="visible">False to hide subtitles. True has no effect as subtitle visibility
+    /// requires selecting a specific track via SetSubtitleTrack().</param>
     public void SetSubtitleVisibility(bool visible)
     {
-        if (visible)
-        {
-            // If subtitles should be visible but sid is 0, we can't enable them
-            // without knowing which track to enable. This method assumes a subtitle
-            // track was previously set.
-            var currentSid = GetCurrentSubtitleTrack();
-            if (currentSid == 0)
-            {
-                // No subtitle track is set, we cannot make subtitles visible
-                // This is expected behavior - caller should use SetSubtitleTrack first
-                return;
-            }
-        }
-        else
+        if (!visible)
         {
             // Disable subtitles by setting sid to 0
             SetSubtitleTrack(0);
         }
+        // When visible is true, no action is taken because MPV requires
+        // a specific track ID to enable subtitles. Use SetSubtitleTrack() instead.
     }
 
     private MpvEvent WaitEvent()
