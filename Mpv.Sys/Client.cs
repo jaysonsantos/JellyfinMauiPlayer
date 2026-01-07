@@ -218,6 +218,8 @@ public sealed class MpvClient : IDisposable
     /// For MpvFormat.Int64, MPV returns the value directly in the IntPtr (not as allocated memory).
     /// See: https://mpv.io/manual/stable/#libmpv - mpv_get_property returns simple types by value.
     /// </summary>
+    /// <param name="propertyName">The name of the MPV property to retrieve.</param>
+    /// <returns>The property value as an integer.</returns>
     private int GetInt64Property(string propertyName)
     {
         IntPtr ptr = GetPropertyPtr(propertyName, MpvFormat.Int64);
