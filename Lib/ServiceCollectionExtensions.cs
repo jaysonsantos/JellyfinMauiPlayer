@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
             services.AddScoped<AuthenticationService>();
             services.AddScoped<MediaService>();
             services.AddScoped<IPlaybackService, PlaybackService>();
+            services.AddScoped<IMetadataService, MetadataService>();
             services.AddSingleton<JellyfinApiClientFactory>();
             services.AddSingleton<RetryPolicy>();
 
