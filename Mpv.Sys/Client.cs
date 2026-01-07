@@ -202,14 +202,9 @@ public sealed class MpvClient : IDisposable
     public int GetCurrentAudioTrack()
     {
         IntPtr ptr = GetPropertyPtr("aid", MpvFormat.Int64);
-        try
-        {
-            return (int)Marshal.ReadInt64(ptr);
-        }
-        finally
-        {
-            MpvClientInternal.Free(ptr);
-        }
+        // For Int64 format, MPV returns the value directly in the IntPtr, not as allocated memory
+        // The value is stored in the pointer itself, so we cast directly without dereferencing
+        return (int)(long)ptr;
     }
 
     /// <summary>
@@ -219,14 +214,9 @@ public sealed class MpvClient : IDisposable
     public int GetCurrentSubtitleTrack()
     {
         IntPtr ptr = GetPropertyPtr("sid", MpvFormat.Int64);
-        try
-        {
-            return (int)Marshal.ReadInt64(ptr);
-        }
-        finally
-        {
-            MpvClientInternal.Free(ptr);
-        }
+        // For Int64 format, MPV returns the value directly in the IntPtr, not as allocated memory
+        // The value is stored in the pointer itself, so we cast directly without dereferencing
+        return (int)(long)ptr;
     }
 
     /// <summary>
