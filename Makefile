@@ -46,3 +46,21 @@ deps: .cache/mpv/windows-x86_64
 else
 deps: $(MPV_TARGETS_DESTINATION) $(MOLTENVK_DESTINATION)
 endif
+
+# Test targets
+.PHONY: test test-coverage test-coverage-html clean-test-results
+
+test:
+	dotnet test -f net10.0
+
+test-coverage:
+	dotnet test -f net10.0 --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults || true
+
+test-coverage-html: test-coverage
+	reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:Html
+	@echo "Coverage report generated at TestResults/CoverageReport/index.html"
+ifeq ($(OS),Windows_NT)
+	start TestResults/CoverageReport/index.html
+else
+	open TestResults/CoverageReport/index.html 2>/dev/null || xdg-open TestResults/CoverageReport/index.html 2>/dev/null || echo "Open TestResults/CoverageReport/index.html in your browser"
+endif

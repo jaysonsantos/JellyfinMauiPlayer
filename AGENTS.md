@@ -3,7 +3,13 @@
 1. Restore workloads first: `dotnet workload restore` (root).
 2. Build everything with `dotnet build JellyfinPlayer.slnx -warnaserror`.
 3. Player-only run/build: `dotnet build Player/Player.csproj -t:Run`.
-4. Tests absent today; future single test via `dotnet test JellyfinPlayer.slnx --filter FullyQualifiedName~TestName`.
+4. **Testing:**
+   - Run `Lib.Tests`: `dotnet test Lib.Tests -f net10.0`
+   - Run `Mpv.Sys.Tests`: `dotnet test Mpv.Sys.Tests -f net10.0`
+   - Run single test: `dotnet test <project> -f net10.0 --filter FullyQualifiedName~TestName`
+   - **Important:** Always use `-f net10.0` flag when running tests as these projects multi-target.
+   - Changes to `Lib` should include corresponding tests in `Lib.Tests`.
+   - Changes to `Mpv.Sys` should include corresponding tests in `Mpv.Sys.Tests`.
 5. Regenerate Kiota client using `make Lib/Generated` (needs `kiota generate`).
 6. Format C# via `dotnet tool restore` then `dotnet csharpier .`; no manual tweaks.
 7. `.editorconfig` rules apply: 4-space indent, insert final newline disabled, sorted/System-first usings.
