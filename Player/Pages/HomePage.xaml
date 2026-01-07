@@ -11,6 +11,7 @@
   Title="Home"
 >
   <ContentPage.ToolbarItems>
+    <ToolbarItem Text="Library Management" Command="{Binding NavigateToLibraryManagementCommand}" />
     <ToolbarItem Text="Logout" Command="{Binding LogoutCommand}" />
   </ContentPage.ToolbarItems>
 
