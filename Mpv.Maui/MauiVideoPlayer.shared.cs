@@ -132,10 +132,64 @@ public sealed partial class MauiVideoPlayer
         }
     }
 
+    private void OnFileLoaded(object? sender, EventArgs e)
+    {
+        try
+        {
+            var currentAudioTrack = _mpvClient.GetCurrentAudioTrack();
+            var currentSubtitleTrack = _mpvClient.GetCurrentSubtitleTrack();
+
+            _logger.LogInformation(
+                "File loaded - Current audio track: {AudioTrack} (language: {AudioLang}), Current subtitle track: {SubtitleTrack} (language: {SubtitleLang})",
+                currentAudioTrack?.Id ?? 0,
+                currentAudioTrack?.Language ?? "unknown",
+                currentSubtitleTrack?.Id ?? 0,
+                currentSubtitleTrack?.Language ?? "unknown"
+            );
+
+            // Log all available tracks
+            var audioTracks = _mpvClient.GetAudioTracks();
+            var subtitleTracks = _mpvClient.GetSubtitleTracks();
+
+            _logger.LogInformation("Available audio tracks: {Count}", audioTracks.Count);
+            foreach (var track in audioTracks)
+            {
+                _logger.LogInformation(
+                    "  Audio track {Id}: {Lang} - {Title} ({Codec}){Default}{Forced}",
+                    track.Id,
+                    track.Language ?? "unknown",
+                    track.Title ?? "no title",
+                    track.Codec ?? "unknown",
+                    track.IsDefault ? " [default]" : "",
+                    track.IsForced ? " [forced]" : ""
+                );
+            }
+
+            _logger.LogInformation("Available subtitle tracks: {Count}", subtitleTracks.Count);
+            foreach (var track in subtitleTracks)
+            {
+                _logger.LogInformation(
+                    "  Subtitle track {Id}: {Lang} - {Title} ({Codec}){Default}{Forced}",
+                    track.Id,
+                    track.Language ?? "unknown",
+                    track.Title ?? "no title",
+                    track.Codec ?? "unknown",
+                    track.IsDefault ? " [default]" : "",
+                    track.IsForced ? " [forced]" : ""
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get current track information after file loaded");
+        }
+    }
+
     private void InitializeMpvCommon()
     {
         _mpvClient.OnLog += LogLines;
         _mpvClient.OnPropertyChange += OnMpvPropertyChange;
+        _mpvClient.OnFileLoaded += OnFileLoaded;
 
         _mpvClient.SetOption(MpvPropertyNames.InputMediaKeys, "yes");
 
@@ -308,6 +362,7 @@ public sealed partial class MauiVideoPlayer
         // Then unsubscribe from events
         _mpvClient.OnLog -= LogLines;
         _mpvClient.OnPropertyChange -= OnMpvPropertyChange;
+        _mpvClient.OnFileLoaded -= OnFileLoaded;
     }
 
     public void PlayRequested(TimeSpan? position)
