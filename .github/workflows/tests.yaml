@@ -51,9 +51,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/mpv
-          key: ${{ runner.os }}-mpv-0.41.0
+          key: mpv-0.41.0
           restore-keys: |
-            ${{ runner.os }}-mpv-
+            mpv-
 
       - name: Download mpv
         run: make deps
