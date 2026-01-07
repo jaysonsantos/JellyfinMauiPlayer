@@ -331,7 +331,7 @@
           FontAttributes="Bold"
           TextColor="{DynamicResource VideoTextColor}"
         />
-        
+
         <!-- Load Subtitle Button -->
         <Border BackgroundColor="{DynamicResource PrimaryColor}" Padding="12,8" StrokeThickness="0">
           <Border.StrokeShape>
@@ -348,7 +348,7 @@
             HorizontalOptions="Center"
           />
         </Border>
-        
+
         <ScrollView MaximumHeightRequest="300">
           <VerticalStackLayout Spacing="4">
             <!-- Off Option -->

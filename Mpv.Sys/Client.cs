@@ -609,7 +609,7 @@ public sealed class MpvClient : IDisposable
     public void AddSubtitleFile(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        
+
         // Use the sub-add command with "select" flag to add and select the subtitle
         Command("sub-add", path, "select");
     }

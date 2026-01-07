@@ -412,7 +412,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         {
             MpvElement.AddSubtitleFile(e.FilePath);
             _logger.LogInformation("External subtitle file loaded: {FilePath}", e.FilePath);
-            
+
             // Reload tracks after adding subtitle
             LoadTracksFromPlayer();
         }
