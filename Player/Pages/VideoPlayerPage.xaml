@@ -270,6 +270,7 @@
       Padding="16"
       StrokeThickness="0"
       MaximumHeightRequest="400"
+      InputTransparent="False"
     >
       <Border.StrokeShape>
         <RoundRectangle CornerRadius="12,12,0,0" />
@@ -316,6 +317,7 @@
       Padding="16"
       StrokeThickness="0"
       MaximumHeightRequest="400"
+      InputTransparent="False"
     >
       <Border.StrokeShape>
         <RoundRectangle CornerRadius="12,12,0,0" />
@@ -337,7 +339,7 @@
               <Border.GestureRecognizers>
                 <TapGestureRecognizer
                   Command="{Binding SelectSubtitleTrackCommand}"
-                  CommandParameter="0"
+                  CommandParameter="{x:Int32 0}"
                 />
               </Border.GestureRecognizers>
               <Label
