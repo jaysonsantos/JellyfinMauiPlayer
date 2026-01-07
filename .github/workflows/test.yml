@@ -68,11 +68,37 @@ jobs:
       - name: Install ReportGenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-      - name: Build
-        run: dotnet build --no-restore -f net10.0
+      - name: Build Mpv.Sys.Tests
+        id: build_mpv
+        continue-on-error: true
+        run: dotnet build Mpv.Sys.Tests/Mpv.Sys.Tests.csproj --no-restore -f net10.0
 
-      - name: Run Tests with Coverage
-        run: dotnet test Mpv.Sys.Tests/Mpv.Sys.Tests.csproj Lib.Tests/Lib.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+      - name: Build Lib.Tests
+        id: build_lib
+        continue-on-error: true
+        run: dotnet build Lib.Tests/Lib.Tests.csproj --no-restore -f net10.0
+
+      - name: Check build results
+        if: steps.build_mpv.outcome == 'failure' || steps.build_lib.outcome == 'failure'
+        run: |
+          echo "One or more builds failed"
+          exit 1
+
+      - name: Run Tests Mpv.Sys.Tests
+        id: test_mpv
+        continue-on-error: true
+        run: dotnet test Mpv.Sys.Tests/Mpv.Sys.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results-mpv.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+
+      - name: Run Tests Lib.Tests
+        id: test_lib
+        continue-on-error: true
+        run: dotnet test Lib.Tests/Lib.Tests.csproj -f net10.0 --no-build --verbosity normal --logger "trx;LogFileName=test-results-lib.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+
+      - name: Check test results
+        if: steps.test_mpv.outcome == 'failure' || steps.test_lib.outcome == 'failure'
+        run: |
+          echo "One or more test suites failed"
+          exit 1
 
       - name: Test Report
         uses: dorny/test-reporter@v1
