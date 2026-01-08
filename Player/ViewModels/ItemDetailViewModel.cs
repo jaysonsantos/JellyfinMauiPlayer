@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
+using Player.Helpers;
 
 namespace Player.ViewModels;
 
@@ -11,6 +12,7 @@ namespace Player.ViewModels;
 [QueryProperty(nameof(ItemName), "ItemName")]
 public sealed partial class ItemDetailViewModel(
     MediaService mediaService,
+    IPlaybackService playbackService,
     ILogger<ItemDetailViewModel> logger
 ) : ObservableObject
 {
@@ -59,6 +61,20 @@ public sealed partial class ItemDetailViewModel(
     [ObservableProperty]
     public partial bool CanPlay { get; set; }
 
+    [ObservableProperty]
+    public partial bool CanResume { get; set; }
+
+    [ObservableProperty]
+    public partial string? ResumePositionText { get; set; }
+
+    private TimeSpan? _resumePosition;
+    private const long MinResumeThresholdTicks = 300_000_000; // 30 seconds in ticks
+
+    // Navigation parameter keys
+    private const string NavParamItemId = "ItemId";
+    private const string NavParamItemName = "ItemName";
+    private const string NavParamStartPosition = "StartPosition";
+
     [RelayCommand]
     private async Task LoadItemAsync()
     {
@@ -78,6 +94,7 @@ public sealed partial class ItemDetailViewModel(
             }
 
             UpdateItemProperties(mediaItem);
+            await CheckResumePositionAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -146,26 +163,105 @@ public sealed partial class ItemDetailViewModel(
 
         try
         {
-            // Navigate to video player page - it will handle getting playback info
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
-            {
-                { "ItemId", ItemId },
-                { "ItemName", Item.Name },
-            };
-
-            await Shell
-                .Current.GoToAsync(Routes.VideoPlayer, navigationParams)
-                .ConfigureAwait(false);
-
-            logger.LogInformation("Navigating to video player for item {ItemId}", ItemId);
+            await NavigateToVideoPlayerAsync(TimeSpan.Zero).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to start playback for item {ItemId}", ItemId);
+            _ = HandleNavigationErrorAsync(ex);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ResumeAsync()
+    {
+        if (Item is null || _resumePosition is null)
+            return;
+
+        try
+        {
+            await NavigateToVideoPlayerAsync(_resumePosition.Value).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to resume playback for item {ItemId}", ItemId);
+            _ = HandleNavigationErrorAsync(ex);
+        }
+    }
+
+    private async Task NavigateToVideoPlayerAsync(TimeSpan startPosition)
+    {
+        var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            { NavParamItemId, ItemId },
+            { NavParamItemName, Item!.Name },
+            { NavParamStartPosition, startPosition },
+        };
+
+        await Shell.Current.GoToAsync(Routes.VideoPlayer, navigationParams).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "Navigating to video player for item {ItemId} with start position {Position}",
+            ItemId,
+            startPosition
+        );
+    }
+
+    private async Task HandleNavigationErrorAsync(Exception ex)
+    {
+        try
+        {
             await Shell
                 .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
                 .ConfigureAwait(false);
         }
+        catch (Exception alertEx)
+        {
+            logger.LogError(alertEx, "Failed to display error alert");
+        }
+    }
+
+    private async Task CheckResumePositionAsync()
+    {
+        try
+        {
+            await CheckResumePositionInternalAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check resume position for item {ItemId}", ItemId);
+        }
+    }
+
+    private async Task CheckResumePositionInternalAsync()
+    {
+        var playbackState = await playbackService
+            .GetPlaybackStateAsync(ItemId, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        if (playbackState is not null && playbackState.PositionTicks > MinResumeThresholdTicks)
+        {
+            _resumePosition = TimeSpan.FromTicks(playbackState.PositionTicks);
+            ResumePositionText = TimeFormatHelper.FormatTimeSpan(_resumePosition.Value);
+            CanResume = true;
+
+            logger.LogInformation(
+                "Found resume position for item {ItemId}: {Position}",
+                ItemId,
+                _resumePosition.Value
+            );
+        }
+        else
+        {
+            ResetResumeState();
+        }
+    }
+
+    private void ResetResumeState()
+    {
+        _resumePosition = null;
+        ResumePositionText = null;
+        CanResume = false;
     }
 
     [RelayCommand]

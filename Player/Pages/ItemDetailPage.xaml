@@ -105,6 +105,24 @@
         <!-- Action Buttons -->
         <VerticalStackLayout Grid.Row="2" Spacing="12" Margin="0,24,0,0">
           <Button
+            Text="Resume"
+            Command="{Binding ResumeCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="{DynamicResource PrimaryTextColor}"
+            FontSize="18"
+            FontAttributes="Bold"
+            HeightRequest="50"
+            CornerRadius="8"
+            IsVisible="{Binding CanResume}"
+          >
+            <Button.FormattedText>
+              <FormattedString>
+                <Span Text="Resume from " />
+                <Span Text="{Binding ResumePositionText}" />
+              </FormattedString>
+            </Button.FormattedText>
+          </Button>
+          <Button
             Text="Play"
             Command="{Binding PlayCommand}"
             BackgroundColor="{DynamicResource PrimaryColor}"

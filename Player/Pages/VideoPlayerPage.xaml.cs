@@ -41,6 +41,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Subscribe to track selection events
         _viewModel.AudioTrackSelected += OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
+
+        // Subscribe to seek requested event
+        _viewModel.SeekRequested += OnSeekRequested;
     }
 
     private void InitializeAutoHideTimer()
@@ -405,6 +408,16 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
+    private void OnSeekRequested(object? sender, TimeSpan position)
+    {
+        _logger.LogInformation(
+            "[VideoPlayerPage] Seek requested to position: {Position}",
+            position
+        );
+        // Seek after video is loaded
+        MpvElement.Seek(position);
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -420,6 +433,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         // Unsubscribe from track selection events
         _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
+
+        // Unsubscribe from seek requested event
+        _viewModel.SeekRequested -= OnSeekRequested;
 
         if (_hideControlsTimer is not null)
         {
