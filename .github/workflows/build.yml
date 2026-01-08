@@ -126,10 +126,10 @@ jobs:
 
       - name: Build ${{ matrix.target }}
         run: |
+          echo "Skipping -r ${{ matrix.runtime }} because it seems to bug https://github.com/dotnet/maui/issues/32968"
           dotnet build Player/Player.csproj `
             -c Release `
             -f ${{ matrix.framework }} `
-            -r ${{ matrix.runtime }} `
             -warnaserror
 
       - name: Upload artifacts
