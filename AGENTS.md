@@ -128,7 +128,6 @@
 28. **Error Handling and Try-Catch Blocks:**
     - Avoid many statements inside a try block to minimize the scope of exception handling.
     - Prefer to break down into smaller functions and wrap the outer function call in try-catch.
-    - Extract the actual work into a separate method that can throw, then call it from a method that handles exceptions.
     - Example pattern:
       ```csharp
       // Bad: Large try block with many statements

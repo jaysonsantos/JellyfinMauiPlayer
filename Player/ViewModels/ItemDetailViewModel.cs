@@ -168,9 +168,7 @@ public sealed partial class ItemDetailViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to start playback for item {ItemId}", ItemId);
-            await Shell
-                .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
-                .ConfigureAwait(false);
+            HandleNavigationError(ex);
         }
     }
 
@@ -187,9 +185,7 @@ public sealed partial class ItemDetailViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to resume playback for item {ItemId}", ItemId);
-            await Shell
-                .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
-                .ConfigureAwait(false);
+            HandleNavigationError(ex);
         }
     }
 
@@ -211,6 +207,20 @@ public sealed partial class ItemDetailViewModel(
         );
     }
 
+    private async void HandleNavigationError(Exception ex)
+    {
+        try
+        {
+            await Shell
+                .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
+                .ConfigureAwait(false);
+        }
+        catch (Exception alertEx)
+        {
+            logger.LogError(alertEx, "Failed to display error alert");
+        }
+    }
+
     private async Task CheckResumePositionAsync()
     {
         try
@@ -220,7 +230,6 @@ public sealed partial class ItemDetailViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to check resume position for item {ItemId}", ItemId);
-            ResetResumeState();
         }
     }
 
