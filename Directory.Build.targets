@@ -1,17 +1,28 @@
 <Project>
-  <!-- For Windows builds, we need to work around a MAUI/.NET 10.0 preview issue
+  <!-- For Windows builds, we need to work around a MAUI/.NET 10.0 issue
        where the build tries to resolve Microsoft.NETCore.App.Runtime.Mono.win-x64
        which doesn't exist (Windows uses native runtime, not Mono).
        
-       The solution is to add a PackageReference that overrides the dependency
-       and maps it to the Windows native runtime package. -->
+       The issue is that MAUI packages are trying to pull in Mono runtime for Windows,
+       but this package doesn't exist. We need to prevent NuGet from trying to resolve it.
+       
+       Solution: Use a PackageReference with a wildcard version and ExcludeAssets
+       to satisfy the dependency check. However, since the package doesn't exist,
+       we'll try to use a PackageReference override that prevents the error. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <!-- Disable Mono runtime for Windows -->
+    <UseMonoRuntime>false</UseMonoRuntime>
+  </PropertyGroup>
+  
+  <!-- Try to override the Mono runtime package requirement -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <!-- Override the Mono runtime dependency with Windows native runtime -->
-    <PackageReference Include="Microsoft.NETCore.App.Runtime.win-x64" Version="10.0.1" />
+    <!-- Remove any direct references -->
+    <PackageReference Remove="Microsoft.NETCore.App.Runtime.Mono.win-x64" />
   </ItemGroup>
   
-  <!-- Also try to exclude the Mono runtime package if it's being pulled in -->
+  <!-- Use a PackageReference override to prevent transitive dependency errors -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageReference Remove="Microsoft.NETCore.App.Runtime.Mono.win-x64" />
+    <!-- Override with ExcludeAssets to prevent it from being used -->
+    <PackageReference Update="Microsoft.NETCore.App.Runtime.Mono.win-x64" ExcludeAssets="All" PrivateAssets="All" />
   </ItemGroup>
 </Project>
