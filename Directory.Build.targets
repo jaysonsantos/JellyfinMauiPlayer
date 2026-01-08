@@ -1,0 +1,17 @@
+<Project>
+  <!-- For Windows builds, we need to work around a MAUI/.NET 10.0 preview issue
+       where the build tries to resolve Microsoft.NETCore.App.Runtime.Mono.win-x64
+       which doesn't exist (Windows uses native runtime, not Mono).
+       
+       The solution is to add a PackageReference that overrides the dependency
+       and maps it to the Windows native runtime package. -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <!-- Override the Mono runtime dependency with Windows native runtime -->
+    <PackageReference Include="Microsoft.NETCore.App.Runtime.win-x64" Version="10.0.1" />
+  </ItemGroup>
+  
+  <!-- Also try to exclude the Mono runtime package if it's being pulled in -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <PackageReference Remove="Microsoft.NETCore.App.Runtime.Mono.win-x64" />
+  </ItemGroup>
+</Project>
