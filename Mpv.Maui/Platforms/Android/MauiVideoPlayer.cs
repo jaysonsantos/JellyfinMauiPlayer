@@ -43,7 +43,8 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         _mpvClient.SetOption("gpu-context", "android");
         _surface = new SurfaceView(_context);
 
-        // TODO: Get the right size for pointer on platform
+        // Allocate 8 bytes for IntPtr on 64-bit Android (Int64 size)
+        // On 32-bit Android this would be 4 bytes, but we use Int64 for compatibility
         var ptr = Marshal.AllocHGlobal(8);
         Marshal.WriteInt64(ptr, _surface.Holder!.Surface!.Handle.ToInt64());
 
