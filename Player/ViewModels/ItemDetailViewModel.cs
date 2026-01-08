@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
+using Player.Helpers;
 
 namespace Player.ViewModels;
 
@@ -226,7 +227,7 @@ public sealed partial class ItemDetailViewModel(
             if (playbackState is not null && playbackState.PositionTicks > MinResumeThresholdTicks)
             {
                 _resumePosition = TimeSpan.FromTicks(playbackState.PositionTicks);
-                ResumePositionText = FormatTimeSpan(_resumePosition.Value);
+                ResumePositionText = TimeFormatHelper.FormatTimeSpan(_resumePosition.Value);
                 CanResume = true;
 
                 logger.LogInformation(
@@ -249,15 +250,6 @@ public sealed partial class ItemDetailViewModel(
             ResumePositionText = null;
             CanResume = false;
         }
-    }
-
-    private static string FormatTimeSpan(TimeSpan timeSpan)
-    {
-        if (timeSpan.TotalHours >= 1)
-        {
-            return timeSpan.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture);
-        }
-        return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
     }
 
     [RelayCommand]

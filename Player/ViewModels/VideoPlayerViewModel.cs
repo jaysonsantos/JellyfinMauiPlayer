@@ -5,6 +5,7 @@ using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
+using Player.Helpers;
 using Player.Models;
 
 namespace Player.ViewModels;
@@ -128,7 +129,7 @@ public sealed partial class VideoPlayerViewModel(
     public void HandlePositionChanged(TimeSpan position)
     {
         _currentPosition = position;
-        CurrentPositionText = FormatTimeSpan(position);
+        CurrentPositionText = TimeFormatHelper.FormatTimeSpan(position);
         CurrentPositionSeconds = position.TotalSeconds;
 
         // Report progress periodically
@@ -146,17 +147,8 @@ public sealed partial class VideoPlayerViewModel(
     public void UpdateDuration(TimeSpan duration)
     {
         _duration = duration;
-        DurationText = FormatTimeSpan(duration);
+        DurationText = TimeFormatHelper.FormatTimeSpan(duration);
         DurationSeconds = duration.TotalSeconds > 0 ? duration.TotalSeconds : 1.0;
-    }
-
-    private static string FormatTimeSpan(TimeSpan timeSpan)
-    {
-        if (timeSpan.TotalHours >= 1)
-        {
-            return timeSpan.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture);
-        }
-        return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
     }
 
     /// <summary>
