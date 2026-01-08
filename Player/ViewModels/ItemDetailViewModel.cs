@@ -195,7 +195,7 @@ public sealed partial class ItemDetailViewModel(
 
     private async Task NavigateToVideoPlayerAsync(TimeSpan startPosition)
     {
-        var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+        var navigationParams = new Dictionary<string, object>(StringComparer.Ordinal)
         {
             { NavParamItemId, ItemId },
             { NavParamItemName, Item!.Name },
