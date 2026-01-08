@@ -95,15 +95,10 @@ if [ "$PLATFORM" = "macos" ]; then
             if [ "$should_process" = true ]; then
                 echo "  Processing: $dylib_name"
                 # Add @loader_path to rpath so libraries can find each other
-                if install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null; then
-                    # Update cache with current modification time
-                    stat -f "%m" "$dylib" > "$cache_file"
-                    processed_count=$((processed_count + 1))
-                else
-                    # install_name_tool failed (possibly already has rpath), still cache it
-                    stat -f "%m" "$dylib" > "$cache_file"
-                    processed_count=$((processed_count + 1))
-                fi
+                install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null || true
+                # Update cache with current modification time (regardless of success/failure)
+                stat -f "%m" "$dylib" > "$cache_file"
+                processed_count=$((processed_count + 1))
             else
                 skipped_count=$((skipped_count + 1))
             fi
