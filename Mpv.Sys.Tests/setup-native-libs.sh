@@ -58,16 +58,61 @@ echo ""
 
 # macOS-specific setup
 if [ "$PLATFORM" = "macos" ]; then
+    # Create cache directory for tracking processed files
+    CACHE_DIR="$SCRIPT_DIR/.cache/rpath-processed"
+    mkdir -p "$CACHE_DIR"
+    
     # Find all dylib files in output directory
+    processed_count=0
+    skipped_count=0
+    
     for dylib in "$OUTPUT_DIR"/*.dylib; do
         if [ -f "$dylib" ]; then
-            echo "  Processing: $(basename "$dylib")"
-            # Add @loader_path to rpath so libraries can find each other
-            install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null || true
+            dylib_name="$(basename "$dylib")"
+            cache_file="$CACHE_DIR/$dylib_name.timestamp"
+            
+            # Check if we need to process this file
+            should_process=false
+            
+            if [ ! -f "$cache_file" ]; then
+                # No cache file exists, need to process
+                should_process=true
+            else
+                # Compare modification times
+                dylib_mtime=$(stat -f "%m" "$dylib" 2>/dev/null || echo "0")
+                cache_mtime=$(cat "$cache_file" 2>/dev/null || echo "0")
+                
+                if [ "$dylib_mtime" -gt "$cache_mtime" ]; then
+                    # File is newer than cache, need to process
+                    should_process=true
+                fi
+            fi
+            
+            if [ "$should_process" = true ]; then
+                echo "  Processing: $dylib_name"
+                # Add @loader_path to rpath so libraries can find each other
+                if install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null; then
+                    # Update cache with current modification time
+                    stat -f "%m" "$dylib" > "$cache_file"
+                    processed_count=$((processed_count + 1))
+                else
+                    # install_name_tool failed (possibly already has rpath), still cache it
+                    stat -f "%m" "$dylib" > "$cache_file"
+                    processed_count=$((processed_count + 1))
+                fi
+            else
+                skipped_count=$((skipped_count + 1))
+            fi
         fi
     done
 
     echo ""
+    if [ $processed_count -gt 0 ]; then
+        echo "✓ Processed $processed_count dylib file(s)"
+    fi
+    if [ $skipped_count -gt 0 ]; then
+        echo "✓ Skipped $skipped_count unchanged dylib file(s)"
+    fi
     echo "✓ Successfully configured MPV libraries for macOS"
     echo "  Libraries are in: $OUTPUT_DIR"
 fi
