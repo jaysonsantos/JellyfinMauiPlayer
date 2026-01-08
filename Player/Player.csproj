@@ -79,11 +79,6 @@
       Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
       >false</PublishTrimmed
     >
-    <!-- MacCatalyst requires PublishTrimmed=true, but we can disable trimming with MtouchLink=None -->
-    <MtouchLink
-      Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'"
-      >None</MtouchLink
-    >
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<linker>
-  <assembly fullname="Microsoft.EntityFrameworkCore" preserve="all" />
-  <assembly fullname="Microsoft.EntityFrameworkCore.Relational" preserve="all" />
-  <assembly fullname="Microsoft.EntityFrameworkCore.Sqlite" preserve="all" />
-  <assembly fullname="Microsoft.EntityFrameworkCore.Abstractions" preserve="all" />
-</linker>
