@@ -22,6 +22,12 @@
     <CodesignProvision>Automatic</CodesignProvision>
     <!-- Enable XamlC compilation for bindings with Source -->
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+    <PublishAot>false</PublishAot>
+
+    <!-- Suppress IL linker warning IL2037 for Entity Framework Core dynamic code generation -->
+    <!-- IL2037: Methods using expression trees that can't be statically analyzed at link time -->
+    <!-- EF Core assemblies are preserved via ILLink.Descriptors.xml but the linker still warns -->
+    <NoWarn>$(NoWarn);IL2037</NoWarn>
 
     <!-- Display name -->
     <ApplicationTitle>Player</ApplicationTitle>

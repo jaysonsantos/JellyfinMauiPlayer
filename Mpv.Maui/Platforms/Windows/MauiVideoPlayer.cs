@@ -96,7 +96,7 @@ public partial class MauiVideoPlayer : Grid, IDisposable
             string filename = fileSource.File;
             if (!string.IsNullOrWhiteSpace(filename))
             {
-                StorageFile
+                _ = StorageFile
                     .GetFileFromPathAsync(filename)
                     .AsTask()
                     .ContinueWith(t =>
@@ -149,7 +149,7 @@ public partial class MauiVideoPlayer : Grid, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposed)
         {

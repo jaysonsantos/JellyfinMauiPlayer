@@ -5,12 +5,14 @@ using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
 using Mpv.Maui.Controls;
+using Player.Helpers;
 using Player.Models;
 
 namespace Player.ViewModels;
 
 [QueryProperty(nameof(ItemId), "ItemId")]
 [QueryProperty(nameof(ItemName), "ItemName")]
+[QueryProperty(nameof(StartPosition), "StartPosition")]
 public sealed partial class VideoPlayerViewModel(
     IPlaybackService playbackService,
     ILogger<VideoPlayerViewModel> logger
@@ -21,6 +23,9 @@ public sealed partial class VideoPlayerViewModel(
 
     [ObservableProperty]
     public partial string ItemName { get; set; } = "Video Player";
+
+    [ObservableProperty]
+    public partial TimeSpan StartPosition { get; set; } = TimeSpan.Zero;
 
     [ObservableProperty]
     public partial string VideoUrl { get; set; } = string.Empty;
@@ -86,6 +91,7 @@ public sealed partial class VideoPlayerViewModel(
 
     public event EventHandler<TrackSelectedEventArgs>? AudioTrackSelected;
     public event EventHandler<TrackSelectedEventArgs>? SubtitleTrackSelected;
+    public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     private TimeSpan _currentPosition;
     private TimeSpan _duration;
@@ -123,7 +129,7 @@ public sealed partial class VideoPlayerViewModel(
     public void HandlePositionChanged(TimeSpan position)
     {
         _currentPosition = position;
-        CurrentPositionText = FormatTimeSpan(position);
+        CurrentPositionText = TimeFormatHelper.FormatTimeSpan(position);
         CurrentPositionSeconds = position.TotalSeconds;
 
         // Report progress periodically
@@ -141,17 +147,8 @@ public sealed partial class VideoPlayerViewModel(
     public void UpdateDuration(TimeSpan duration)
     {
         _duration = duration;
-        DurationText = FormatTimeSpan(duration);
+        DurationText = TimeFormatHelper.FormatTimeSpan(duration);
         DurationSeconds = duration.TotalSeconds > 0 ? duration.TotalSeconds : 1.0;
-    }
-
-    private static string FormatTimeSpan(TimeSpan timeSpan)
-    {
-        if (timeSpan.TotalHours >= 1)
-        {
-            return timeSpan.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture);
-        }
-        return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -349,7 +346,7 @@ public sealed partial class VideoPlayerViewModel(
     }
 
     [RelayCommand]
-    private void SelectAudioTrack(int trackId)
+    public void SelectAudioTrack(int trackId)
     {
         CurrentAudioTrackId = trackId;
         ShowAudioTrackSelector = false;
@@ -358,7 +355,7 @@ public sealed partial class VideoPlayerViewModel(
     }
 
     [RelayCommand]
-    private void SelectSubtitleTrack(int trackId)
+    public void SelectSubtitleTrack(int trackId)
     {
         CurrentSubtitleTrackId = trackId;
         ShowSubtitleTrackSelector = false;
@@ -459,6 +456,18 @@ public sealed partial class VideoPlayerViewModel(
         {
             logger.LogInformation("[VideoPlayerViewModel] Executing LoadPlaybackInfoCommand");
             LoadPlaybackInfoCommand.Execute(null);
+        }
+    }
+
+    partial void OnStartPositionChanged(TimeSpan value)
+    {
+        if (value > TimeSpan.Zero)
+        {
+            logger.LogInformation(
+                "[VideoPlayerViewModel] Start position set to: {Position}",
+                value
+            );
+            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(value));
         }
     }
 }

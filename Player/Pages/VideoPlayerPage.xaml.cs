@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
 using Mpv.Maui.Controls;
 using Player.ViewModels;
 
@@ -42,6 +43,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         _viewModel.AudioTrackSelected += OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
         _viewModel.SubtitleFileSelected += OnSubtitleFileSelected;
+
+        // Subscribe to seek requested event
+        _viewModel.SeekRequested += OnSeekRequested;
     }
 
     private void InitializeAutoHideTimer()
@@ -426,6 +430,32 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
+    private void OnAudioTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectAudioTrackCommand.Execute(trackId);
+        }
+    }
+
+    private void OnSubtitleTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectSubtitleTrackCommand.Execute(trackId);
+        }
+    }
+
+    private void OnSeekRequested(object? sender, SeekRequestedEventArgs e)
+    {
+        _logger.LogInformation(
+            "[VideoPlayerPage] Seek requested to position: {Position}",
+            e.Position
+        );
+        // Seek after video is loaded
+        MpvElement.Seek(e.Position);
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -442,6 +472,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
         _viewModel.SubtitleFileSelected -= OnSubtitleFileSelected;
+
+        // Unsubscribe from seek requested event
+        _viewModel.SeekRequested -= OnSeekRequested;
 
         if (_hideControlsTimer is not null)
         {
