@@ -11,6 +11,7 @@ namespace Player.ViewModels;
 [QueryProperty(nameof(ItemName), "ItemName")]
 public sealed partial class ItemDetailViewModel(
     MediaService mediaService,
+    IPlaybackService playbackService,
     ILogger<ItemDetailViewModel> logger
 ) : ObservableObject
 {
@@ -59,6 +60,15 @@ public sealed partial class ItemDetailViewModel(
     [ObservableProperty]
     public partial bool CanPlay { get; set; }
 
+    [ObservableProperty]
+    public partial bool CanResume { get; set; }
+
+    [ObservableProperty]
+    public partial string? ResumePositionText { get; set; }
+
+    private TimeSpan? _resumePosition;
+    private const long MinResumeThresholdTicks = 300_000_000; // 30 seconds in ticks
+
     [RelayCommand]
     private async Task LoadItemAsync()
     {
@@ -78,6 +88,7 @@ public sealed partial class ItemDetailViewModel(
             }
 
             UpdateItemProperties(mediaItem);
+            await CheckResumePositionAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -146,11 +157,12 @@ public sealed partial class ItemDetailViewModel(
 
         try
         {
-            // Navigate to video player page - it will handle getting playback info
+            // Navigate to video player page - start from beginning
             var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
             {
                 { "ItemId", ItemId },
                 { "ItemName", Item.Name },
+                { "StartPosition", TimeSpan.Zero },
             };
 
             await Shell
@@ -166,6 +178,86 @@ public sealed partial class ItemDetailViewModel(
                 .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
                 .ConfigureAwait(false);
         }
+    }
+
+    [RelayCommand]
+    private async Task ResumeAsync()
+    {
+        if (Item is null || _resumePosition is null)
+            return;
+
+        try
+        {
+            // Navigate to video player page - resume from saved position
+            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+            {
+                { "ItemId", ItemId },
+                { "ItemName", Item.Name },
+                { "StartPosition", _resumePosition.Value },
+            };
+
+            await Shell
+                .Current.GoToAsync(Routes.VideoPlayer, navigationParams)
+                .ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Navigating to video player for item {ItemId} to resume at {Position}",
+                ItemId,
+                _resumePosition.Value
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to resume playback for item {ItemId}", ItemId);
+            await Shell
+                .Current.DisplayAlertAsync("Playback Error", ex.Message, "OK")
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async Task CheckResumePositionAsync()
+    {
+        try
+        {
+            var playbackState = await playbackService
+                .GetPlaybackStateAsync(ItemId, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            if (playbackState is not null && playbackState.PositionTicks > MinResumeThresholdTicks)
+            {
+                _resumePosition = TimeSpan.FromTicks(playbackState.PositionTicks);
+                ResumePositionText = FormatTimeSpan(_resumePosition.Value);
+                CanResume = true;
+
+                logger.LogInformation(
+                    "Found resume position for item {ItemId}: {Position}",
+                    ItemId,
+                    _resumePosition.Value
+                );
+            }
+            else
+            {
+                _resumePosition = null;
+                ResumePositionText = null;
+                CanResume = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check resume position for item {ItemId}", ItemId);
+            _resumePosition = null;
+            ResumePositionText = null;
+            CanResume = false;
+        }
+    }
+
+    private static string FormatTimeSpan(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalHours >= 1)
+        {
+            return timeSpan.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture);
+        }
+        return timeSpan.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
     }
 
     [RelayCommand]

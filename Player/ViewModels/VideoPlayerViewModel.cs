@@ -11,6 +11,7 @@ namespace Player.ViewModels;
 
 [QueryProperty(nameof(ItemId), "ItemId")]
 [QueryProperty(nameof(ItemName), "ItemName")]
+[QueryProperty(nameof(StartPosition), "StartPosition")]
 public sealed partial class VideoPlayerViewModel(
     IPlaybackService playbackService,
     ILogger<VideoPlayerViewModel> logger
@@ -21,6 +22,9 @@ public sealed partial class VideoPlayerViewModel(
 
     [ObservableProperty]
     public partial string ItemName { get; set; } = "Video Player";
+
+    [ObservableProperty]
+    public partial TimeSpan StartPosition { get; set; } = TimeSpan.Zero;
 
     [ObservableProperty]
     public partial string VideoUrl { get; set; } = string.Empty;
@@ -86,6 +90,7 @@ public sealed partial class VideoPlayerViewModel(
 
     public event EventHandler<TrackSelectedEventArgs>? AudioTrackSelected;
     public event EventHandler<TrackSelectedEventArgs>? SubtitleTrackSelected;
+    public event EventHandler<TimeSpan>? SeekRequested;
 
     private TimeSpan _currentPosition;
     private TimeSpan _duration;
@@ -93,9 +98,6 @@ public sealed partial class VideoPlayerViewModel(
     private bool _hasReportedStart;
     private DateTime _lastProgressReport = DateTime.MinValue;
     private const int ProgressReportIntervalSeconds = 10;
-    private const long MinResumeThresholdTicks = 300_000_000; // 30 seconds in ticks
-
-    public event EventHandler<TimeSpan>? ResumePromptRequested;
 
     public void HandleMediaStateChanged(VideoStatus newState)
     {
@@ -148,7 +150,7 @@ public sealed partial class VideoPlayerViewModel(
         DurationSeconds = duration.TotalSeconds > 0 ? duration.TotalSeconds : 1.0;
     }
 
-    public static string FormatTimeSpan(TimeSpan timeSpan)
+    private static string FormatTimeSpan(TimeSpan timeSpan)
     {
         if (timeSpan.TotalHours >= 1)
         {
@@ -227,22 +229,10 @@ public sealed partial class VideoPlayerViewModel(
             .GetPlaybackStateAsync(ItemId, CancellationToken.None)
             .ConfigureAwait(false);
 
-        if (previousState is not null && previousState.PositionTicks > MinResumeThresholdTicks)
+        if (previousState is not null && previousState.PositionTicks > 0)
         {
             logger.LogInformation(
-                "Found previous playback position: {Ticks} ticks ({Seconds} seconds)",
-                previousState.PositionTicks,
-                TimeSpan.FromTicks(previousState.PositionTicks).TotalSeconds
-            );
-
-            // Request resume prompt from the page
-            var resumePosition = TimeSpan.FromTicks(previousState.PositionTicks);
-            ResumePromptRequested?.Invoke(this, resumePosition);
-        }
-        else if (previousState is not null)
-        {
-            logger.LogInformation(
-                "Previous position {Ticks} ticks is below resume threshold, starting from beginning",
+                "Found previous playback position: {Ticks} ticks",
                 previousState.PositionTicks
             );
         }
@@ -421,6 +411,18 @@ public sealed partial class VideoPlayerViewModel(
         {
             logger.LogInformation("[VideoPlayerViewModel] Executing LoadPlaybackInfoCommand");
             LoadPlaybackInfoCommand.Execute(null);
+        }
+    }
+
+    partial void OnStartPositionChanged(TimeSpan value)
+    {
+        if (value > TimeSpan.Zero)
+        {
+            logger.LogInformation(
+                "[VideoPlayerViewModel] Start position set to: {Position}",
+                value
+            );
+            SeekRequested?.Invoke(this, value);
         }
     }
 }

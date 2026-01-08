@@ -13,13 +13,9 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
     private bool _disposed;
     private bool _isSliderDragging;
     private DisplayOrientation _previousOrientation;
-    private TimeSpan? _pendingResumePosition;
 
     private const uint FadeAnimationDuration = 250;
     private const int AutoHideDelayMs = 4000;
-    private const string ResumeActionPrefix = "Resume from ";
-    private const string StartFromBeginningAction = "Start from Beginning";
-    private const string CancelAction = "Cancel";
 
     public VideoPlayerPage(VideoPlayerViewModel viewModel, ILogger<VideoPlayerPage> logger)
     {
@@ -46,8 +42,8 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         _viewModel.AudioTrackSelected += OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected += OnSubtitleTrackSelected;
 
-        // Subscribe to resume prompt event
-        _viewModel.ResumePromptRequested += OnResumePromptRequested;
+        // Subscribe to seek requested event
+        _viewModel.SeekRequested += OnSeekRequested;
     }
 
     private void InitializeAutoHideTimer()
@@ -128,16 +124,6 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
         // Show controls initially and start auto-hide timer
         ShowControls();
-
-        // Show resume prompt if there's a pending position
-        if (_pendingResumePosition.HasValue)
-        {
-            MainThread.BeginInvokeOnMainThread(async () =>
-            {
-                await ShowResumePromptAsync(_pendingResumePosition.Value);
-                _pendingResumePosition = null;
-            });
-        }
     }
 
     protected override void OnDisappearing()
@@ -422,54 +408,14 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnResumePromptRequested(object? sender, TimeSpan resumePosition)
+    private void OnSeekRequested(object? sender, TimeSpan position)
     {
         _logger.LogInformation(
-            "[VideoPlayerPage] Resume prompt requested for position: {Position}",
-            resumePosition
+            "[VideoPlayerPage] Seek requested to position: {Position}",
+            position
         );
-        _pendingResumePosition = resumePosition;
-    }
-
-    private async Task ShowResumePromptAsync(TimeSpan resumePosition)
-    {
-        _logger.LogInformation(
-            "[VideoPlayerPage] Showing resume prompt for position: {Position}",
-            resumePosition
-        );
-
-        var formattedPosition = VideoPlayerViewModel.FormatTimeSpan(resumePosition);
-        var resumeAction = ResumeActionPrefix + formattedPosition;
-
-        var action = await Shell.Current.DisplayActionSheet(
-            "Resume Playback",
-            CancelAction,
-            null,
-            resumeAction,
-            StartFromBeginningAction
-        );
-
-        _logger.LogInformation("[VideoPlayerPage] User selected: {Action}", action ?? "null");
-
-        if (string.Equals(action, resumeAction, StringComparison.Ordinal))
-        {
-            _logger.LogInformation(
-                "[VideoPlayerPage] User chose to resume from {Position}",
-                resumePosition
-            );
-            MpvElement.Seek(resumePosition);
-        }
-        else if (string.Equals(action, StartFromBeginningAction, StringComparison.Ordinal))
-        {
-            _logger.LogInformation("[VideoPlayerPage] User chose to start from beginning");
-            MpvElement.Seek(TimeSpan.Zero);
-        }
-        else
-        {
-            _logger.LogInformation("[VideoPlayerPage] User cancelled resume prompt");
-            // User cancelled, start from beginning as default
-            MpvElement.Seek(TimeSpan.Zero);
-        }
+        // Seek after video is loaded
+        MpvElement.Seek(position);
     }
 
     public void Dispose()
@@ -488,8 +434,8 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         _viewModel.AudioTrackSelected -= OnAudioTrackSelected;
         _viewModel.SubtitleTrackSelected -= OnSubtitleTrackSelected;
 
-        // Unsubscribe from resume prompt event
-        _viewModel.ResumePromptRequested -= OnResumePromptRequested;
+        // Unsubscribe from seek requested event
+        _viewModel.SeekRequested -= OnSeekRequested;
 
         if (_hideControlsTimer is not null)
         {
