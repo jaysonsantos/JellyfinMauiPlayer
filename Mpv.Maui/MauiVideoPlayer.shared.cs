@@ -398,6 +398,17 @@ public sealed partial class MauiVideoPlayer
 
     public void SeekRequested(TimeSpan position)
     {
+        // Only allow seeking when a video is loaded and ready
+        if (_video == null)
+            return;
+
+        VideoStatus status = ((IVideoController)_video).Status;
+        if (status is VideoStatus.NotReady or VideoStatus.Opening)
+        {
+            _logger.LogDebug("Seek ignored - video not ready (status: {Status})", status);
+            return;
+        }
+
         _mpvClient.Command(
             "seek",
             position.TotalSeconds.ToString(CultureInfo.InvariantCulture),
