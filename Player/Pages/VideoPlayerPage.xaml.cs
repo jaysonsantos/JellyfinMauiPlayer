@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
 using Mpv.Maui.Controls;
 using Player.ViewModels;
 
@@ -405,6 +406,22 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to change subtitle track to {TrackId}", e.TrackId);
+        }
+    }
+
+    private void OnAudioTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectAudioTrackCommand.Execute(trackId);
+        }
+    }
+
+    private void OnSubtitleTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectSubtitleTrackCommand.Execute(trackId);
         }
     }
 

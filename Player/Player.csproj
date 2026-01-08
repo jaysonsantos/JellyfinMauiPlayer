@@ -64,6 +64,21 @@
       Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
       >android-arm;android-arm64;android-x64</RuntimeIdentifiers
     >
+
+    <!-- Explicitly disable AOT for Android to prevent MonoAOTCompiler SDK resolution issues -->
+    <PublishAot
+      Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
+      >false</PublishAot
+    >
+    <RunAOTCompilation
+      Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
+      >false</RunAOTCompilation
+    >
+    <!-- Disable trimming for Android to avoid ILLink warnings -->
+    <PublishTrimmed
+      Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
+      >false</PublishTrimmed
+    >
   </PropertyGroup>
 
   <ItemGroup>
@@ -118,6 +133,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Lib\Lib.csproj" />
     <ProjectReference Include="..\Mpv.Maui\Mpv.Maui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
   </ItemGroup>
 
   <ItemGroup>
