@@ -91,7 +91,7 @@ public sealed partial class VideoPlayerViewModel(
 
     public event EventHandler<TrackSelectedEventArgs>? AudioTrackSelected;
     public event EventHandler<TrackSelectedEventArgs>? SubtitleTrackSelected;
-    public event EventHandler<TimeSpan>? SeekRequested;
+    public event EventHandler<SeekRequestedEventArgs>? SeekRequested;
 
     private TimeSpan _currentPosition;
     private TimeSpan _duration;
@@ -346,7 +346,7 @@ public sealed partial class VideoPlayerViewModel(
     }
 
     [RelayCommand]
-    private void SelectAudioTrack(int trackId)
+    public void SelectAudioTrack(int trackId)
     {
         CurrentAudioTrackId = trackId;
         ShowAudioTrackSelector = false;
@@ -355,7 +355,7 @@ public sealed partial class VideoPlayerViewModel(
     }
 
     [RelayCommand]
-    private void SelectSubtitleTrack(int trackId)
+    public void SelectSubtitleTrack(int trackId)
     {
         CurrentSubtitleTrackId = trackId;
         ShowSubtitleTrackSelector = false;
@@ -414,7 +414,7 @@ public sealed partial class VideoPlayerViewModel(
                 "[VideoPlayerViewModel] Start position set to: {Position}",
                 value
             );
-            SeekRequested?.Invoke(this, value);
+            SeekRequested?.Invoke(this, new SeekRequestedEventArgs(value));
         }
     }
 }

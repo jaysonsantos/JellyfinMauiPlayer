@@ -284,7 +284,11 @@
           TextColor="{DynamicResource VideoTextColor}"
         />
         <ScrollView MaximumHeightRequest="300">
-          <CollectionView ItemsSource="{Binding AudioTracks}" SelectionMode="None">
+          <CollectionView
+            ItemsSource="{Binding AudioTracks}"
+            SelectionMode="None"
+            x:Name="AudioTracksCollectionView"
+          >
             <CollectionView.ItemTemplate>
               <DataTemplate x:DataType="models:TrackInfo">
                 <Border Padding="12,8" Margin="0,4" StrokeThickness="0" BackgroundColor="#40FFFFFF">
@@ -293,7 +297,7 @@
                   </Border.StrokeShape>
                   <Border.GestureRecognizers>
                     <TapGestureRecognizer
-                      Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:VideoPlayerViewModel}}, Path=SelectAudioTrackCommand}"
+                      Tapped="OnAudioTrackTapped"
                       CommandParameter="{Binding Id}"
                     />
                   </Border.GestureRecognizers>
@@ -353,7 +357,11 @@
             </Border>
 
             <!-- Subtitle Tracks -->
-            <CollectionView ItemsSource="{Binding SubtitleTracks}" SelectionMode="None">
+            <CollectionView
+              ItemsSource="{Binding SubtitleTracks}"
+              SelectionMode="None"
+              x:Name="SubtitleTracksCollectionView"
+            >
               <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:TrackInfo">
                   <Border
@@ -367,7 +375,7 @@
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
                       <TapGestureRecognizer
-                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:VideoPlayerViewModel}}, Path=SelectSubtitleTrackCommand}"
+                        Tapped="OnSubtitleTrackTapped"
                         CommandParameter="{Binding Id}"
                       />
                     </Border.GestureRecognizers>

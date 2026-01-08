@@ -104,24 +104,31 @@
 
         <!-- Action Buttons -->
         <VerticalStackLayout Grid.Row="2" Spacing="12" Margin="0,24,0,0">
-          <Button
-            Text="Resume"
-            Command="{Binding ResumeCommand}"
+          <Grid
             BackgroundColor="{DynamicResource PrimaryColor}"
-            TextColor="{DynamicResource PrimaryTextColor}"
-            FontSize="18"
-            FontAttributes="Bold"
             HeightRequest="50"
-            CornerRadius="8"
+            Margin="0"
+            Padding="0"
             IsVisible="{Binding CanResume}"
           >
-            <Button.FormattedText>
-              <FormattedString>
-                <Span Text="Resume from " />
-                <Span Text="{Binding ResumePositionText}" />
-              </FormattedString>
-            </Button.FormattedText>
-          </Button>
+            <Grid.GestureRecognizers>
+              <TapGestureRecognizer Command="{Binding ResumeCommand}" />
+            </Grid.GestureRecognizers>
+            <Label
+              TextColor="{DynamicResource PrimaryTextColor}"
+              FontSize="18"
+              FontAttributes="Bold"
+              HorizontalOptions="Center"
+              VerticalOptions="Center"
+            >
+              <Label.FormattedText>
+                <FormattedString>
+                  <Span Text="Resume from " />
+                  <Span Text="{Binding ResumePositionText}" />
+                </FormattedString>
+              </Label.FormattedText>
+            </Label>
+          </Grid>
           <Button
             Text="Play"
             Command="{Binding PlayCommand}"

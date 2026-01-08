@@ -43,29 +43,35 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
-          dotnet-quality: "preview"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache mpv libraries
+        uses: actions/cache@v4
+        with:
+          path: .cache/mpv
+          key: ${{ runner.os }}-mpv-0.41.0
+          restore-keys: |
+            ${{ runner.os }}-mpv-
 
       - name: Restore MAUI workloads
         run: dotnet workload restore
 
-      - name: Cache MPV dependencies
-        uses: actions/cache@v4
-        with:
-          path: .cache/mpv
-          key: mpv-deps-${{ matrix.target }}-${{ hashFiles('Makefile') }}
-          restore-keys: |
-            mpv-deps-${{ matrix.target }}-
-
-      - name: Download MPV dependencies
+      - name: Download mpv
         run: make deps
 
-      - name: Publish ${{ matrix.target }}
+      - name: Build ${{ matrix.target }}
         run: |
-          dotnet publish Player/Player.csproj \
+          dotnet build Player/Player.csproj \
             -c Release \
             -f ${{ matrix.framework }} \
             -r ${{ matrix.runtime }} \
-            -o publish/${{ matrix.target }} \
             -warnaserror \
             ${{ matrix.target == 'maccatalyst-arm64' && '-p:EnableCodeSigning=false' || '' }}
 
@@ -73,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jellyfin-player-${{ matrix.target }}
-          path: publish/${{ matrix.target }}
+          path: Player/bin/Release/${{ matrix.framework }}/${{ matrix.runtime }}
           retention-days: 14
 
   build-windows:
@@ -94,35 +100,41 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
-          dotnet-quality: "preview"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache mpv libraries
+        uses: actions/cache@v4
+        with:
+          path: .cache/mpv
+          key: ${{ runner.os }}-mpv-0.41.0
+          restore-keys: |
+            ${{ runner.os }}-mpv-
 
       - name: Restore MAUI workloads
         run: dotnet workload restore
 
-      - name: Cache MPV dependencies
-        uses: actions/cache@v4
-        with:
-          path: .cache/mpv
-          key: mpv-deps-${{ matrix.target }}-${{ hashFiles('Makefile') }}
-          restore-keys: |
-            mpv-deps-${{ matrix.target }}-
-
-      - name: Download MPV dependencies
+      - name: Download mpv
         run: make deps
         shell: bash
 
-      - name: Publish ${{ matrix.target }}
+      - name: Build ${{ matrix.target }}
         run: |
-          dotnet publish Player/Player.csproj `
+          dotnet build Player/Player.csproj `
             -c Release `
             -f ${{ matrix.framework }} `
             -r ${{ matrix.runtime }} `
-            -o publish/${{ matrix.target }} `
             -warnaserror
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: jellyfin-player-${{ matrix.target }}
-          path: publish/${{ matrix.target }}
+          path: Player/bin/Release/${{ matrix.framework }}/${{ matrix.runtime }}
           retention-days: 14

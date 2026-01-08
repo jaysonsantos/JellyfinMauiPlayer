@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
 using Mpv.Maui.Controls;
 using Player.ViewModels;
 
@@ -408,14 +409,30 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnSeekRequested(object? sender, TimeSpan position)
+    private void OnAudioTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectAudioTrackCommand.Execute(trackId);
+        }
+    }
+
+    private void OnSubtitleTrackTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        {
+            _viewModel.SelectSubtitleTrackCommand.Execute(trackId);
+        }
+    }
+
+    private void OnSeekRequested(object? sender, SeekRequestedEventArgs e)
     {
         _logger.LogInformation(
             "[VideoPlayerPage] Seek requested to position: {Position}",
-            position
+            e.Position
         );
         // Seek after video is loaded
-        MpvElement.Seek(position);
+        MpvElement.Seek(e.Position);
     }
 
     public void Dispose()
