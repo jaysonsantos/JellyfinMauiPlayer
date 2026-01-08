@@ -94,7 +94,8 @@ if [ "$PLATFORM" = "macos" ]; then
                 # Compare modification times
                 cache_mtime=$(cat "$cache_file" 2>/dev/null)
                 
-                # Set default value if cache is empty, then compare
+                # Reprocess if cache is invalid or file is newer
+                # Note: Use default value in numeric comparison for safety, though -z check handles empty case
                 if [ -z "$cache_mtime" ] || [ "$dylib_mtime" -gt "${cache_mtime:-0}" ]; then
                     # Cache is invalid or file is newer than cache, need to process
                     should_process=true
