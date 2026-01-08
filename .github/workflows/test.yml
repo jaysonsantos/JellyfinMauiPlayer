@@ -126,9 +126,10 @@ jobs:
           retention-days: 30
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always()
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: TestResults/CoverageReport/Cobertura.xml
           fail_ci_if_error: false
         continue-on-error: true
