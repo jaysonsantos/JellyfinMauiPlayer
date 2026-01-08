@@ -58,22 +58,14 @@ jobs:
       - name: Download MPV dependencies
         run: make deps
 
-      - name: Publish ${{ matrix.target }}
+      - name: Build ${{ matrix.target }}
         run: |
-          dotnet publish Player/Player.csproj \
+          dotnet build Player/Player.csproj \
             -c Release \
             -f ${{ matrix.framework }} \
             -r ${{ matrix.runtime }} \
-            -o publish/${{ matrix.target }} \
             -warnaserror \
             ${{ matrix.target == 'maccatalyst-arm64' && '-p:EnableCodeSigning=false' || '' }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: jellyfin-player-${{ matrix.target }}
-          path: publish/${{ matrix.target }}
-          retention-days: 14
 
   build-windows:
     runs-on: windows-latest
@@ -109,18 +101,10 @@ jobs:
         run: make deps
         shell: bash
 
-      - name: Publish ${{ matrix.target }}
+      - name: Build ${{ matrix.target }}
         run: |
-          dotnet publish Player/Player.csproj `
+          dotnet build Player/Player.csproj `
             -c Release `
             -f ${{ matrix.framework }} `
             -r ${{ matrix.runtime }} `
-            -o publish/${{ matrix.target }} `
             -warnaserror
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: jellyfin-player-${{ matrix.target }}
-          path: publish/${{ matrix.target }}
-          retention-days: 14
