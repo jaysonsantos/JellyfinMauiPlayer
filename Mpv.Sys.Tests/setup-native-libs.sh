@@ -76,20 +76,26 @@ if [ "$PLATFORM" = "macos" ]; then
             cache_file="$CACHE_DIR/$dylib_name.timestamp"
             
             # Get current file modification time (using macOS/BSD stat syntax)
-            dylib_mtime=$(stat -f "%m" "$dylib" 2>/dev/null || echo "0")
+            dylib_mtime=$(stat -f "%m" "$dylib" 2>/dev/null)
             
             # Check if we need to process this file
             should_process=false
+            
+            if [ -z "$dylib_mtime" ]; then
+                # Failed to get modification time, skip this file
+                echo "  Warning: Cannot get modification time for $dylib_name, skipping"
+                continue
+            fi
             
             if [ ! -f "$cache_file" ]; then
                 # No cache file exists, need to process
                 should_process=true
             else
                 # Compare modification times
-                cache_mtime=$(cat "$cache_file" 2>/dev/null || echo "0")
+                cache_mtime=$(cat "$cache_file" 2>/dev/null)
                 
-                if [ "$dylib_mtime" -gt "$cache_mtime" ]; then
-                    # File is newer than cache, need to process
+                if [ -z "$cache_mtime" ] || [ "$dylib_mtime" -gt "$cache_mtime" ]; then
+                    # Cache is invalid or file is newer than cache, need to process
                     should_process=true
                 fi
             fi
@@ -97,8 +103,9 @@ if [ "$PLATFORM" = "macos" ]; then
             if [ "$should_process" = true ]; then
                 echo "  Processing: $dylib_name"
                 # Add @loader_path to rpath so libraries can find each other
+                # Note: install_name_tool may fail if rpath already exists, which is fine
                 install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null || true
-                # Update cache with current modification time (regardless of success/failure)
+                # Update cache with current modification time
                 echo "$dylib_mtime" > "$cache_file"
                 processed_count=$((processed_count + 1))
             else
