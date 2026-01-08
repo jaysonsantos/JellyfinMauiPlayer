@@ -75,6 +75,9 @@ if [ "$PLATFORM" = "macos" ]; then
             dylib_name="$(basename "$dylib")"
             cache_file="$CACHE_DIR/$dylib_name.timestamp"
             
+            # Get current file modification time (using macOS/BSD stat syntax)
+            dylib_mtime=$(stat -f "%m" "$dylib" 2>/dev/null || echo "0")
+            
             # Check if we need to process this file
             should_process=false
             
@@ -83,7 +86,6 @@ if [ "$PLATFORM" = "macos" ]; then
                 should_process=true
             else
                 # Compare modification times
-                dylib_mtime=$(stat -f "%m" "$dylib" 2>/dev/null || echo "0")
                 cache_mtime=$(cat "$cache_file" 2>/dev/null || echo "0")
                 
                 if [ "$dylib_mtime" -gt "$cache_mtime" ]; then
@@ -97,7 +99,7 @@ if [ "$PLATFORM" = "macos" ]; then
                 # Add @loader_path to rpath so libraries can find each other
                 install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null || true
                 # Update cache with current modification time (regardless of success/failure)
-                stat -f "%m" "$dylib" > "$cache_file"
+                echo "$dylib_mtime" > "$cache_file"
                 processed_count=$((processed_count + 1))
             else
                 skipped_count=$((skipped_count + 1))
