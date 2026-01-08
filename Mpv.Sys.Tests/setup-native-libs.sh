@@ -4,6 +4,10 @@ set -e
 # Script to fix rpath and setup Vulkan for MPV native libraries
 # Note: MSBuild already copies MPV libraries via PostBuild target in .csproj
 # This script only handles post-copy configuration
+#
+# Optimization: The script caches processed files to avoid redundant install_name_tool operations.
+# Cache files are stored in .cache/rpath-processed/ and contain the modification timestamp
+# of each processed dylib. Files are only reprocessed if they are newer than the cache.
 
 # Determine the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
