@@ -67,6 +67,13 @@ jobs:
             -warnaserror \
             ${{ matrix.target == 'maccatalyst-arm64' && '-p:EnableCodeSigning=false' || '' }}
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyfin-player-${{ matrix.target }}
+          path: Player/bin/Release/${{ matrix.framework }}/${{ matrix.runtime }}
+          retention-days: 14
+
   build-windows:
     runs-on: windows-latest
     strategy:
@@ -108,3 +115,10 @@ jobs:
             -f ${{ matrix.framework }} `
             -r ${{ matrix.runtime }} `
             -warnaserror
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyfin-player-${{ matrix.target }}
+          path: Player/bin/Release/${{ matrix.framework }}/${{ matrix.runtime }}
+          retention-days: 14
