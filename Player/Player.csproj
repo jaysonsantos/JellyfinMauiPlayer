@@ -22,6 +22,7 @@
     <CodesignProvision>Automatic</CodesignProvision>
     <!-- Enable XamlC compilation for bindings with Source -->
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+    <PublishAot>false</PublishAot>
 
     <!-- Display name -->
     <ApplicationTitle>Player</ApplicationTitle>
