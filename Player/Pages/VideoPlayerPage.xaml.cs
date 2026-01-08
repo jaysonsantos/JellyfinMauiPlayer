@@ -408,14 +408,14 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
         }
     }
 
-    private void OnSeekRequested(object? sender, TimeSpan position)
+    private void OnSeekRequested(object? sender, SeekRequestedEventArgs e)
     {
         _logger.LogInformation(
             "[VideoPlayerPage] Seek requested to position: {Position}",
-            position
+            e.Position
         );
         // Seek after video is loaded
-        MpvElement.Seek(position);
+        MpvElement.Seek(e.Position);
     }
 
     public void Dispose()
