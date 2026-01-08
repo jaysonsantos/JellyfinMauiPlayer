@@ -94,7 +94,8 @@ if [ "$PLATFORM" = "macos" ]; then
                 # Compare modification times
                 cache_mtime=$(cat "$cache_file" 2>/dev/null)
                 
-                if [ -z "$cache_mtime" ] || [ "$dylib_mtime" -gt "$cache_mtime" ]; then
+                # Set default value if cache is empty, then compare
+                if [ -z "$cache_mtime" ] || [ "$dylib_mtime" -gt "${cache_mtime:-0}" ]; then
                     # Cache is invalid or file is newer than cache, need to process
                     should_process=true
                 fi
@@ -115,10 +116,10 @@ if [ "$PLATFORM" = "macos" ]; then
     done
 
     echo ""
-    if [ $processed_count -gt 0 ]; then
+    if [ "$processed_count" -gt 0 ]; then
         echo "✓ Processed $processed_count dylib file(s)"
     fi
-    if [ $skipped_count -gt 0 ]; then
+    if [ "$skipped_count" -gt 0 ]; then
         echo "✓ Skipped $skipped_count unchanged dylib file(s)"
     fi
     echo "✓ Successfully configured MPV libraries for macOS"
