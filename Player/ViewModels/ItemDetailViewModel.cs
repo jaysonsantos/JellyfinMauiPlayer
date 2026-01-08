@@ -168,7 +168,7 @@ public sealed partial class ItemDetailViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to start playback for item {ItemId}", ItemId);
-            HandleNavigationError(ex);
+            _ = HandleNavigationErrorAsync(ex);
         }
     }
 
@@ -185,7 +185,7 @@ public sealed partial class ItemDetailViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to resume playback for item {ItemId}", ItemId);
-            HandleNavigationError(ex);
+            _ = HandleNavigationErrorAsync(ex);
         }
     }
 
@@ -207,7 +207,7 @@ public sealed partial class ItemDetailViewModel(
         );
     }
 
-    private async void HandleNavigationError(Exception ex)
+    private async Task HandleNavigationErrorAsync(Exception ex)
     {
         try
         {
