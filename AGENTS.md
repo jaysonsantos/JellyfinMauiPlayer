@@ -125,3 +125,48 @@
       // Usage: AudioTrackChanged?.Invoke(this, new TrackChangeEventArgs(trackId));
       ```
     - See existing examples: `VideoPositionEventArgs`, `TrackChangeEventArgs`, `TrackSelectedEventArgs`.
+28. **Error Handling and Try-Catch Blocks:**
+    - Avoid many statements inside a try block to minimize the scope of exception handling.
+    - Prefer to break down into smaller functions and wrap the outer function call in try-catch.
+    - Extract the actual work into a separate method that can throw, then call it from a method that handles exceptions.
+    - Example pattern:
+      ```csharp
+      // Bad: Large try block with many statements
+      public async Task ProcessAsync()
+      {
+          try
+          {
+              var data = await FetchDataAsync();
+              var transformed = TransformData(data);
+              await SaveDataAsync(transformed);
+              await NotifyUsersAsync();
+          }
+          catch (Exception ex)
+          {
+              logger.LogError(ex, "Failed to process");
+          }
+      }
+      
+      // Good: Small try block, extracted implementation
+      public async Task ProcessAsync()
+      {
+          try
+          {
+              await ProcessInternalAsync();
+          }
+          catch (Exception ex)
+          {
+              logger.LogError(ex, "Failed to process");
+          }
+      }
+      
+      private async Task ProcessInternalAsync()
+      {
+          var data = await FetchDataAsync();
+          var transformed = TransformData(data);
+          await SaveDataAsync(transformed);
+          await NotifyUsersAsync();
+      }
+      ```
+    - This pattern makes code more testable, easier to read, and provides clearer exception handling boundaries.
+

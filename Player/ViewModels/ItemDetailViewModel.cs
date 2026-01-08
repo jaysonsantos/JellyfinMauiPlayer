@@ -70,6 +70,11 @@ public sealed partial class ItemDetailViewModel(
     private TimeSpan? _resumePosition;
     private const long MinResumeThresholdTicks = 300_000_000; // 30 seconds in ticks
 
+    // Navigation parameter keys
+    private const string NavParamItemId = "ItemId";
+    private const string NavParamItemName = "ItemName";
+    private const string NavParamStartPosition = "StartPosition";
+
     [RelayCommand]
     private async Task LoadItemAsync()
     {
@@ -158,19 +163,7 @@ public sealed partial class ItemDetailViewModel(
 
         try
         {
-            // Navigate to video player page - start from beginning
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
-            {
-                { "ItemId", ItemId },
-                { "ItemName", Item.Name },
-                { "StartPosition", TimeSpan.Zero },
-            };
-
-            await Shell
-                .Current.GoToAsync(Routes.VideoPlayer, navigationParams)
-                .ConfigureAwait(false);
-
-            logger.LogInformation("Navigating to video player for item {ItemId}", ItemId);
+            await NavigateToVideoPlayerAsync(TimeSpan.Zero).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -189,23 +182,7 @@ public sealed partial class ItemDetailViewModel(
 
         try
         {
-            // Navigate to video player page - resume from saved position
-            var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
-            {
-                { "ItemId", ItemId },
-                { "ItemName", Item.Name },
-                { "StartPosition", _resumePosition.Value },
-            };
-
-            await Shell
-                .Current.GoToAsync(Routes.VideoPlayer, navigationParams)
-                .ConfigureAwait(false);
-
-            logger.LogInformation(
-                "Navigating to video player for item {ItemId} to resume at {Position}",
-                ItemId,
-                _resumePosition.Value
-            );
+            await NavigateToVideoPlayerAsync(_resumePosition.Value).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -216,40 +193,66 @@ public sealed partial class ItemDetailViewModel(
         }
     }
 
+    private async Task NavigateToVideoPlayerAsync(TimeSpan startPosition)
+    {
+        var navigationParams = new Dictionary<string, object>(StringComparer.CurrentCulture)
+        {
+            { NavParamItemId, ItemId },
+            { NavParamItemName, Item!.Name },
+            { NavParamStartPosition, startPosition },
+        };
+
+        await Shell.Current.GoToAsync(Routes.VideoPlayer, navigationParams).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "Navigating to video player for item {ItemId} with start position {Position}",
+            ItemId,
+            startPosition
+        );
+    }
+
     private async Task CheckResumePositionAsync()
     {
         try
         {
-            var playbackState = await playbackService
-                .GetPlaybackStateAsync(ItemId, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (playbackState is not null && playbackState.PositionTicks > MinResumeThresholdTicks)
-            {
-                _resumePosition = TimeSpan.FromTicks(playbackState.PositionTicks);
-                ResumePositionText = TimeFormatHelper.FormatTimeSpan(_resumePosition.Value);
-                CanResume = true;
-
-                logger.LogInformation(
-                    "Found resume position for item {ItemId}: {Position}",
-                    ItemId,
-                    _resumePosition.Value
-                );
-            }
-            else
-            {
-                _resumePosition = null;
-                ResumePositionText = null;
-                CanResume = false;
-            }
+            await CheckResumePositionInternalAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to check resume position for item {ItemId}", ItemId);
-            _resumePosition = null;
-            ResumePositionText = null;
-            CanResume = false;
+            ResetResumeState();
         }
+    }
+
+    private async Task CheckResumePositionInternalAsync()
+    {
+        var playbackState = await playbackService
+            .GetPlaybackStateAsync(ItemId, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        if (playbackState is not null && playbackState.PositionTicks > MinResumeThresholdTicks)
+        {
+            _resumePosition = TimeSpan.FromTicks(playbackState.PositionTicks);
+            ResumePositionText = TimeFormatHelper.FormatTimeSpan(_resumePosition.Value);
+            CanResume = true;
+
+            logger.LogInformation(
+                "Found resume position for item {ItemId}: {Position}",
+                ItemId,
+                _resumePosition.Value
+            );
+        }
+        else
+        {
+            ResetResumeState();
+        }
+    }
+
+    private void ResetResumeState()
+    {
+        _resumePosition = null;
+        ResumePositionText = null;
+        CanResume = false;
     }
 
     [RelayCommand]
