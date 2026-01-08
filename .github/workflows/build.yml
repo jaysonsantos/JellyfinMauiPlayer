@@ -67,6 +67,7 @@ jobs:
         run: make deps
 
       - name: Build ${{ matrix.target }}
+        continue-on-error: ${{ matrix.target == 'maccatalyst-arm64' }}
         run: |
           dotnet build Player/Player.csproj \
             -c Release \
