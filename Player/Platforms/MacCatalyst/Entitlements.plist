@@ -6,9 +6,6 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>$(AppIdentifierPrefix)io.github.jaysonsantos.MauiJellyfinPlayer</string>
-	</array>
+	<!-- keychain-access-groups removed when code signing is disabled -->
 </dict>
 </plist>
