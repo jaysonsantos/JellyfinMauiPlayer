@@ -290,14 +290,14 @@
             x:Name="AudioTracksCollectionView"
           >
             <CollectionView.ItemTemplate>
-              <DataTemplate x:DataType="models:TrackInfo">
+              <DataTemplate>
                 <Border Padding="12,8" Margin="0,4" StrokeThickness="0" BackgroundColor="#40FFFFFF">
                   <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                   </Border.StrokeShape>
                   <Border.GestureRecognizers>
                     <TapGestureRecognizer
-                      Command="{Binding Path=BindingContext.SelectAudioTrackCommand, Source={x:Reference AudioTracksCollectionView}}"
+                      Command="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, Path=BindingContext.SelectAudioTrackCommand}"
                       CommandParameter="{Binding Id}"
                     />
                   </Border.GestureRecognizers>
@@ -363,7 +363,7 @@
               x:Name="SubtitleTracksCollectionView"
             >
               <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:TrackInfo">
+                <DataTemplate>
                   <Border
                     Padding="12,8"
                     Margin="0,4"
@@ -375,7 +375,7 @@
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
                       <TapGestureRecognizer
-                        Command="{Binding Path=BindingContext.SelectSubtitleTrackCommand, Source={x:Reference SubtitleTracksCollectionView}}"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, Path=BindingContext.SelectSubtitleTrackCommand}"
                         CommandParameter="{Binding Id}"
                       />
                     </Border.GestureRecognizers>
