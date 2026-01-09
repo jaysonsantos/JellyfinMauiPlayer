@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
 using Player.Resources.Strings;
@@ -102,27 +103,45 @@ public sealed partial class LoginViewModel(
     [RelayCommand]
     private async Task LoadStoredLoginCredentialsAsync()
     {
+        logger.LogInformation("Initializing login page...");
+
+        var credentials = await LoadCredentialsInternalAsync();
+        if (credentials is null)
+        {
+            SetDefaultCredentials();
+            return;
+        }
+
+        ServerUrl = !string.IsNullOrWhiteSpace(credentials.ServerUrl)
+            ? credentials.ServerUrl
+            : "http://localhost:8096";
+        Username = !string.IsNullOrWhiteSpace(credentials.Username)
+            ? credentials.Username
+            : string.Empty;
+        Password = !string.IsNullOrWhiteSpace(credentials.Password)
+            ? credentials.Password
+            : string.Empty;
+
+        logger.LogInformation("Login page initialized");
+    }
+
+    private async Task<StoredLoginCredentials?> LoadCredentialsInternalAsync()
+    {
         try
         {
-            logger.LogInformation("Initializing login page...");
-
-            var (serverUrl, username, password) =
-                await authenticationService.GetStoredLoginCredentialsAsync();
-
-            // Use stored values if available, otherwise use defaults
-            ServerUrl = !string.IsNullOrWhiteSpace(serverUrl) ? serverUrl : "http://localhost:8096";
-            Username = !string.IsNullOrWhiteSpace(username) ? username : string.Empty;
-            Password = !string.IsNullOrWhiteSpace(password) ? password : string.Empty;
-
-            logger.LogInformation("Login page initialized");
+            return await authenticationService.GetStoredLoginCredentialsAsync();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to initialize login page");
-            // Fall back to defaults on error
-            ServerUrl = "http://localhost:8096";
-            Username = string.Empty;
-            Password = string.Empty;
+            return null;
         }
+    }
+
+    private void SetDefaultCredentials()
+    {
+        ServerUrl = "http://localhost:8096";
+        Username = string.Empty;
+        Password = string.Empty;
     }
 }

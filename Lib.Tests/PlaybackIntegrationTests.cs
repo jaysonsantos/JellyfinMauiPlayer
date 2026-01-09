@@ -1,4 +1,6 @@
+using System.Text.Json;
 using JellyfinPlayer.Lib.Api;
+using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using JellyfinPlayer.Lib.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -236,25 +238,26 @@ public class PlaybackIntegrationTests
             _serviceProvider.GetRequiredService<ISecureStorageService>() as InMemorySecureStorage;
         Assert.NotNull(secureStorage);
 
-        await secureStorage.SetAsync("jellyfin_server_url", testServerUrl);
-        await secureStorage.SetAsync("jellyfin_username", testUsername);
-        await secureStorage.SetAsync("jellyfin_password", testPassword);
+        var credentials = new StoredLoginCredentials(testServerUrl, testUsername, testPassword);
+        var credentialsJson = JsonSerializer.Serialize(credentials);
+        await secureStorage.SetAsync("jellyfin_login_credentials", credentialsJson);
 
         // Act
-        var (serverUrl, username, password) = await _authService.GetStoredLoginCredentialsAsync(
+        var storedCredentials = await _authService.GetStoredLoginCredentialsAsync(
             CancellationToken.None
         );
 
         // Assert
-        Assert.Equal(testServerUrl, serverUrl);
-        Assert.Equal(testUsername, username);
-        Assert.Equal(testPassword, password);
+        Assert.NotNull(storedCredentials);
+        Assert.Equal(testServerUrl, storedCredentials.ServerUrl);
+        Assert.Equal(testUsername, storedCredentials.Username);
+        Assert.Equal(testPassword, storedCredentials.Password);
 
         logger.LogInformation("Credential storage test passed");
     }
 
     [Fact]
-    public async Task GetStoredLoginCredentials_WhenNoCredentialsStored_ShouldReturnNulls()
+    public async Task GetStoredLoginCredentials_WhenNoCredentialsStored_ShouldReturnNull()
     {
         // Arrange
         var logger = _serviceProvider.GetRequiredService<ILogger<PlaybackIntegrationTests>>();
@@ -264,19 +267,13 @@ public class PlaybackIntegrationTests
         var secureStorage =
             _serviceProvider.GetRequiredService<ISecureStorageService>() as InMemorySecureStorage;
         Assert.NotNull(secureStorage);
-        await secureStorage.RemoveAsync("jellyfin_server_url");
-        await secureStorage.RemoveAsync("jellyfin_username");
-        await secureStorage.RemoveAsync("jellyfin_password");
+        await secureStorage.RemoveAsync("jellyfin_login_credentials");
 
         // Act
-        var (serverUrl, username, password) = await _authService.GetStoredLoginCredentialsAsync(
-            CancellationToken.None
-        );
+        var credentials = await _authService.GetStoredLoginCredentialsAsync(CancellationToken.None);
 
         // Assert
-        Assert.Null(serverUrl);
-        Assert.Null(username);
-        Assert.Null(password);
+        Assert.Null(credentials);
 
         logger.LogInformation("Empty credential storage test passed");
     }
