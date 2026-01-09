@@ -499,3 +499,6 @@ devenv.local.yaml
 # pre-commit
 .pre-commit-config.yaml
 local.properties
+
+# Native library setup cache
+Mpv.Sys.Tests/.cache/
