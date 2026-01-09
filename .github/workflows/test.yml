@@ -184,8 +184,25 @@ jobs:
         run: |
           dotnet build Player/Player.csproj -c Release -f net10.0-windows10.0.19041.0
 
+      - name: Find Player executable path
+        id: find_player
+        shell: pwsh
+        run: |
+          $playerExe = Get-ChildItem -Path "Player/bin/Release/net10.0-windows10.0.19041.0" -Filter "Player.exe" -Recurse | Select-Object -First 1
+          if ($playerExe) {
+            echo "PLAYER_PATH=$($playerExe.FullName)" >> $env:GITHUB_OUTPUT
+          } else {
+            # Fallback to the expected default location
+            echo "PLAYER_PATH=${{ github.workspace }}/Player/bin/Release/net10.0-windows10.0.19041.0/Player.exe" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Build Appium Tests
         run: dotnet build Player.AppiumTests/Player.AppiumTests.csproj -c Release
+
+      - name: Enable Developer Mode
+        shell: pwsh
+        run: |
+          reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
 
       - name: Start WinAppDriver
         run: |
@@ -197,7 +214,7 @@ jobs:
         id: appium_tests
         continue-on-error: true
         env:
-          PLAYER_APP_PATH: ${{ github.workspace }}/Player/bin/Release/net10.0-windows10.0.19041.0/win-x64/Player.exe
+          PLAYER_APP_PATH: ${{ steps.find_player.outputs.PLAYER_PATH }}
           APPIUM_SERVER_URL: http://127.0.0.1:4723
         run: |
           dotnet test Player.AppiumTests/Player.AppiumTests.csproj -c Release --no-build --verbosity normal --logger "trx;LogFileName=test-results-appium.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
