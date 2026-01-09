@@ -363,6 +363,59 @@ public sealed partial class VideoPlayerViewModel(
         logger.LogInformation("Subtitle track selected: {TrackId}", trackId);
     }
 
+    [RelayCommand]
+    private async Task LoadSubtitleFileAsync()
+    {
+        try
+        {
+            // Define subtitle file types for each platform
+            // iOS: Uses Uniform Type Identifiers (UTIs)
+            // Android: Uses MIME types
+            // Windows: Uses file extensions with dots
+            // MacCatalyst: Uses file extensions without dots
+            FilePickerFileType subtitleFileTypes = new(
+                new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    // iOS UTIs for subtitle formats
+                    { DevicePlatform.iOS, new[] { "public.srt", "public.ssa", "public.ass" } },
+                    // Android MIME types (text/plain covers .srt files)
+                    {
+                        DevicePlatform.Android,
+                        new[] { "application/x-subrip", "text/x-ssa", "text/x-ass", "text/plain" }
+                    },
+                    // Windows file extensions (with dots)
+                    { DevicePlatform.WinUI, new[] { ".srt", ".ass", ".ssa", ".sub", ".vtt" } },
+                    // MacCatalyst file extensions (without dots)
+                    { DevicePlatform.MacCatalyst, new[] { "srt", "ass", "ssa", "sub", "vtt" } },
+                }
+            );
+
+            PickOptions options = new()
+            {
+                PickerTitle = "Select Subtitle File",
+                FileTypes = subtitleFileTypes,
+            };
+
+            FileResult? result = await FilePicker.Default.PickAsync(options);
+            if (result is not null)
+            {
+                logger.LogInformation(
+                    "Subtitle file selected: {FileName} ({Path})",
+                    result.FileName,
+                    result.FullPath
+                );
+                SubtitleFileSelected?.Invoke(this, new SubtitleFileEventArgs(result.FullPath));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to pick subtitle file");
+            ErrorMessage = $"Failed to load subtitle file: {ex.Message}";
+        }
+    }
+
+    public event EventHandler<SubtitleFileEventArgs>? SubtitleFileSelected;
+
     public void LoadTracks(
         IReadOnlyList<Mpv.Sys.TrackInfo> audioTracks,
         IReadOnlyList<Mpv.Sys.TrackInfo> subtitleTracks
