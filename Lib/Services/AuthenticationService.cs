@@ -56,7 +56,8 @@ public sealed class AuthenticationService(
         var authResult = CreateAuthResult(response, username);
 
         LogCredentialStorage(authResult, serverUrl);
-        await StoreCredentialsAsync(authResult, serverUrl, username, password, cancellationToken).ConfigureAwait(false);
+        await StoreCredentialsAsync(authResult, serverUrl, username, password, cancellationToken)
+            .ConfigureAwait(false);
 
         apiClientFactory.InvalidateCache();
 
@@ -173,6 +174,9 @@ public sealed class AuthenticationService(
         CancellationToken cancellationToken
     )
     {
+        // Store credentials in platform-specific secure storage for auto-login convenience.
+        // Note: Password is stored encrypted via SecureStorage, which uses platform-specific
+        // encryption mechanisms (iOS Keychain, Android KeyStore, Windows Credential Manager).
         await secureStorage
             .SetAsync(AccessTokenKey, authResult.AccessToken, cancellationToken)
             .ConfigureAwait(false);
@@ -339,9 +343,11 @@ public sealed class AuthenticationService(
         logger.LogInformation("User logged out");
     }
 
-    public async Task<(string? ServerUrl, string? Username, string? Password)> GetStoredLoginCredentialsAsync(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<(
+        string? ServerUrl,
+        string? Username,
+        string? Password
+    )> GetStoredLoginCredentialsAsync(CancellationToken cancellationToken = default)
     {
         var serverUrl = await secureStorage
             .GetAsync(ServerUrlKey, cancellationToken)

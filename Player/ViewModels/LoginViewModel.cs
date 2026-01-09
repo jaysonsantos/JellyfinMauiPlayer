@@ -106,26 +106,23 @@ public sealed partial class LoginViewModel(
         {
             logger.LogInformation("Loading stored login credentials...");
 
-            var (serverUrl, username, password) = await authenticationService.GetStoredLoginCredentialsAsync();
+            var (serverUrl, username, password) =
+                await authenticationService.GetStoredLoginCredentialsAsync();
 
             // Use stored values if available, otherwise use defaults
             ServerUrl = !string.IsNullOrWhiteSpace(serverUrl) ? serverUrl : "http://localhost:8096";
-            Username = !string.IsNullOrWhiteSpace(username) ? username : "guest";
-            Password = !string.IsNullOrWhiteSpace(password) ? password : "guest";
+            Username = !string.IsNullOrWhiteSpace(username) ? username : string.Empty;
+            Password = !string.IsNullOrWhiteSpace(password) ? password : string.Empty;
 
-            logger.LogInformation(
-                "Loaded credentials - Server: {ServerUrl}, Username: {Username}",
-                ServerUrl,
-                string.IsNullOrWhiteSpace(Username) ? "none" : Username
-            );
+            logger.LogInformation("Loaded login credentials from secure storage");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to load stored login credentials");
             // Fall back to defaults on error
             ServerUrl = "http://localhost:8096";
-            Username = "guest";
-            Password = "guest";
+            Username = string.Empty;
+            Password = string.Empty;
         }
     }
 }
