@@ -12,13 +12,13 @@ public sealed partial class LoginViewModel(
 ) : ObservableObject
 {
     [ObservableProperty]
-    public partial string ServerUrl { get; set; } = "http://localhost:8096";
+    public partial string ServerUrl { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Username { get; set; } = "guest";
+    public partial string Username { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Password { get; set; } = "guest";
+    public partial string Password { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -96,6 +96,36 @@ public sealed partial class LoginViewModel(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to check stored credentials");
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadStoredLoginCredentialsAsync()
+    {
+        try
+        {
+            logger.LogInformation("Loading stored login credentials...");
+
+            var (serverUrl, username, password) = await authenticationService.GetStoredLoginCredentialsAsync();
+
+            // Use stored values if available, otherwise use defaults
+            ServerUrl = !string.IsNullOrWhiteSpace(serverUrl) ? serverUrl : "http://localhost:8096";
+            Username = !string.IsNullOrWhiteSpace(username) ? username : "guest";
+            Password = !string.IsNullOrWhiteSpace(password) ? password : "guest";
+
+            logger.LogInformation(
+                "Loaded credentials - Server: {ServerUrl}, Username: {Username}",
+                ServerUrl,
+                string.IsNullOrWhiteSpace(Username) ? "none" : Username
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to load stored login credentials");
+            // Fall back to defaults on error
+            ServerUrl = "http://localhost:8096";
+            Username = "guest";
+            Password = "guest";
         }
     }
 }

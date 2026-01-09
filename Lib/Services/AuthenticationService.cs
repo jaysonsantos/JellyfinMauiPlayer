@@ -20,6 +20,8 @@ public sealed class AuthenticationService(
     private const string AccessTokenKey = "jellyfin_access_token";
     private const string ServerUrlKey = "jellyfin_server_url";
     private const string UserIdKey = "jellyfin_user_id";
+    private const string UsernameKey = "jellyfin_username";
+    private const string PasswordKey = "jellyfin_password";
 
     public async Task<UserAuthenticationResult?> AuthenticateAsync(
         string serverUrl,
@@ -54,7 +56,7 @@ public sealed class AuthenticationService(
         var authResult = CreateAuthResult(response, username);
 
         LogCredentialStorage(authResult, serverUrl);
-        await StoreCredentialsAsync(authResult, serverUrl, cancellationToken).ConfigureAwait(false);
+        await StoreCredentialsAsync(authResult, serverUrl, username, password, cancellationToken).ConfigureAwait(false);
 
         apiClientFactory.InvalidateCache();
 
@@ -166,6 +168,8 @@ public sealed class AuthenticationService(
     private async Task StoreCredentialsAsync(
         UserAuthenticationResult authResult,
         string serverUrl,
+        string username,
+        string password,
         CancellationToken cancellationToken
     )
     {
@@ -177,6 +181,12 @@ public sealed class AuthenticationService(
             .ConfigureAwait(false);
         await secureStorage
             .SetAsync(UserIdKey, authResult.UserId, cancellationToken)
+            .ConfigureAwait(false);
+        await secureStorage
+            .SetAsync(UsernameKey, username, cancellationToken)
+            .ConfigureAwait(false);
+        await secureStorage
+            .SetAsync(PasswordKey, password, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -320,10 +330,29 @@ public sealed class AuthenticationService(
         await secureStorage.RemoveAsync(AccessTokenKey, cancellationToken).ConfigureAwait(false);
         await secureStorage.RemoveAsync(ServerUrlKey, cancellationToken).ConfigureAwait(false);
         await secureStorage.RemoveAsync(UserIdKey, cancellationToken).ConfigureAwait(false);
+        await secureStorage.RemoveAsync(UsernameKey, cancellationToken).ConfigureAwait(false);
+        await secureStorage.RemoveAsync(PasswordKey, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cached API client since credentials are cleared
         apiClientFactory.InvalidateCache();
 
         logger.LogInformation("User logged out");
+    }
+
+    public async Task<(string? ServerUrl, string? Username, string? Password)> GetStoredLoginCredentialsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var serverUrl = await secureStorage
+            .GetAsync(ServerUrlKey, cancellationToken)
+            .ConfigureAwait(false);
+        var username = await secureStorage
+            .GetAsync(UsernameKey, cancellationToken)
+            .ConfigureAwait(false);
+        var password = await secureStorage
+            .GetAsync(PasswordKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        return (serverUrl, username, password);
     }
 }
