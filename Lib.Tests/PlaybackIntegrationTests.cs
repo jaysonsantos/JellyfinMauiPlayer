@@ -307,8 +307,11 @@ public class InMemorySecureStorage : ISecureStorageService
         {
             return Task.FromResult(JsonSerializer.Deserialize<T>(json));
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine(
+                $"Failed to deserialize stored value for key '{key}': {ex.Message}"
+            );
             return Task.FromResult<T?>(null);
         }
     }

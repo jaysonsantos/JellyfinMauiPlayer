@@ -1,9 +1,11 @@
 using System.Text.Json;
 using JellyfinPlayer.Lib.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace Player.Services;
 
-public sealed class PlatformSecureStorageService : ISecureStorageService
+public sealed class PlatformSecureStorageService(ILogger<PlatformSecureStorageService> logger)
+    : ISecureStorageService
 {
     public async Task<string?> GetAsync(string key, CancellationToken cancellationToken = default)
     {
@@ -45,9 +47,14 @@ public sealed class PlatformSecureStorageService : ISecureStorageService
 
             return JsonSerializer.Deserialize<T>(json);
         }
+        catch (JsonException ex)
+        {
+            logger.LogError(ex, "Failed to deserialize stored value for key '{Key}'", key);
+            return null;
+        }
         catch (Exception)
         {
-            // SecureStorage may throw if key doesn't exist or deserialization fails
+            // SecureStorage may throw if key doesn't exist - this is expected
             return null;
         }
     }

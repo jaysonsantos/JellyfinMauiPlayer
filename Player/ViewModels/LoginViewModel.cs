@@ -107,7 +107,7 @@ public sealed partial class LoginViewModel(
     {
         logger.LogInformation("Initializing login page...");
 
-        var credentials = await LoadCredentialsInternalAsync();
+        var credentials = await authenticationService.GetStoredLoginCredentialsAsync();
         if (credentials is null)
         {
             SetDefaultCredentials();
@@ -125,19 +125,6 @@ public sealed partial class LoginViewModel(
             : string.Empty;
 
         logger.LogInformation("Login page initialized");
-    }
-
-    private async Task<StoredLoginCredentials?> LoadCredentialsInternalAsync()
-    {
-        try
-        {
-            return await authenticationService.GetStoredLoginCredentialsAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to initialize login page");
-            return null;
-        }
     }
 
     private void SetDefaultCredentials()

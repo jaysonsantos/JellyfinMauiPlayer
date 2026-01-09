@@ -55,7 +55,8 @@ public sealed class AuthenticationService(
         var authResult = CreateAuthResult(response, username);
 
         LogCredentialStorage(authResult, serverUrl);
-        await StoreCredentialsAsync(authResult, serverUrl, username, password, cancellationToken)
+        var loginCredentials = new StoredLoginCredentials(serverUrl, username, password);
+        await StoreCredentialsAsync(authResult, loginCredentials, cancellationToken)
             .ConfigureAwait(false);
 
         apiClientFactory.InvalidateCache();
@@ -167,9 +168,7 @@ public sealed class AuthenticationService(
 
     private async Task StoreCredentialsAsync(
         UserAuthenticationResult authResult,
-        string serverUrl,
-        string username,
-        string password,
+        StoredLoginCredentials loginCredentials,
         CancellationToken cancellationToken
     )
     {
@@ -180,14 +179,13 @@ public sealed class AuthenticationService(
             .SetAsync(AccessTokenKey, authResult.AccessToken, cancellationToken)
             .ConfigureAwait(false);
         await secureStorage
-            .SetAsync(ServerUrlKey, serverUrl, cancellationToken)
+            .SetAsync(ServerUrlKey, loginCredentials.ServerUrl, cancellationToken)
             .ConfigureAwait(false);
         await secureStorage
             .SetAsync(UserIdKey, authResult.UserId, cancellationToken)
             .ConfigureAwait(false);
 
         // Store login credentials as a single object
-        var loginCredentials = new StoredLoginCredentials(serverUrl, username, password);
         await secureStorage
             .SetAsync(LoginCredentialsKey, loginCredentials, cancellationToken)
             .ConfigureAwait(false);
