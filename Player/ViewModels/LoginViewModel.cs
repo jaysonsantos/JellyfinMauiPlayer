@@ -12,6 +12,8 @@ public sealed partial class LoginViewModel(
     ILogger<LoginViewModel> logger
 ) : ObservableObject
 {
+    private const string DefaultServerUrl = "http://localhost:8096";
+
     [ObservableProperty]
     public partial string ServerUrl { get; set; } = string.Empty;
 
@@ -114,7 +116,7 @@ public sealed partial class LoginViewModel(
 
         ServerUrl = !string.IsNullOrWhiteSpace(credentials.ServerUrl)
             ? credentials.ServerUrl
-            : "http://localhost:8096";
+            : DefaultServerUrl;
         Username = !string.IsNullOrWhiteSpace(credentials.Username)
             ? credentials.Username
             : string.Empty;
@@ -140,7 +142,7 @@ public sealed partial class LoginViewModel(
 
     private void SetDefaultCredentials()
     {
-        ServerUrl = "http://localhost:8096";
+        ServerUrl = DefaultServerUrl;
         Username = string.Empty;
         Password = string.Empty;
     }
