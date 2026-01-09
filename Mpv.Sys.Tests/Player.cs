@@ -423,7 +423,7 @@ public class Player
     {
         using var client = CreateInitializedClientWithVideo();
 
-        Assert.Throws<ArgumentException>(() => client.AddSubtitleFile(null!));
+        Assert.Throws<ArgumentNullException>(() => client.AddSubtitleFile(null!));
     }
 
     [Fact]
