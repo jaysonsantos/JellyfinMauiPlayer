@@ -133,3 +133,113 @@ jobs:
           files: TestResults/CoverageReport/Cobertura.xml
           fail_ci_if_error: false
         continue-on-error: true
+
+  appium-test:
+    name: Appium UI Tests (Windows)
+    runs-on: windows-latest
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          dotnet-quality: "preview"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache mpv libraries
+        uses: actions/cache@v4
+        with:
+          path: .cache/mpv
+          key: ${{ runner.os }}-mpv-0.41.0
+          restore-keys: |
+            ${{ runner.os }}-mpv-
+
+      - name: Download mpv
+        run: make deps
+        shell: bash
+
+      - name: Restore workloads
+        run: dotnet workload restore
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Build Player app for Windows
+        run: |
+          dotnet build Player/Player.csproj -c Release -f net10.0-windows10.0.19041.0
+
+      - name: Build Appium Tests
+        run: dotnet build Player.AppiumTests/Player.AppiumTests.csproj -c Release
+
+      - name: Start WinAppDriver
+        run: |
+          Start-Process -FilePath "C:\Program Files (x86)\Windows Application Driver\WinAppDriver.exe"
+          Start-Sleep -Seconds 5
+        shell: pwsh
+
+      - name: Run Appium Tests
+        id: appium_tests
+        continue-on-error: true
+        env:
+          PLAYER_APP_PATH: ${{ github.workspace }}/Player/bin/Release/net10.0-windows10.0.19041.0/win-x64/Player.exe
+          APPIUM_SERVER_URL: http://127.0.0.1:4723
+        run: |
+          dotnet test Player.AppiumTests/Player.AppiumTests.csproj -c Release --no-build --verbosity normal --logger "trx;LogFileName=test-results-appium.trx" --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./TestResults
+
+      - name: Stop WinAppDriver
+        if: always()
+        run: |
+          Stop-Process -Name "WinAppDriver" -Force -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: Check Appium test results
+        if: steps.appium_tests.outcome == 'failure'
+        run: |
+          echo "Appium tests failed"
+          exit 1
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Appium Test Results
+          path: "**/TestResults/*appium*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Generate coverage report
+        if: always()
+        run: reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" -title:"Appium Test Coverage Report"
+
+      - name: Upload Appium test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: appium-test-results
+          path: |
+            **/TestResults/*appium*.trx
+          retention-days: 30
+
+      - name: Upload Appium coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: appium-coverage-report
+          path: TestResults/CoverageReport
+          retention-days: 30
