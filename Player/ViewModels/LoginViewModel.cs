@@ -104,7 +104,7 @@ public sealed partial class LoginViewModel(
     {
         try
         {
-            logger.LogInformation("Loading stored login credentials...");
+            logger.LogInformation("Initializing login page...");
 
             var (serverUrl, username, password) =
                 await authenticationService.GetStoredLoginCredentialsAsync();
@@ -114,11 +114,11 @@ public sealed partial class LoginViewModel(
             Username = !string.IsNullOrWhiteSpace(username) ? username : string.Empty;
             Password = !string.IsNullOrWhiteSpace(password) ? password : string.Empty;
 
-            logger.LogInformation("Loaded login credentials from secure storage");
+            logger.LogInformation("Login page initialized");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to load stored login credentials");
+            logger.LogError(ex, "Failed to initialize login page");
             // Fall back to defaults on error
             ServerUrl = "http://localhost:8096";
             Username = string.Empty;
