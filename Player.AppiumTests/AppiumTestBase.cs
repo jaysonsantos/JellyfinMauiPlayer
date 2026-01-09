@@ -38,11 +38,8 @@ public abstract class AppiumTestBase : IAsyncLifetime
             PlatformName = "Windows",
             AutomationName = "Windows",
             App = AppPath,
+            DeviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC",
         };
-
-        // Additional capabilities can be set via environment variables
-        var deviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC";
-        options.AddAdditionalAppiumOption("deviceName", deviceName);
 
         // Create the driver with retry logic for CI environments
         const int maxRetries = 3;
