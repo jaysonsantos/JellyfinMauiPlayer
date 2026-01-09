@@ -239,8 +239,7 @@ public class PlaybackIntegrationTests
         Assert.NotNull(secureStorage);
 
         var credentials = new StoredLoginCredentials(testServerUrl, testUsername, testPassword);
-        var credentialsJson = JsonSerializer.Serialize(credentials);
-        await secureStorage.SetAsync("jellyfin_login_credentials", credentialsJson);
+        await secureStorage.SetAsync("jellyfin_login_credentials", credentials);
 
         // Act
         var storedCredentials = await _authService.GetStoredLoginCredentialsAsync(
@@ -295,6 +294,30 @@ public class InMemorySecureStorage : ISecureStorageService
     public Task SetAsync(string key, string value, CancellationToken cancellationToken = default)
     {
         _storage[key] = value;
+        return Task.CompletedTask;
+    }
+
+    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        where T : class
+    {
+        if (!_storage.TryGetValue(key, out var json) || string.IsNullOrWhiteSpace(json))
+            return Task.FromResult<T?>(null);
+
+        try
+        {
+            return Task.FromResult(JsonSerializer.Deserialize<T>(json));
+        }
+        catch
+        {
+            return Task.FromResult<T?>(null);
+        }
+    }
+
+    public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default)
+        where T : class
+    {
+        var json = JsonSerializer.Serialize(value);
+        _storage[key] = json;
         return Task.CompletedTask;
     }
 

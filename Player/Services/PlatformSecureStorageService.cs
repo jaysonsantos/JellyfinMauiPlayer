@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JellyfinPlayer.Lib.Storage;
 
 namespace Player.Services;
@@ -29,6 +30,40 @@ public sealed class PlatformSecureStorageService : ISecureStorageService
         ArgumentNullException.ThrowIfNull(value);
 
         await SecureStorage.Default.SetAsync(key, value);
+    }
+
+    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        where T : class
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        try
+        {
+            var json = await SecureStorage.Default.GetAsync(key);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            return JsonSerializer.Deserialize<T>(json);
+        }
+        catch (Exception)
+        {
+            // SecureStorage may throw if key doesn't exist or deserialization fails
+            return null;
+        }
+    }
+
+    public async Task SetAsync<T>(
+        string key,
+        T value,
+        CancellationToken cancellationToken = default
+    )
+        where T : class
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        var json = JsonSerializer.Serialize(value);
+        await SecureStorage.Default.SetAsync(key, json);
     }
 
     public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)

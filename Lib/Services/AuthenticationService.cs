@@ -186,11 +186,10 @@ public sealed class AuthenticationService(
             .SetAsync(UserIdKey, authResult.UserId, cancellationToken)
             .ConfigureAwait(false);
 
-        // Store login credentials as a single JSON object
+        // Store login credentials as a single object
         var loginCredentials = new StoredLoginCredentials(serverUrl, username, password);
-        var credentialsJson = JsonSerializer.Serialize(loginCredentials);
         await secureStorage
-            .SetAsync(LoginCredentialsKey, credentialsJson, cancellationToken)
+            .SetAsync(LoginCredentialsKey, loginCredentials, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -348,21 +347,8 @@ public sealed class AuthenticationService(
         CancellationToken cancellationToken = default
     )
     {
-        var credentialsJson = await secureStorage
-            .GetAsync(LoginCredentialsKey, cancellationToken)
+        return await secureStorage
+            .GetAsync<StoredLoginCredentials>(LoginCredentialsKey, cancellationToken)
             .ConfigureAwait(false);
-
-        if (string.IsNullOrWhiteSpace(credentialsJson))
-            return null;
-
-        try
-        {
-            return JsonSerializer.Deserialize<StoredLoginCredentials>(credentialsJson);
-        }
-        catch (JsonException ex)
-        {
-            logger.LogWarning(ex, "Failed to deserialize stored login credentials");
-            return null;
-        }
     }
 }
