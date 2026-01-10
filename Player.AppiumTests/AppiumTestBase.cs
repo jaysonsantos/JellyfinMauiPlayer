@@ -43,13 +43,12 @@ public abstract class AppiumTestBase : IAsyncLifetime
             );
         }
 
-        var options = new AppiumOptions();
-        options.AddAdditionalAppiumOption("app", appPath);
-        options.AddAdditionalAppiumOption("platformName", "Windows");
-        options.AddAdditionalAppiumOption(
-            "deviceName",
-            Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC"
-        );
+        var options = new AppiumOptions
+        {
+            Application = appPath,
+            PlatformName = "Windows",
+            DeviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC",
+        };
 
         // Create the driver with retry logic for CI environments
         const int maxRetries = 3;
