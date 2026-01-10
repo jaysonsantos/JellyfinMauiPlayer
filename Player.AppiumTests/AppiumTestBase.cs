@@ -43,15 +43,17 @@ public abstract class AppiumTestBase : IAsyncLifetime
             );
         }
 
-        // For WinAppDriver with Appium.WebDriver 5.x, we need to set capabilities properly
+        // For WinAppDriver, capabilities need to be passed in a specific format
+        // WinAppDriver uses the legacy JSON Wire Protocol, not W3C WebDriver
         var options = new AppiumOptions
         {
+            // These properties map to the correct capability names for WinAppDriver
             PlatformName = "Windows",
             DeviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC",
+            App = appPath,
+            // Set automation name to "Windows" for WinAppDriver
+            AutomationName = "Windows",
         };
-
-        // Set the app path using the App property (lowercase in capabilities becomes appium:app)
-        options.App = appPath;
 
         // Create the driver with retry logic for CI environments
         const int maxRetries = 3;
