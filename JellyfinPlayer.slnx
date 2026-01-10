@@ -21,4 +21,5 @@
     <Platform Solution="Debug|ARM64" Project="ARM64" />
     <Deploy Solution="Debug|*" />
   </Project>
+  <Project Path="Player.AppiumTests/Player.AppiumTests.csproj" />
 </Solution>
