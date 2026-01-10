@@ -33,13 +33,23 @@ public abstract class AppiumTestBase : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var options = new AppiumOptions
+        var appPath = AppPath;
+
+        // Validate app path is set and file exists
+        if (string.IsNullOrWhiteSpace(appPath))
         {
-            PlatformName = "Windows",
-            AutomationName = "Windows",
-            App = AppPath,
-            DeviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC",
-        };
+            throw new InvalidOperationException(
+                "AppPath is null or empty. Ensure PLAYER_APP_PATH environment variable is set."
+            );
+        }
+
+        var options = new AppiumOptions();
+        options.AddAdditionalAppiumOption("app", appPath);
+        options.AddAdditionalAppiumOption("platformName", "Windows");
+        options.AddAdditionalAppiumOption(
+            "deviceName",
+            Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC"
+        );
 
         // Create the driver with retry logic for CI environments
         const int maxRetries = 3;
@@ -66,7 +76,7 @@ public abstract class AppiumTestBase : IAsyncLifetime
         if (Driver is null && lastException is not null)
         {
             throw new InvalidOperationException(
-                $"Failed to connect to Appium server at {AppiumServerUrl} after {maxRetries} attempts",
+                $"Failed to connect to Appium server at {AppiumServerUrl} after {maxRetries} attempts. App path was: {appPath}",
                 lastException
             );
         }
