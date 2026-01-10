@@ -43,12 +43,15 @@ public abstract class AppiumTestBase : IAsyncLifetime
             );
         }
 
+        // For WinAppDriver with Appium.WebDriver 5.x, we need to set capabilities properly
         var options = new AppiumOptions
         {
-            Application = appPath,
             PlatformName = "Windows",
             DeviceName = Environment.GetEnvironmentVariable("APPIUM_DEVICE_NAME") ?? "WindowsPC",
         };
+
+        // Set the app path using the App property (lowercase in capabilities becomes appium:app)
+        options.App = appPath;
 
         // Create the driver with retry logic for CI environments
         const int maxRetries = 3;
