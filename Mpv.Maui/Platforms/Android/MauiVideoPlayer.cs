@@ -149,21 +149,24 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         if (JvmSet.Get())
             return;
 
-        var jvm = JniEnvironment.Runtime.InvocationPointer;
-        var returnCode = FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
-        if (returnCode != 0)
+        var returnCode = 0;
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            var errorMsg = Marshal.AllocHGlobal(1000);
-            var error = FfmpegLibs.MakeErrorString(returnCode, errorMsg, 1000);
-            if (error != 0)
-                throw new Exception(
-                    $"Failed to make error string for FFmpeg Java VM set failure: {error} original error {returnCode}"
-                );
-            var msg = Marshal.PtrToStringAnsi(errorMsg);
-            Marshal.FreeHGlobal(errorMsg);
-            throw new Exception($"Failed to set Java VM for FFmpeg: {returnCode} {msg}");
-        }
+            var jvm = JniEnvironment.Runtime.InvocationPointer;
+            returnCode = FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
+        });
 
-        JvmSet.Set(true);
+        if (returnCode == 0)
+            JvmSet.Set(true);
+
+        var errorMsg = Marshal.AllocHGlobal(1000);
+        var error = FfmpegLibs.MakeErrorString(returnCode, errorMsg, 1000);
+        if (error != 0)
+            throw new Exception(
+                $"Failed to make error string for FFmpeg Java VM set failure: {error} original error {returnCode}"
+            );
+        var msg = Marshal.PtrToStringAnsi(errorMsg);
+        Marshal.FreeHGlobal(errorMsg);
+        throw new Exception($"Failed to set Java VM for FFmpeg: {returnCode} {msg}");
     }
 }
