@@ -11,7 +11,7 @@
   <ShellContent ContentTemplate="{DataTemplate pages:LoginPage}" Route="LoginPage" />
 
   <!-- Flyout Items (shown after login) -->
-  <FlyoutItem Title="Home" Icon="home.png">
+  <FlyoutItem Title="Home">
     <ShellContent ContentTemplate="{DataTemplate pages:HomePage}" Route="HomePage" />
   </FlyoutItem>
 

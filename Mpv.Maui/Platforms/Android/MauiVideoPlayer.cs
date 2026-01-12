@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Android.Content;
 using Android.Media;
@@ -38,19 +39,10 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
 
         InitializeMpvCommon();
 
-        _mpvClient.SetOption("vo", "gpu-next");
-        _mpvClient.SetOption("hwdec", "mediacodec");
+        _mpvClient.SetOption("hwdec", "auto");
         _mpvClient.SetOption("gpu-context", "android");
         _surface = new SurfaceView(_context);
-
-        // Allocate 8 bytes for IntPtr on 64-bit Android (Int64 size)
-        // On 32-bit Android this would be 4 bytes, but we use Int64 for compatibility
-        var ptr = Marshal.AllocHGlobal(8);
-        Marshal.WriteInt64(ptr, _surface.Holder!.Surface!.Handle.ToInt64());
-
-        _mpvClient.Initialize();
-        _mpvClient.SetOption("wid", 4, ptr);
-        Marshal.FreeHGlobal(ptr);
+        _surface.Holder!.AddCallback(new SurfaceHolderCallback(SetMpvWid));
 
         _mpvClient.Initialize();
 
@@ -68,6 +60,25 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         // Add to the layouts
         _relativeLayout.AddView(_surface);
         AddView(_relativeLayout);
+    }
+
+    private void SetMpvWid(ISurfaceHolder? holder)
+    {
+        // Allocate 8 bytes for IntPtr on 64-bit Android (Int64 size)
+        // On 32-bit Android this would be 4 bytes, but we use Int64 for compatibility
+        var ptr = Marshal.AllocHGlobal(8);
+        // -1 removes video output
+        var handle = holder?.Surface?.Handle.ToInt64() ?? -1;
+
+        _logger.LogInformation(
+            $"Setting mpv wid to handle: {handle.ToString(CultureInfo.InvariantCulture)}"
+        );
+
+        _mpvClient.SetOption("vo", handle != -1 ? "gpu-next" : "null");
+
+        Marshal.WriteInt64(ptr, handle);
+        _mpvClient.SetOption("wid", 4, ptr);
+        Marshal.FreeHGlobal(ptr);
     }
 
     private partial void UpdateSourcePlatform()
@@ -153,7 +164,8 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         int returnCode = MainThread
             .InvokeOnMainThreadAsync(() =>
             {
-                var jvm = JniEnvironment.Runtime.InvocationPointer;
+                var currentRuntime = JniRuntime.CurrentRuntime;
+                var jvm = currentRuntime.InvocationPointer;
                 return FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
             })
             .GetAwaiter()

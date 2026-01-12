@@ -76,7 +76,7 @@ public sealed class JellyfinApiClientFactory(
         var serverUrl = connection?.ServerUrl ?? "null";
         var token = connection?.AccessToken;
 
-        logger.LogInformation(
+        logger.LogDebug(
             "CreateClientAsync called - ServerUrl: {ServerUrl}, HasToken: {HasToken}, TokenLength: {TokenLength}, CachedClient: {CachedClient}, CachedToken: {CachedToken}",
             serverUrl,
             !string.IsNullOrWhiteSpace(token),
@@ -115,7 +115,7 @@ public sealed class JellyfinApiClientFactory(
             .ConfigureAwait(false);
         var authProvider = new JellyfinAuthenticationProvider(deviceInfo, connection.AccessToken);
 
-        logger.LogInformation(
+        logger.LogDebug(
             "Creating new API client with token (first 10 chars): {TokenPreview}",
             GetTokenPreview(connection.AccessToken)
         );
