@@ -130,7 +130,8 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
             _surface = null;
             _relativeLayout = null;
             DisposeMpvCommon();
-            _mpvClient.Dispose();
+            // Do not dispose the mpv client because it is a singleton
+            // _mpvClient.Dispose();
         }
 
         base.Dispose(disposing);

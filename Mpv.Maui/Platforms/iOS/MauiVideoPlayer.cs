@@ -120,7 +120,8 @@ namespace Mpv.Maui.Platforms.MaciOS
             {
                 DisposeMpvCommon();
                 _mpvClient.OnVideoReconfigure -= OnVideoReconfigure;
-                _mpvClient.Dispose();
+                // Do not dispose the mpv client because it is a singleton
+                // _mpvClient.Dispose();
             }
 
             base.Dispose(disposing);
