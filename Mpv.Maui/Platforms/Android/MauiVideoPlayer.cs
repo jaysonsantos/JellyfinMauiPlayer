@@ -149,12 +149,14 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         if (JvmSet.Get())
             return;
 
-        var returnCode = 0;
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            var jvm = JniEnvironment.Runtime.InvocationPointer;
-            returnCode = FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
-        });
+        int returnCode = MainThread
+            .InvokeOnMainThreadAsync(() =>
+            {
+                var jvm = JniEnvironment.Runtime.InvocationPointer;
+                return FfmpegLibs.SetJavaVm(jvm, IntPtr.Zero);
+            })
+            .GetAwaiter()
+            .GetResult();
 
         if (returnCode == 0)
         {
