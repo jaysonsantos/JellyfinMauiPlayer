@@ -157,7 +157,10 @@ public sealed partial class MauiVideoPlayer : CoordinatorLayout, MediaPlayer.IOn
         });
 
         if (returnCode == 0)
+        {
             JvmSet.Set(true);
+            return;
+        }
 
         var errorMsg = Marshal.AllocHGlobal(1000);
         var error = FfmpegLibs.MakeErrorString(returnCode, errorMsg, 1000);
