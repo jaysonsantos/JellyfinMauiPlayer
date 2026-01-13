@@ -305,6 +305,7 @@
                     Text="{Binding DisplayName}"
                     TextColor="{DynamicResource VideoTextColor}"
                     FontSize="14"
+                    InputTransparent="True"
                   />
                 </Border>
               </DataTemplate>
@@ -401,6 +402,7 @@
                       Text="{Binding DisplayName}"
                       TextColor="{DynamicResource VideoTextColor}"
                       FontSize="14"
+                      InputTransparent="True"
                     />
                   </Border>
                 </DataTemplate>

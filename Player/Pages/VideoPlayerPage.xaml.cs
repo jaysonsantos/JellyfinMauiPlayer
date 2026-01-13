@@ -432,7 +432,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
     private void OnAudioTrackTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        if (e.Parameter is int trackId)
         {
             _viewModel.SelectAudioTrackCommand.Execute(trackId);
         }
@@ -440,7 +440,7 @@ public sealed partial class VideoPlayerPage : ContentPage, IQueryAttributable, I
 
     private void OnSubtitleTrackTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is TapGestureRecognizer recognizer && recognizer.CommandParameter is int trackId)
+        if (e.Parameter is int trackId)
         {
             _viewModel.SelectSubtitleTrackCommand.Execute(trackId);
         }
