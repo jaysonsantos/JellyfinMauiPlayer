@@ -121,4 +121,10 @@ public sealed partial class HomeViewModel(
             ErrorMessage = $"Failed to logout: {ex.Message}";
         }
     }
+
+    [RelayCommand]
+    private async Task NavigateToLibraryManagementAsync()
+    {
+        await Shell.Current.GoToAsync(Routes.LibraryManagement);
+    }
 }
