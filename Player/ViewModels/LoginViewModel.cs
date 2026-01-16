@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using JellyfinPlayer.Lib.Models;
 using JellyfinPlayer.Lib.Services;
 using Microsoft.Extensions.Logging;
 using Player.Resources.Strings;
@@ -11,14 +12,16 @@ public sealed partial class LoginViewModel(
     ILogger<LoginViewModel> logger
 ) : ObservableObject
 {
-    [ObservableProperty]
-    public partial string ServerUrl { get; set; } = "http://localhost:8096";
+    private const string DefaultServerUrl = "http://localhost:8096";
 
     [ObservableProperty]
-    public partial string Username { get; set; } = "guest";
+    public partial string ServerUrl { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Password { get; set; } = "guest";
+    public partial string Username { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string Password { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
@@ -97,5 +100,37 @@ public sealed partial class LoginViewModel(
         {
             logger.LogError(ex, "Failed to check stored credentials");
         }
+    }
+
+    [RelayCommand]
+    private async Task LoadStoredLoginCredentialsAsync()
+    {
+        logger.LogInformation("Initializing login page...");
+
+        var credentials = await authenticationService.GetStoredLoginCredentialsAsync();
+        if (credentials is null)
+        {
+            SetDefaultCredentials();
+            return;
+        }
+
+        ServerUrl = !string.IsNullOrWhiteSpace(credentials.ServerUrl)
+            ? credentials.ServerUrl
+            : DefaultServerUrl;
+        Username = !string.IsNullOrWhiteSpace(credentials.Username)
+            ? credentials.Username
+            : string.Empty;
+        Password = !string.IsNullOrWhiteSpace(credentials.Password)
+            ? credentials.Password
+            : string.Empty;
+
+        logger.LogInformation("Login page initialized");
+    }
+
+    private void SetDefaultCredentials()
+    {
+        ServerUrl = DefaultServerUrl;
+        Username = string.Empty;
+        Password = string.Empty;
     }
 }

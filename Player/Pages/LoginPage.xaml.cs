@@ -9,7 +9,11 @@ public partial class LoginPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
 
-        // Check for stored credentials when page loads
-        Loaded += async (s, e) => await viewModel.CheckStoredCredentialsCommand.ExecuteAsync(null);
+        // Load stored credentials and check for valid session when page loads
+        Loaded += async (s, e) =>
+        {
+            await viewModel.LoadStoredLoginCredentialsCommand.ExecuteAsync(null);
+            await viewModel.CheckStoredCredentialsCommand.ExecuteAsync(null);
+        };
     }
 }
